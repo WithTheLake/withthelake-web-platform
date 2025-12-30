@@ -1,0 +1,511 @@
+'use client'
+
+import { useState, useEffect, useRef } from 'react'
+import Image from 'next/image'
+import { motion, AnimatePresence } from 'framer-motion'
+import { X, MapPin, Play, Pause, Square } from 'lucide-react'
+import { useAudioStore } from '@/stores/useAudioStore'
+import type { AudioItem } from '@/types/audio'
+import EmotionRecordSheet from '@/components/modals/EmotionRecordSheet'
+
+interface HealingPageClientProps {
+  walkGuides: AudioItem[]
+  affirmations: AudioItem[]
+}
+
+export default function HealingPageClient({ walkGuides, affirmations }: HealingPageClientProps) {
+  const [isWalkGuideOpen, setIsWalkGuideOpen] = useState(false)
+  const [isAffirmationOpen, setIsAffirmationOpen] = useState(false)
+  const [isDescriptionOpen, setIsDescriptionOpen] = useState(false)
+  const [isEmotionSheetOpen, setIsEmotionSheetOpen] = useState(false)
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
+  const audioRef = useRef<HTMLAudioElement>(null)
+
+  const {
+    currentAudio,
+    playbackState,
+    currentTime,
+    duration,
+    isLoading,
+    setCurrentAudio,
+    setAudioElement,
+    setLoading,
+    setCurrentTime,
+    setDuration,
+    play,
+    pause,
+    stop
+  } = useAudioStore()
+
+  // 오디오 요소 등록 및 페이지 이탈 시 정지
+  useEffect(() => {
+    if (audioRef.current) {
+      setAudioElement(audioRef.current)
+    }
+    return () => {
+      // 페이지 이탈 시 오디오 정지 및 상태 초기화
+      stop()
+      setAudioElement(null)
+    }
+  }, [setAudioElement, stop])
+
+  // 오디오 이벤트 리스너
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+
+    const handleLoadedMetadata = () => {
+      setDuration(audio.duration)
+    }
+
+    const handleTimeUpdate = () => {
+      setCurrentTime(audio.currentTime)
+    }
+
+    const handleEnded = () => {
+      stop()
+    }
+
+    const handleCanPlay = () => {
+      setLoading(false)
+    }
+
+    const handleWaiting = () => {
+      setLoading(true)
+    }
+
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata)
+    audio.addEventListener('timeupdate', handleTimeUpdate)
+    audio.addEventListener('ended', handleEnded)
+    audio.addEventListener('canplay', handleCanPlay)
+    audio.addEventListener('waiting', handleWaiting)
+
+    return () => {
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata)
+      audio.removeEventListener('timeupdate', handleTimeUpdate)
+      audio.removeEventListener('ended', handleEnded)
+      audio.removeEventListener('canplay', handleCanPlay)
+      audio.removeEventListener('waiting', handleWaiting)
+    }
+  }, [setDuration, setCurrentTime, setLoading, stop])
+
+  // 오디오 변경 시 로드
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio || !currentAudio) return
+
+    setLoading(true)
+    // 카테고리에 따라 폴더 경로 결정
+    const folder = currentAudio.category === 'walk_guide' ? 'walk_guide' : 'affirmation'
+    audio.src = `/audio/${folder}/${encodeURIComponent(currentAudio.filename)}`
+    audio.load()
+  }, [currentAudio, setLoading])
+
+  // GPS 위치 추적
+  useEffect(() => {
+    if (navigator.geolocation) {
+      const watchId = navigator.geolocation.watchPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          })
+        },
+        (error) => {
+          console.warn('위치 정보를 가져오지 못했습니다:', error.message)
+        },
+        {
+          enableHighAccuracy: true,
+          maximumAge: 10000,
+          timeout: 5000,
+        }
+      )
+
+      return () => navigator.geolocation.clearWatch(watchId)
+    }
+  }, [])
+
+  const selectAudioItem = (item: AudioItem) => {
+    setCurrentAudio(item)
+    setIsWalkGuideOpen(false)
+    setIsAffirmationOpen(false)
+  }
+
+  const formatTime = (seconds: number) => {
+    if (isNaN(seconds)) return '0:00'
+    const min = Math.floor(seconds / 60)
+    const sec = Math.floor(seconds % 60)
+    return `${min}:${sec < 10 ? '0' + sec : sec}`
+  }
+
+  const openLocation = () => {
+    if (userLocation) {
+      window.open(
+        `https://www.google.com/maps?q=${userLocation.lat},${userLocation.lng}&hl=ko&z=15`,
+        '_blank'
+      )
+    } else {
+      alert('위치 정보를 가져오는 중입니다. 잠시 후 다시 시도해주세요.')
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-white">
+      {/* 숨김 오디오 요소 */}
+      <audio ref={audioRef} preload="metadata" />
+
+      {/* 페이지 타이틀 및 배너 */}
+      <section className="pt-3 px-5 pb-2">
+        <div className="text-center mb-2">
+          <Image
+            src="/images/healingroadon_logo.jpg"
+            alt="HEALING ROAD ON"
+            width={200}
+            height={60}
+            className="h-12 w-auto mx-auto"
+          />
+        </div>
+        <div className="w-full aspect-[16/9] rounded-2xl overflow-hidden">
+          <Image
+            src="/images/healingroadon_banner.jpg"
+            alt="힐링로드ON 메인 배너"
+            width={800}
+            height={450}
+            className="w-full h-full object-cover"
+            priority
+          />
+        </div>
+      </section>
+
+      {/* Main Content */}
+      <section className="px-5 pt-4">
+        {/* 미디어 제어 박스 */}
+        {currentAudio ? (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-r from-purple-50 to-blue-50 border-2 border-purple-300 rounded-2xl p-5 mb-5 shadow-lg"
+          >
+            {/* 오디오 정보 */}
+            <div className="flex items-center mb-4">
+              <span className="text-3xl mr-3">{currentAudio.emoji || '🎵'}</span>
+              <div className="flex-1">
+                <h3 className="font-bold text-lg">{currentAudio.title}</h3>
+                <p className="text-sm text-gray-600 truncate">{currentAudio.description}</p>
+              </div>
+              <button
+                onClick={() => setIsDescriptionOpen(true)}
+                className="px-3 py-1.5 bg-white rounded-full text-xs font-medium hover:bg-gray-50 transition-colors shadow-sm"
+              >
+                상세보기
+              </button>
+            </div>
+
+            {/* 진행 바 */}
+            <div className="mb-4">
+              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                <motion.div
+                  className="h-full bg-gradient-to-r from-purple-500 to-blue-500"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(currentTime / duration) * 100}%` }}
+                  transition={{ duration: 0.1 }}
+                />
+              </div>
+              <div className="flex justify-between mt-1 text-xs text-gray-500">
+                <span>{formatTime(currentTime)}</span>
+                <span>{formatTime(duration)}</span>
+              </div>
+            </div>
+
+            {/* 재생 컨트롤 */}
+            <div className="flex items-center justify-center gap-3">
+              <button
+                onClick={playbackState === 'playing' ? pause : play}
+                disabled={isLoading}
+                className="w-14 h-14 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label={playbackState === 'playing' ? '일시정지' : '재생'}
+              >
+                {playbackState === 'playing' ? (
+                  <Pause size={24} fill="white" color="white" />
+                ) : (
+                  <Play size={24} fill="white" color="white" className="ml-0.5" />
+                )}
+              </button>
+              <button
+                onClick={stop}
+                disabled={isLoading}
+                className="w-12 h-12 bg-gray-600 rounded-full flex items-center justify-center hover:bg-gray-700 transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label="정지"
+              >
+                <Square size={20} fill="white" color="white" />
+              </button>
+            </div>
+
+            {/* 로딩 상태 */}
+            {isLoading && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center mt-3 text-sm text-purple-600 font-medium"
+              >
+                로딩 중...
+              </motion.div>
+            )}
+          </motion.div>
+        ) : (
+          <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-2xl p-8 mb-5 text-center">
+            <div className="text-4xl mb-2">🎵</div>
+            <p className="text-gray-500 text-sm">오디오를 선택해주세요</p>
+          </div>
+        )}
+
+        {/* Audio Selection Section */}
+        <div className="mb-5">
+          <div className="flex items-center mb-3">
+            <span className="text-lg font-bold mr-2">오디오 듣기</span>
+            <span className="text-xs text-gray-600">
+              올바른 걷기의 마음가짐과 긍정적 메세지를 확인하세요.
+            </span>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setIsWalkGuideOpen(true)}
+              className="flex-1 h-12 border border-gray-300 rounded-xl flex items-center justify-between px-3 hover:bg-gray-50"
+            >
+              <div className="w-7 h-7 flex items-center justify-center">
+                <span className="text-xl">🚶</span>
+              </div>
+              <span className="text-sm font-medium">걷기 안내</span>
+              <span className="text-xl">▼</span>
+            </button>
+            <button
+              onClick={() => setIsAffirmationOpen(true)}
+              className="flex-1 h-12 border border-gray-300 rounded-xl flex items-center justify-between px-3 hover:bg-gray-50"
+            >
+              <div className="w-7 h-7 flex items-center justify-center">
+                <span className="text-xl">💭</span>
+              </div>
+              <span className="text-sm font-medium">긍정확언</span>
+              <span className="text-xl">▼</span>
+            </button>
+          </div>
+        </div>
+
+        {/* GPS 위치 버튼 */}
+        <div className="mb-5">
+          <button
+            onClick={openLocation}
+            className="w-full py-3 px-4 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 transition-colors flex items-center justify-center gap-2"
+          >
+            <MapPin size={20} />
+            나의 위치 보기
+          </button>
+        </div>
+
+        {/* Divider */}
+        <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-5" />
+
+        {/* Recording Section */}
+        <div className="mb-5">
+          <div className="flex items-center mb-3">
+            <span className="text-lg font-bold mr-2">기록하기</span>
+            <span className="text-xs text-gray-600">
+              나의 오늘 느끼는 감정을 적고, 질문에 답변해주세요.
+            </span>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setIsEmotionSheetOpen(true)}
+              className="flex-1 h-12 border border-gray-300 rounded-xl flex items-center justify-center hover:bg-gray-50"
+            >
+              <div className="w-7 h-7 flex items-center justify-center mr-2">
+                <span className="text-xl">😊</span>
+              </div>
+              <span className="text-sm font-medium">오늘 감정</span>
+            </button>
+            <a
+              href="https://forms.gle/At8WaVZLsXLCoxCLA"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 h-12 border border-gray-300 rounded-xl flex items-center justify-center hover:bg-gray-50"
+            >
+              <div className="w-7 h-7 flex items-center justify-center mr-2">
+                <span className="text-xl">📝</span>
+              </div>
+              <span className="text-sm font-medium">설문조사</span>
+            </a>
+          </div>
+        </div>
+
+        {/* Store Section */}
+        <div className="mb-5">
+          <div className="mb-2">
+            <span className="text-lg font-bold">힐링로드ON 제품 구입</span>
+          </div>
+          <div className="relative w-full aspect-[16/9] rounded-xl overflow-hidden">
+            <Image
+              src="/images/healingroadon_store.jpg"
+              alt="힐링로드ON 제품"
+              fill
+              className="object-cover"
+            />
+            <a
+              href="https://smartstore.naver.com/withlab201"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="absolute top-5 left-5 px-6 py-2 bg-green-500 text-white rounded-full text-sm font-bold hover:bg-green-600"
+            >
+              스마트스토어 바로가기
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* Walk Guide Modal */}
+      <AnimatePresence>
+        {isWalkGuideOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-5"
+            onClick={() => setIsWalkGuideOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="bg-green-500 rounded-3xl w-full max-w-sm p-5 relative max-h-[80vh] flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setIsWalkGuideOpen(false)}
+                className="absolute top-3 right-3 text-white text-xl hover:bg-white hover:bg-opacity-20 rounded-full p-1 transition-colors"
+              >
+                <X size={24} />
+              </button>
+              <h2 className="text-white text-xl font-bold mb-4 mt-2">걷기 안내</h2>
+              <div className="overflow-y-auto flex-1">
+                {walkGuides.length > 0 ? (
+                  <ul className="space-y-2">
+                    {walkGuides.map((item, index) => (
+                      <motion.li
+                        key={item.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        onClick={() => selectAudioItem(item)}
+                        className="py-3 px-3 border-b border-white border-opacity-30 cursor-pointer hover:bg-white hover:bg-opacity-10 rounded text-white transition-colors"
+                      >
+                        <div className="font-semibold">{item.emoji} {item.title}</div>
+                        <div className="text-xs mt-1 opacity-90">{item.description}</div>
+                      </motion.li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-white text-center py-8">오디오 트랙을 불러오는 중...</p>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Affirmation Modal */}
+      <AnimatePresence>
+        {isAffirmationOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-5"
+            onClick={() => setIsAffirmationOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="bg-green-500 rounded-3xl w-full max-w-sm p-5 relative max-h-[80vh] flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setIsAffirmationOpen(false)}
+                className="absolute top-3 right-3 text-white text-xl hover:bg-white hover:bg-opacity-20 rounded-full p-1 transition-colors"
+              >
+                <X size={24} />
+              </button>
+              <h2 className="text-white text-xl font-bold mb-4 mt-2">긍정확언</h2>
+              <div className="overflow-y-auto flex-1">
+                {affirmations.length > 0 ? (
+                  <ul className="space-y-2">
+                    {affirmations.map((item, index) => (
+                      <motion.li
+                        key={item.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        onClick={() => selectAudioItem(item)}
+                        className="py-3 px-3 border-b border-white border-opacity-30 cursor-pointer hover:bg-white hover:bg-opacity-10 rounded text-white transition-colors"
+                      >
+                        <div className="font-semibold">{item.emoji} {item.title}</div>
+                        <div className="text-xs mt-1 opacity-90">{item.description}</div>
+                      </motion.li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-white text-center py-8">오디오 트랙을 불러오는 중...</p>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Description Modal */}
+      <AnimatePresence>
+        {isDescriptionOpen && currentAudio && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-5"
+            onClick={() => setIsDescriptionOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="bg-white rounded-3xl w-full max-w-sm p-6 relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setIsDescriptionOpen(false)}
+                className="absolute top-3 right-3 text-black text-xl hover:bg-gray-100 rounded-full p-1 transition-colors"
+              >
+                <X size={24} />
+              </button>
+              <motion.div
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.1 }}
+                className="mt-8"
+              >
+                <h3 className="text-xl font-bold mb-3">{currentAudio.title}</h3>
+                <p className="text-gray-800 leading-relaxed">{currentAudio.description}</p>
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Emotion Record Bottom Sheet */}
+      <EmotionRecordSheet
+        isOpen={isEmotionSheetOpen}
+        onClose={() => setIsEmotionSheetOpen(false)}
+      />
+    </div>
+  )
+}
