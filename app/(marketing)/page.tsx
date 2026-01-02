@@ -9,7 +9,7 @@ export default function HomePage() {
         {/* 유튜브 비디오 배경 */}
         <div className="absolute inset-0 pointer-events-none">
           <iframe
-            className="absolute w-full h-full scale-150"
+            className="absolute w-full h-full scale-110"
             src="https://www.youtube.com/embed/GI4SKsaESc0?autoplay=1&mute=1&loop=1&playlist=GI4SKsaESc0&controls=0&showinfo=0&modestbranding=1&playsinline=1"
             title="Barefoot walking background video"
             allow="autoplay; encrypted-media"

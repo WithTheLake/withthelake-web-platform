@@ -2,9 +2,12 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { User, Calendar, Heart, LogOut, ChevronRight, Clock } from 'lucide-react'
+import { User, Calendar, Heart, LogOut, ChevronRight, Clock, Sparkles } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import LoginModal from '@/components/modals/LoginModal'
+import WeeklyEmotionReport from '@/components/report/WeeklyEmotionReport'
+import { EMOTION_LABELS } from '@/types/emotion'
+import { formatRelativeTime } from '@/lib/utils/format'
 
 interface EmotionRecord {
   id: string
@@ -20,17 +23,6 @@ interface MypageClientProps {
   emotionRecords: EmotionRecord[]
 }
 
-const EMOTION_LABELS: Record<string, { emoji: string; label: string }> = {
-  happy: { emoji: '😊', label: '행복' },
-  calm: { emoji: '😌', label: '평온' },
-  grateful: { emoji: '🙏', label: '감사' },
-  energetic: { emoji: '💪', label: '활기' },
-  tired: { emoji: '😴', label: '피곤' },
-  sad: { emoji: '😢', label: '슬픔' },
-  anxious: { emoji: '😰', label: '불안' },
-  angry: { emoji: '😠', label: '화남' },
-}
-
 export default function MypageClient({
   isAuthenticated,
   user,
@@ -38,6 +30,7 @@ export default function MypageClient({
 }: MypageClientProps) {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [isReportOpen, setIsReportOpen] = useState(false)
 
   const handleLogout = async () => {
     setIsLoggingOut(true)
@@ -53,27 +46,7 @@ export default function MypageClient({
     }
   }
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    const now = new Date()
-    const diffTime = now.getTime() - date.getTime()
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
-
-    if (diffDays === 0) {
-      return '오늘'
-    } else if (diffDays === 1) {
-      return '어제'
-    } else if (diffDays < 7) {
-      return `${diffDays}일 전`
-    } else {
-      return date.toLocaleDateString('ko-KR', {
-        month: 'short',
-        day: 'numeric',
-      })
-    }
-  }
-
-  const formatTime = (dateString: string) => {
+  const formatTimeOfDay = (dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleTimeString('ko-KR', {
       hour: '2-digit',
@@ -281,7 +254,7 @@ export default function MypageClient({
                           <span className="font-medium">{emotion.label}</span>
                           <div className="flex items-center gap-1 text-xs text-gray-400">
                             <Clock size={12} />
-                            {formatDate(record.created_at)} {formatTime(record.created_at)}
+                            {formatRelativeTime(record.created_at)} {formatTimeOfDay(record.created_at)}
                           </div>
                         </div>
                         <div className="flex items-center gap-1 mt-1">
@@ -314,8 +287,19 @@ export default function MypageClient({
         )}
       </section>
 
+      {/* 주간 보고서 버튼 */}
+      <section className="px-5 py-3">
+        <button
+          onClick={() => setIsReportOpen(true)}
+          className="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:from-amber-600 hover:to-orange-600 transition-colors"
+        >
+          <Sparkles size={20} />
+          주간 감정 보고서 보기
+        </button>
+      </section>
+
       {/* 힐링로드 ON 바로가기 */}
-      <section className="px-5 py-5">
+      <section className="px-5 py-3">
         <a
           href="/healing"
           className="block w-full py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold text-center hover:from-purple-700 hover:to-blue-700 transition-colors"
@@ -323,6 +307,12 @@ export default function MypageClient({
           힐링로드 ON 시작하기
         </a>
       </section>
+
+      {/* 주간 감정 보고서 모달 */}
+      <WeeklyEmotionReport
+        isOpen={isReportOpen}
+        onClose={() => setIsReportOpen(false)}
+      />
 
       <LoginModal
         isOpen={isLoginModalOpen}

@@ -6,18 +6,24 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, MapPin, Play, Pause, Square } from 'lucide-react'
 import { useAudioStore } from '@/stores/useAudioStore'
 import type { AudioItem } from '@/types/audio'
-import EmotionRecordSheet from '@/components/modals/EmotionRecordSheet'
+import EmotionRecordModal from '@/components/modals/EmotionRecordModal'
+import TrailTextSelectModal from '@/components/modals/TrailTextSelectModal'
+import TrailMapSelectModal from '@/components/modals/TrailMapSelectModal'
+import { formatTime } from '@/lib/utils/format'
 
 interface HealingPageClientProps {
   walkGuides: AudioItem[]
   affirmations: AudioItem[]
+  trailGuides: AudioItem[]
 }
 
-export default function HealingPageClient({ walkGuides, affirmations }: HealingPageClientProps) {
+export default function HealingPageClient({ walkGuides, affirmations, trailGuides }: HealingPageClientProps) {
   const [isWalkGuideOpen, setIsWalkGuideOpen] = useState(false)
   const [isAffirmationOpen, setIsAffirmationOpen] = useState(false)
   const [isDescriptionOpen, setIsDescriptionOpen] = useState(false)
   const [isEmotionSheetOpen, setIsEmotionSheetOpen] = useState(false)
+  const [isTrailTextSelectOpen, setIsTrailTextSelectOpen] = useState(false)
+  const [isTrailMapSelectOpen, setIsTrailMapSelectOpen] = useState(false)
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
   const audioRef = useRef<HTMLAudioElement>(null)
 
@@ -28,76 +34,150 @@ export default function HealingPageClient({ walkGuides, affirmations }: HealingP
     duration,
     isLoading,
     setCurrentAudio,
-    setAudioElement,
     setLoading,
     setCurrentTime,
     setDuration,
-    play,
-    pause,
-    stop
+    setPlaybackState
   } = useAudioStore()
 
-  // 오디오 요소 등록 및 페이지 이탈 시 정지
-  useEffect(() => {
+  // 로컬 오디오 제어 함수들
+  const play = () => {
     if (audioRef.current) {
-      setAudioElement(audioRef.current)
+      audioRef.current.play()
+      setPlaybackState('playing')
     }
+  }
+
+  const pause = () => {
+    if (audioRef.current) {
+      audioRef.current.pause()
+      setPlaybackState('paused')
+    }
+  }
+
+  const stop = () => {
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current.currentTime = 0
+      setPlaybackState('stopped')
+      setCurrentTime(0)
+    }
+  }
+
+  // 페이지 이탈 시 오디오 정지
+  useEffect(() => {
     return () => {
-      // 페이지 이탈 시 오디오 정지 및 상태 초기화
-      stop()
-      setAudioElement(null)
+      // 페이지 이탈 시 오디오 정지
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current.currentTime = 0
+      }
+      setPlaybackState('stopped')
+      setCurrentTime(0)
     }
-  }, [setAudioElement, stop])
+  }, [setPlaybackState, setCurrentTime])
 
   // 오디오 이벤트 리스너
   useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
 
-    const handleLoadedMetadata = () => {
-      setDuration(audio.duration)
+    const handleDurationChange = () => {
+      // WAV 파일은 duration이 Infinity로 올 수 있음 - 유효한 값만 설정
+      if (audio.duration && isFinite(audio.duration) && audio.duration > 0) {
+        setDuration(audio.duration)
+      }
     }
 
     const handleTimeUpdate = () => {
       setCurrentTime(audio.currentTime)
+      // timeupdate에서도 duration 체크 (WAV 파일 대응)
+      if (audio.duration && isFinite(audio.duration) && audio.duration > 0) {
+        setDuration(audio.duration)
+      }
     }
 
     const handleEnded = () => {
-      stop()
+      audio.currentTime = 0
+      setPlaybackState('stopped')
+      setCurrentTime(0)
     }
 
     const handleCanPlay = () => {
       setLoading(false)
+      // canplay에서도 duration 체크
+      if (audio.duration && isFinite(audio.duration) && audio.duration > 0) {
+        setDuration(audio.duration)
+      }
     }
 
     const handleWaiting = () => {
       setLoading(true)
     }
 
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata)
+    const handleError = (e: Event) => {
+      const audioElement = e.target as HTMLAudioElement
+      const error = audioElement.error
+      setLoading(false)
+      setPlaybackState('stopped')
+
+      let errorMessage = '오디오를 재생할 수 없습니다.'
+      if (error) {
+        switch (error.code) {
+          case MediaError.MEDIA_ERR_ABORTED:
+            errorMessage = '오디오 로딩이 취소되었습니다.'
+            break
+          case MediaError.MEDIA_ERR_NETWORK:
+            errorMessage = '네트워크 오류가 발생했습니다. 인터넷 연결을 확인해주세요.'
+            break
+          case MediaError.MEDIA_ERR_DECODE:
+            errorMessage = '오디오 파일을 재생할 수 없습니다.'
+            break
+          case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
+            errorMessage = '지원하지 않는 오디오 형식입니다.'
+            break
+        }
+      }
+      console.error('Audio error:', error?.message || 'Unknown error')
+      alert(errorMessage)
+    }
+
+    audio.addEventListener('loadedmetadata', handleDurationChange)
+    audio.addEventListener('durationchange', handleDurationChange)
     audio.addEventListener('timeupdate', handleTimeUpdate)
     audio.addEventListener('ended', handleEnded)
     audio.addEventListener('canplay', handleCanPlay)
     audio.addEventListener('waiting', handleWaiting)
+    audio.addEventListener('error', handleError)
 
     return () => {
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata)
+      audio.removeEventListener('loadedmetadata', handleDurationChange)
+      audio.removeEventListener('durationchange', handleDurationChange)
       audio.removeEventListener('timeupdate', handleTimeUpdate)
       audio.removeEventListener('ended', handleEnded)
       audio.removeEventListener('canplay', handleCanPlay)
       audio.removeEventListener('waiting', handleWaiting)
+      audio.removeEventListener('error', handleError)
     }
-  }, [setDuration, setCurrentTime, setLoading, stop])
+  }, [setDuration, setCurrentTime, setLoading, setPlaybackState])
 
-  // 오디오 변경 시 로드
+  // 오디오 변경 시 Supabase Storage에서 로드
   useEffect(() => {
     const audio = audioRef.current
     if (!audio || !currentAudio) return
 
     setLoading(true)
+
     // 카테고리에 따라 폴더 경로 결정
-    const folder = currentAudio.category === 'walk_guide' ? 'walk_guide' : 'affirmation'
-    audio.src = `/audio/${folder}/${encodeURIComponent(currentAudio.filename)}`
+    let folder = 'affirmation'
+    if (currentAudio.category === 'walk_guide') folder = 'walk_guide'
+    else if (currentAudio.category === 'trail_guide') folder = 'trail_guide'
+
+    // Supabase Storage Public URL (환경 변수 사용)
+    const storageUrl = process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL
+    const audioUrl = `${storageUrl}/audio/${folder}/${encodeURIComponent(currentAudio.filename)}`
+
+    audio.src = audioUrl
     audio.load()
   }, [currentAudio, setLoading])
 
@@ -129,13 +209,6 @@ export default function HealingPageClient({ walkGuides, affirmations }: HealingP
     setCurrentAudio(item)
     setIsWalkGuideOpen(false)
     setIsAffirmationOpen(false)
-  }
-
-  const formatTime = (seconds: number) => {
-    if (isNaN(seconds)) return '0:00'
-    const min = Math.floor(seconds / 60)
-    const sec = Math.floor(seconds % 60)
-    return `${min}:${sec < 10 ? '0' + sec : sec}`
   }
 
   const openLocation = () => {
@@ -203,11 +276,21 @@ export default function HealingPageClient({ walkGuides, affirmations }: HealingP
 
             {/* 진행 바 */}
             <div className="mb-4">
-              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div
+                className="h-3 bg-gray-200 rounded-full overflow-hidden cursor-pointer relative"
+                onClick={(e) => {
+                  if (!audioRef.current || !duration) return
+                  const rect = e.currentTarget.getBoundingClientRect()
+                  const clickX = e.clientX - rect.left
+                  const newTime = (clickX / rect.width) * duration
+                  audioRef.current.currentTime = newTime
+                  setCurrentTime(newTime)
+                }}
+              >
                 <motion.div
-                  className="h-full bg-gradient-to-r from-purple-500 to-blue-500"
+                  className="h-full bg-gradient-to-r from-purple-500 to-blue-500 pointer-events-none"
                   initial={{ width: 0 }}
-                  animate={{ width: `${(currentTime / duration) * 100}%` }}
+                  animate={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
                   transition={{ duration: 0.1 }}
                 />
               </div>
@@ -289,17 +372,25 @@ export default function HealingPageClient({ walkGuides, affirmations }: HealingP
               <span className="text-xl">▼</span>
             </button>
           </div>
-        </div>
-
-        {/* GPS 위치 버튼 */}
-        <div className="mb-5">
-          <button
-            onClick={openLocation}
-            className="w-full py-3 px-4 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 transition-colors flex items-center justify-center gap-2"
-          >
-            <MapPin size={20} />
-            나의 위치 보기
-          </button>
+          {/* 길 안내 및 지도 버튼 */}
+          <div className="flex gap-2 mt-2">
+            <button
+              onClick={() => setIsTrailTextSelectOpen(true)}
+              className="flex-1 h-12 border border-gray-300 rounded-xl flex items-center justify-center hover:bg-gray-50"
+            >
+              <div className="w-7 h-7 flex items-center justify-center mr-2">
+                <span className="text-xl">🗺️</span>
+              </div>
+              <span className="text-sm font-medium">길 안내</span>
+            </button>
+            <button
+              onClick={() => setIsTrailMapSelectOpen(true)}
+              className="flex-1 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center hover:bg-blue-700 transition-colors"
+            >
+              <MapPin size={18} className="mr-2" />
+              <span className="text-sm font-medium">지도</span>
+            </button>
+          </div>
         </div>
 
         {/* Divider */}
@@ -342,18 +433,19 @@ export default function HealingPageClient({ walkGuides, affirmations }: HealingP
           <div className="mb-2">
             <span className="text-lg font-bold">힐링로드ON 제품 구입</span>
           </div>
-          <div className="relative w-full aspect-[16/9] rounded-xl overflow-hidden">
+          <div className="relative w-full rounded-xl overflow-hidden">
             <Image
               src="/images/healingroadon_store.jpg"
               alt="힐링로드ON 제품"
-              fill
-              className="object-cover"
+              width={800}
+              height={450}
+              className="w-full h-auto"
             />
             <a
               href="https://smartstore.naver.com/withlab201"
               target="_blank"
               rel="noopener noreferrer"
-              className="absolute top-5 left-5 px-6 py-2 bg-green-500 text-white rounded-full text-sm font-bold hover:bg-green-600"
+              className="absolute top-3 left-3 px-3 py-2 bg-green-500 text-white rounded-full text-xs font-bold hover:bg-green-600"
             >
               스마트스토어 바로가기
             </a>
@@ -361,105 +453,208 @@ export default function HealingPageClient({ walkGuides, affirmations }: HealingP
         </div>
       </section>
 
-      {/* Walk Guide Modal */}
+      {/* Walk Guide Modal - Redesigned */}
       <AnimatePresence>
         {isWalkGuideOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-5"
-            onClick={() => setIsWalkGuideOpen(false)}
-          >
+          <>
+            {/* Backdrop */}
             <motion.div
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50"
+              onClick={() => setIsWalkGuideOpen(false)}
+            />
+            {/* Modal */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="bg-green-500 rounded-3xl w-full max-w-sm p-5 relative max-h-[80vh] flex flex-col"
+              className="fixed inset-4 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-md md:max-h-[85vh] bg-white rounded-2xl shadow-xl z-50 flex flex-col overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
-              <button
-                onClick={() => setIsWalkGuideOpen(false)}
-                className="absolute top-3 right-3 text-white text-xl hover:bg-white hover:bg-opacity-20 rounded-full p-1 transition-colors"
-              >
-                <X size={24} />
-              </button>
-              <h2 className="text-white text-xl font-bold mb-4 mt-2">걷기 안내</h2>
-              <div className="overflow-y-auto flex-1">
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-emerald-500 to-teal-500">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">🚶</span>
+                  <h2 className="text-lg font-bold text-white">걷기 안내</h2>
+                </div>
+                <button
+                  onClick={() => setIsWalkGuideOpen(false)}
+                  className="p-1.5 hover:bg-white/20 rounded-full transition-colors"
+                >
+                  <X size={22} className="text-white" />
+                </button>
+              </div>
+
+              {/* Description */}
+              <div className="px-4 py-3 bg-emerald-50 border-b border-emerald-100">
+                <p className="text-sm text-emerald-800">
+                  올바른 맨발걷기 방법과 마음가짐을 안내합니다
+                </p>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto p-4">
                 {walkGuides.length > 0 ? (
-                  <ul className="space-y-2">
+                  <div className="grid gap-3">
                     {walkGuides.map((item, index) => (
-                      <motion.li
+                      <motion.button
                         key={item.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.05 }}
                         onClick={() => selectAudioItem(item)}
-                        className="py-3 px-3 border-b border-white border-opacity-30 cursor-pointer hover:bg-white hover:bg-opacity-10 rounded text-white transition-colors"
+                        className="w-full text-left p-4 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl hover:from-emerald-100 hover:to-teal-100 hover:border-emerald-300 transition-all group"
                       >
-                        <div className="font-semibold">{item.emoji} {item.title}</div>
-                        <div className="text-xs mt-1 opacity-90">{item.description}</div>
-                      </motion.li>
+                        <div className="flex items-start gap-3">
+                          <span className="text-2xl group-hover:scale-110 transition-transform">
+                            {item.emoji || '🚶'}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-bold text-emerald-800 mb-1 truncate">
+                              {item.title}
+                            </h3>
+                            <p className="text-sm text-emerald-600 line-clamp-2">
+                              {item.description}
+                            </p>
+                          </div>
+                          <Play size={20} className="text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity mt-1" />
+                        </div>
+                      </motion.button>
                     ))}
-                  </ul>
+                  </div>
                 ) : (
-                  <p className="text-white text-center py-8">오디오 트랙을 불러오는 중...</p>
+                  <div className="text-center py-12">
+                    <div className="text-4xl mb-3">🎵</div>
+                    <p className="text-gray-500">오디오를 불러오는 중...</p>
+                  </div>
                 )}
               </div>
+
+              {/* Footer */}
+              <div className="p-3 border-t bg-gray-50 text-center">
+                <p className="text-xs text-gray-500">
+                  오디오를 선택하면 자동으로 재생됩니다
+                </p>
+              </div>
             </motion.div>
-          </motion.div>
+          </>
         )}
       </AnimatePresence>
 
-      {/* Affirmation Modal */}
+      {/* Affirmation Modal - Redesigned */}
       <AnimatePresence>
         {isAffirmationOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-5"
-            onClick={() => setIsAffirmationOpen(false)}
-          >
+          <>
+            {/* Backdrop */}
             <motion.div
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50"
+              onClick={() => setIsAffirmationOpen(false)}
+            />
+            {/* Modal */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="bg-green-500 rounded-3xl w-full max-w-sm p-5 relative max-h-[80vh] flex flex-col"
+              className="fixed inset-4 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-md md:max-h-[85vh] bg-white rounded-2xl shadow-xl z-50 flex flex-col overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
-              <button
-                onClick={() => setIsAffirmationOpen(false)}
-                className="absolute top-3 right-3 text-white text-xl hover:bg-white hover:bg-opacity-20 rounded-full p-1 transition-colors"
-              >
-                <X size={24} />
-              </button>
-              <h2 className="text-white text-xl font-bold mb-4 mt-2">긍정확언</h2>
-              <div className="overflow-y-auto flex-1">
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-purple-500 to-pink-500">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">💭</span>
+                  <h2 className="text-lg font-bold text-white">긍정확언</h2>
+                </div>
+                <button
+                  onClick={() => setIsAffirmationOpen(false)}
+                  className="p-1.5 hover:bg-white/20 rounded-full transition-colors"
+                >
+                  <X size={22} className="text-white" />
+                </button>
+              </div>
+
+              {/* Description */}
+              <div className="px-4 py-3 bg-purple-50 border-b border-purple-100">
+                <p className="text-sm text-purple-800">
+                  긍정적인 메시지로 마음을 채워보세요
+                </p>
+              </div>
+
+              {/* Subcategory Filter - if needed */}
+              {affirmations.some(a => a.subcategory) && (
+                <div className="px-4 py-2 border-b bg-white">
+                  <div className="flex gap-2 overflow-x-auto pb-1">
+                    {Array.from(new Set(affirmations.map(a => a.subcategory).filter(Boolean))).map((sub) => (
+                      <span
+                        key={sub}
+                        className="px-3 py-1 text-xs bg-purple-100 text-purple-700 rounded-full whitespace-nowrap"
+                      >
+                        {sub}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto p-4">
                 {affirmations.length > 0 ? (
-                  <ul className="space-y-2">
+                  <div className="grid gap-3">
                     {affirmations.map((item, index) => (
-                      <motion.li
+                      <motion.button
                         key={item.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.05 }}
                         onClick={() => selectAudioItem(item)}
-                        className="py-3 px-3 border-b border-white border-opacity-30 cursor-pointer hover:bg-white hover:bg-opacity-10 rounded text-white transition-colors"
+                        className="w-full text-left p-4 bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-xl hover:from-purple-100 hover:to-pink-100 hover:border-purple-300 transition-all group"
                       >
-                        <div className="font-semibold">{item.emoji} {item.title}</div>
-                        <div className="text-xs mt-1 opacity-90">{item.description}</div>
-                      </motion.li>
+                        <div className="flex items-start gap-3">
+                          <span className="text-2xl group-hover:scale-110 transition-transform">
+                            {item.emoji || '💭'}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h3 className="font-bold text-purple-800 truncate">
+                                {item.title}
+                              </h3>
+                              {item.subcategory && (
+                                <span className="px-2 py-0.5 text-[10px] bg-purple-200 text-purple-700 rounded-full">
+                                  {item.subcategory}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm text-purple-600 line-clamp-2">
+                              {item.description}
+                            </p>
+                          </div>
+                          <Play size={20} className="text-purple-500 opacity-0 group-hover:opacity-100 transition-opacity mt-1" />
+                        </div>
+                      </motion.button>
                     ))}
-                  </ul>
+                  </div>
                 ) : (
-                  <p className="text-white text-center py-8">오디오 트랙을 불러오는 중...</p>
+                  <div className="text-center py-12">
+                    <div className="text-4xl mb-3">✨</div>
+                    <p className="text-gray-500">오디오를 불러오는 중...</p>
+                  </div>
                 )}
               </div>
+
+              {/* Footer */}
+              <div className="p-3 border-t bg-gray-50 text-center">
+                <p className="text-xs text-gray-500">
+                  오디오를 선택하면 자동으로 재생됩니다
+                </p>
+              </div>
             </motion.div>
-          </motion.div>
+          </>
         )}
       </AnimatePresence>
 
@@ -501,10 +696,29 @@ export default function HealingPageClient({ walkGuides, affirmations }: HealingP
         )}
       </AnimatePresence>
 
-      {/* Emotion Record Bottom Sheet */}
-      <EmotionRecordSheet
+      {/* Emotion Record Modal */}
+      <EmotionRecordModal
         isOpen={isEmotionSheetOpen}
         onClose={() => setIsEmotionSheetOpen(false)}
+      />
+
+      {/* Trail Text Select Modal */}
+      <TrailTextSelectModal
+        isOpen={isTrailTextSelectOpen}
+        onClose={() => setIsTrailTextSelectOpen(false)}
+        trails={trailGuides}
+        onTrailSelect={(trail) => {
+          setCurrentAudio(trail)
+        }}
+      />
+
+      {/* Trail Map Select Modal */}
+      <TrailMapSelectModal
+        isOpen={isTrailMapSelectOpen}
+        onClose={() => setIsTrailMapSelectOpen(false)}
+        onTrailSelect={(trail) => {
+          setCurrentAudio(trail)
+        }}
       />
     </div>
   )
