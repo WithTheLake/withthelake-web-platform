@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Loader2, MessageCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -13,16 +13,31 @@ interface LoginModalProps {
 export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const [isLoading, setIsLoading] = useState(false)
 
+  // 모달 열릴 때 배경 스크롤 방지
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [isOpen])
+
   const handleKakaoLogin = async () => {
     setIsLoading(true)
 
     try {
       const supabase = createClient()
 
+      // 현재 페이지 경로를 next 파라미터로 전달
+      const currentPath = window.location.pathname + window.location.search
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'kakao',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(currentPath)}`,
         },
       })
 

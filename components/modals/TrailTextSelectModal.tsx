@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, ChevronRight, ChevronLeft, Clock, Ruler, MapPin, Mountain } from 'lucide-react'
 import { PROVINCE_NAMES, CITY_NAMES, DIFFICULTY_LABELS, type AudioItem } from '@/types/audio'
@@ -23,6 +23,18 @@ export default function TrailTextSelectModal({
   const [viewMode, setViewMode] = useState<ViewMode>('province')
   const [selectedProvince, setSelectedProvince] = useState<string | null>(null)
   const [selectedCity, setSelectedCity] = useState<string | null>(null)
+
+  // 모달 열릴 때 배경 스크롤 방지
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [isOpen])
 
   // 도 목록 계산 (중복 제거)
   const availableProvinces = useMemo(() => {

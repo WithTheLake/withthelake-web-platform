@@ -2,17 +2,36 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { useState } from 'react'
-import { Menu, X, ChevronDown } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Menu, X, ChevronDown, LogIn, User } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { createClient } from '@/lib/supabase/client'
+import { useAuthStore } from '@/stores/useAuthStore'
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isCommunityOpen, setIsCommunityOpen] = useState(false)
   const [isMobileCommunityOpen, setIsMobileCommunityOpen] = useState(false)
 
+  // 전역 인증 상태 사용 (페이지 이동 시에도 유지됨)
+  const { isLoggedIn, isAuthChecked, checkAuth, setUser } = useAuthStore()
+
+  // 로그인 상태 확인 (전역 스토어 사용)
+  useEffect(() => {
+    checkAuth()
+
+    // 인증 상태 변경 리스너
+    const supabase = createClient()
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [checkAuth, setUser])
+
   const communityItems = [
     { label: '공지사항', href: '/community/notice' },
+    { label: '이벤트', href: '/community/event' },
     { label: '자유게시판', href: '/community/free' },
     { label: '힐링 후기', href: '/community/review' },
   ]
@@ -24,8 +43,12 @@ export default function Header() {
     { label: '맨발걷기 정보', href: '/info' },
     { label: 'NEWS', href: '/news' },
     { label: '스토어', href: '/store' },
-    { label: '마이페이지', href: '/mypage' },
   ]
+
+  // 로그인/마이페이지 항목 (조건부)
+  const authNavItem = isLoggedIn
+    ? { label: '마이페이지', href: '/mypage', icon: User }
+    : { label: '로그인', href: '/login', icon: LogIn }
 
   return (
     <header className="fixed top-0 left-0 right-0 bg-white z-50 shadow-sm">
@@ -98,6 +121,17 @@ export default function Header() {
                 </Link>
               )
             ))}
+
+            {/* 로그인/마이페이지 버튼 */}
+            {isAuthChecked && (
+              <Link
+                href={authNavItem.href}
+                className="flex items-center gap-1.5 text-gray-700 hover:text-blue-600 font-semibold transition-colors text-sm whitespace-nowrap"
+              >
+                <authNavItem.icon size={16} />
+                {authNavItem.label}
+              </Link>
+            )}
           </nav>
 
           {/* 모바일 메뉴 버튼 */}
@@ -167,6 +201,18 @@ export default function Header() {
                 </Link>
               )
             ))}
+
+            {/* 모바일 로그인/마이페이지 버튼 */}
+            {isAuthChecked && (
+              <Link
+                href={authNavItem.href}
+                className="flex items-center gap-2 py-2 text-gray-700 hover:text-blue-600 font-semibold border-t pt-4 mt-2"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <authNavItem.icon size={18} />
+                {authNavItem.label}
+              </Link>
+            )}
           </nav>
         </div>
       )}

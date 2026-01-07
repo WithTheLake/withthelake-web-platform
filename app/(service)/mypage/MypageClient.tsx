@@ -1,32 +1,46 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
-import { User, Calendar, Heart, LogOut, ChevronRight, Clock, Sparkles } from 'lucide-react'
+import { User, Calendar, Heart, LogOut, ChevronRight, Clock, Sparkles, Settings } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import LoginModal from '@/components/modals/LoginModal'
 import WeeklyEmotionReport from '@/components/report/WeeklyEmotionReport'
-import { EMOTION_LABELS } from '@/types/emotion'
+import { EMOTION_LABELS, ACTION_LABELS, CHANGE_LABELS } from '@/types/emotion'
 import { formatRelativeTime } from '@/lib/utils/format'
 
 interface EmotionRecord {
   id: string
   emotion_type: string
-  intensity: number
-  note: string | null
+  emotion_reason: string | null
+  helpful_actions: string[] | null
+  positive_changes: string[] | null
+  self_message: string | null
+  experience_location: string | null
+  note: string | null // 하위 호환성
   created_at: string
+}
+
+interface UserProfile {
+  nickname: string | null
+  age_group: string | null
+  total_walks: number
+  total_duration: number
 }
 
 interface MypageClientProps {
   isAuthenticated: boolean
   user: { id: string; email?: string | null } | null
   emotionRecords: EmotionRecord[]
+  userProfile: UserProfile | null
 }
 
 export default function MypageClient({
   isAuthenticated,
   user,
   emotionRecords,
+  userProfile,
 }: MypageClientProps) {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
@@ -37,11 +51,11 @@ export default function MypageClient({
     try {
       const supabase = createClient()
       await supabase.auth.signOut()
-      window.location.reload()
+      // 로그아웃 후 메인 페이지로 이동
+      window.location.href = '/'
     } catch (error) {
       console.error('Logout error:', error)
       alert('로그아웃에 실패했습니다.')
-    } finally {
       setIsLoggingOut(false)
     }
   }
@@ -114,20 +128,31 @@ export default function MypageClient({
       {/* 헤더 */}
       <section className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-5 py-8">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">마이페이지</h1>
-            <p className="text-purple-100 mt-1">
-              {user?.email || '힐링로드 ON 사용자'}
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold">
+              {userProfile?.nickname || '힐링로드 ON 사용자'}
+            </h1>
+            <p className="text-purple-100 mt-1 text-sm">
+              {user?.email}
             </p>
           </div>
-          <button
-            onClick={handleLogout}
-            disabled={isLoggingOut}
-            className="px-4 py-2 bg-black bg-opacity-20 rounded-full text-sm hover:bg-opacity-30 transition-colors flex items-center gap-1"
-          >
-            <LogOut size={16} />
-            {isLoggingOut ? '로그아웃 중...' : '로그아웃'}
-          </button>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/mypage/settings"
+              className="p-2 bg-black bg-opacity-20 rounded-full hover:bg-opacity-30 transition-colors"
+              title="설정"
+            >
+              <Settings size={18} />
+            </Link>
+            <button
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              className="px-4 py-2 bg-black bg-opacity-20 rounded-full text-sm hover:bg-opacity-30 transition-colors flex items-center gap-1"
+            >
+              <LogOut size={16} />
+              {isLoggingOut ? '로그아웃 중...' : '로그아웃'}
+            </button>
+          </div>
         </div>
       </section>
 
@@ -165,9 +190,14 @@ export default function MypageClient({
             <p className="text-2xl font-bold">
               {emotionRecords.filter((r) => {
                 const recordDate = new Date(r.created_at)
-                const weekAgo = new Date()
-                weekAgo.setDate(weekAgo.getDate() - 7)
-                return recordDate >= weekAgo
+                const now = new Date()
+                // 이번 주 월요일 00:00:00 계산
+                const dayOfWeek = now.getDay() // 0=일, 1=월, ..., 6=토
+                const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1 // 일요일이면 6일 전, 아니면 (요일-1)일 전
+                const monday = new Date(now)
+                monday.setDate(now.getDate() - diffToMonday)
+                monday.setHours(0, 0, 0, 0)
+                return recordDate >= monday
               }).length}
               회
             </p>
@@ -211,11 +241,14 @@ export default function MypageClient({
       <section className="px-5 py-3">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-bold">최근 감정 기록</h2>
-          {emotionRecords.length > 5 && (
-            <button className="text-sm text-purple-600 font-medium flex items-center gap-1">
+          {emotionRecords.length > 0 && (
+            <Link
+              href="/mypage/records"
+              className="text-sm text-purple-600 font-medium flex items-center gap-1 hover:underline"
+            >
               전체보기
               <ChevronRight size={16} />
-            </button>
+            </Link>
           )}
         </div>
 
@@ -257,25 +290,44 @@ export default function MypageClient({
                             {formatRelativeTime(record.created_at)} {formatTimeOfDay(record.created_at)}
                           </div>
                         </div>
-                        <div className="flex items-center gap-1 mt-1">
-                          {[1, 2, 3, 4, 5].map((level) => (
-                            <div
-                              key={level}
-                              className={`w-4 h-1.5 rounded-full ${
-                                level <= record.intensity
-                                  ? 'bg-purple-500'
-                                  : 'bg-gray-200'
-                              }`}
-                            />
-                          ))}
-                          <span className="text-xs text-gray-500 ml-1">
-                            강도 {record.intensity}
-                          </span>
-                        </div>
-                        {record.note && (
-                          <p className="text-sm text-gray-600 mt-2 line-clamp-2">
-                            {record.note}
-                          </p>
+                        {/* 도움이 된 행동 (객관식) */}
+                        {record.helpful_actions && record.helpful_actions.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {record.helpful_actions.slice(0, 3).map((action) => (
+                              <span
+                                key={action}
+                                className="px-2 py-0.5 bg-green-50 text-green-700 text-xs rounded-full"
+                              >
+                                {ACTION_LABELS[action] || action}
+                              </span>
+                            ))}
+                            {record.helpful_actions.length > 3 && (
+                              <span className="text-xs text-gray-400">
+                                +{record.helpful_actions.length - 3}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        {/* 긍정적 변화 (객관식) */}
+                        {record.positive_changes && record.positive_changes.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {record.positive_changes.slice(0, 3).map((change) => {
+                              const changeData = CHANGE_LABELS[change] || { emoji: '✨', label: change }
+                              return (
+                                <span
+                                  key={change}
+                                  className="px-2 py-0.5 bg-blue-50 text-blue-700 text-xs rounded-full"
+                                >
+                                  {changeData.emoji} {changeData.label}
+                                </span>
+                              )
+                            })}
+                            {record.positive_changes.length > 3 && (
+                              <span className="text-xs text-gray-400">
+                                +{record.positive_changes.length - 3}
+                              </span>
+                            )}
+                          </div>
                         )}
                       </div>
                     </div>

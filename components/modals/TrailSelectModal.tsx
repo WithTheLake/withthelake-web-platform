@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, ChevronLeft, MapPin, Clock, Ruler, Mountain } from 'lucide-react'
 import GangwonMap from '@/components/maps/GangwonMap'
@@ -21,6 +21,18 @@ export default function TrailSelectModal({
 }: TrailSelectModalProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('map')
   const [selectedCity, setSelectedCity] = useState<City | null>(null)
+
+  // 모달 열릴 때 배경 스크롤 방지
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [isOpen])
 
   const handleCitySelect = (cityId: string) => {
     const city = GANGWON_DATA.cities.find((c) => c.id === cityId)

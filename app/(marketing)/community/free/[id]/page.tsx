@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
-import { getPost } from '@/actions/communityActions'
+import { getPost, getAdjacentPosts, getCurrentUserId } from '@/actions/communityActions'
+import { checkIsAdmin } from '@/actions/profileActions'
 import PostDetail from '../../_components/PostDetail'
 
 interface PageProps {
@@ -29,7 +30,12 @@ export async function generateMetadata({ params }: PageProps) {
 
 export default async function FreePostPage({ params }: PageProps) {
   const { id } = await params
-  const result = await getPost(id)
+  const [result, adjacentResult, currentUserId, adminStatus] = await Promise.all([
+    getPost(id),
+    getAdjacentPosts(id, 'free'),
+    getCurrentUserId(),
+    checkIsAdmin()
+  ])
 
   if (!result.success || !result.post) {
     notFound()
@@ -40,6 +46,10 @@ export default async function FreePostPage({ params }: PageProps) {
       <PostDetail
         post={result.post}
         comments={result.comments || []}
+        prevPost={adjacentResult.prevPost}
+        nextPost={adjacentResult.nextPost}
+        currentUserId={currentUserId}
+        isAdmin={adminStatus.isAdmin}
       />
     </Suspense>
   )

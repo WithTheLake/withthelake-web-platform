@@ -2,8 +2,15 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, ChevronLeft, MapPin, Clock, Ruler, Mountain } from 'lucide-react'
+import { X, ChevronLeft, MapPin, Clock, Ruler, Mountain, Navigation, Loader2, Settings, AlertCircle, Smartphone } from 'lucide-react'
 import KoreaMap from '@/components/maps/KoreaMap'
+import {
+  getCurrentPosition,
+  findNearestCity,
+  isInKorea,
+  type GeoLocation,
+  type RegionInfo,
+} from '@/lib/utils/geoLocation'
 import GangwonMapWithAudio from '@/components/maps/GangwonMapWithAudio'
 import GyeonggiMap from '@/components/maps/GyeonggiMap'
 import ChungbukMap from '@/components/maps/ChungbukMap'
@@ -48,6 +55,21 @@ export default function TrailMapSelectModal({
   const [availableCities, setAvailableCities] = useState<string[]>([])
   const [trails, setTrails] = useState<AudioItem[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [isLocating, setIsLocating] = useState(false)
+  const [locationError, setLocationError] = useState<string | null>(null)
+  const [showPermissionGuide, setShowPermissionGuide] = useState(false)
+
+  // 모달 열릴 때 배경 스크롤 방지
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [isOpen])
 
   // 오디오가 있는 도 목록 로드
   useEffect(() => {
@@ -122,13 +144,127 @@ export default function TrailMapSelectModal({
     handleClose()
   }
 
+  // 내 위치로 찾기 기능
+  const handleFindMyLocation = async () => {
+    setIsLocating(true)
+    setLocationError(null)
+
+    try {
+      const position = await getCurrentPosition()
+      const userLocation: GeoLocation = {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+      }
+
+      // 디버깅: 위치 정보 출력
+      console.log('📍 현재 위치:', userLocation)
+
+      // 한국 영토 내인지 확인
+      if (!isInKorea(userLocation)) {
+        setLocationError('현재 위치가 한국 외부입니다.')
+        setIsLocating(false)
+        return
+      }
+
+      // 가장 가까운 지역 찾기
+      const nearestRegion = findNearestCity(userLocation)
+
+      // 디버깅: 찾은 지역 출력
+      console.log('🗺️ 가장 가까운 지역:', nearestRegion)
+      if (!nearestRegion) {
+        setLocationError('가까운 지역을 찾을 수 없습니다.')
+        setIsLocating(false)
+        return
+      }
+
+      // 해당 도에 오디오가 있는지 확인
+      if (!availableProvinces.includes(nearestRegion.province)) {
+        setLocationError(`${nearestRegion.provinceName} 지역에는 아직 등록된 코스가 없습니다.`)
+        setIsLocating(false)
+        return
+      }
+
+      // 해당 도의 시군구 목록 로드 후 확인
+      const cities = await getAvailableCities(nearestRegion.province)
+
+      if (!cities.includes(nearestRegion.city)) {
+        // 가장 가까운 시군구에 코스가 없으면, 해당 도의 다른 시군구 중 코스가 있는 곳으로 안내
+        if (cities.length > 0) {
+          setLocationError(`${nearestRegion.cityName}에는 등록된 코스가 없습니다. ${nearestRegion.provinceName}의 다른 지역을 선택해주세요.`)
+          setSelectedProvince(nearestRegion.province)
+          setAvailableCities(cities)
+          setViewMode('province')
+        } else {
+          setLocationError(`${nearestRegion.provinceName} 지역에는 아직 등록된 코스가 없습니다.`)
+        }
+        setIsLocating(false)
+        return
+      }
+
+      // 성공: 지역 자동 선택 및 길 목록 표시
+      setSelectedProvince(nearestRegion.province)
+      setSelectedCity(nearestRegion.city)
+      setAvailableCities(cities)
+      setViewMode('trails')
+
+      // 길 목록 로드
+      const trailData = await getTrailGuidesByCity(nearestRegion.province, nearestRegion.city)
+      setTrails(trailData)
+
+    } catch (error) {
+      if (error instanceof Error) {
+        switch (error.message) {
+          case 'GPS_NOT_SUPPORTED':
+            setLocationError('이 기기에서는 위치 서비스를 지원하지 않습니다.')
+            break
+          case 'GPS_PERMISSION_DENIED':
+            setLocationError('위치 권한이 필요합니다')
+            setShowPermissionGuide(true)
+            break
+          case 'GPS_POSITION_UNAVAILABLE':
+            setLocationError('위치 정보를 가져올 수 없습니다. 잠시 후 다시 시도해주세요.')
+            break
+          case 'GPS_TIMEOUT':
+            setLocationError('위치 정보 요청 시간이 초과되었습니다. 다시 시도해주세요.')
+            break
+          default:
+            setLocationError('위치를 확인하는 중 오류가 발생했습니다.')
+        }
+      } else {
+        setLocationError('위치를 확인하는 중 오류가 발생했습니다.')
+      }
+    } finally {
+      setIsLocating(false)
+    }
+  }
+
+  // 브라우저/OS 감지
+  const getBrowserInfo = () => {
+    const ua = navigator.userAgent
+    const isIOS = /iPad|iPhone|iPod/.test(ua)
+    const isAndroid = /Android/.test(ua)
+    const isSamsung = /SamsungBrowser/.test(ua)
+    const isChrome = /Chrome/.test(ua) && !/Edge|Edg/.test(ua)
+    const isSafari = /Safari/.test(ua) && !/Chrome/.test(ua)
+
+    return { isIOS, isAndroid, isSamsung, isChrome, isSafari }
+  }
+
   const handleClose = () => {
     setViewMode('korea')
     setSelectedProvince(null)
     setSelectedCity(null)
     setAvailableCities([])
     setTrails([])
+    setLocationError(null)
+    setShowPermissionGuide(false)
     onClose()
+  }
+
+  // 위치 권한 안내 닫기
+  const handleClosePermissionGuide = () => {
+    setShowPermissionGuide(false)
+    setLocationError(null)
   }
 
   const getTitle = () => {
@@ -267,9 +403,159 @@ export default function TrailMapSelectModal({
                       exit={{ opacity: 0, x: -20 }}
                       className="p-4"
                     >
-                      <p className="text-center text-gray-600 text-sm mb-4">
-                        지도에서 지역을 선택해주세요
-                      </p>
+                      {/* 내 위치로 찾기 버튼 */}
+                      <button
+                        onClick={handleFindMyLocation}
+                        disabled={isLocating}
+                        className="w-full mb-4 py-3 px-4 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl font-medium flex items-center justify-center gap-2 hover:from-blue-600 hover:to-cyan-600 transition-all disabled:opacity-70 disabled:cursor-not-allowed shadow-md"
+                      >
+                        {isLocating ? (
+                          <>
+                            <Loader2 size={20} className="animate-spin" />
+                            <span>위치 확인 중...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Navigation size={20} />
+                            <span>내 현재 위치로 찾기</span>
+                          </>
+                        )}
+                      </button>
+
+                      {/* 위치 권한 안내 (권한 거부 시) */}
+                      {showPermissionGuide && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-xl"
+                        >
+                          <div className="flex items-start gap-3 mb-3">
+                            <div className="p-2 bg-amber-100 rounded-full flex-shrink-0">
+                              <AlertCircle size={20} className="text-amber-600" />
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-amber-800 text-base mb-1">
+                                위치 권한이 필요해요
+                              </h4>
+                              <p className="text-amber-700 text-sm">
+                                내 위치를 찾으려면 위치 권한을 허용해주세요
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* 브라우저별 안내 */}
+                          <div className="bg-white rounded-lg p-3 mb-3 border border-amber-100">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Settings size={16} className="text-gray-600" />
+                              <span className="font-medium text-gray-700 text-sm">설정 방법</span>
+                            </div>
+                            {(() => {
+                              const { isIOS, isAndroid, isSamsung, isChrome, isSafari } = getBrowserInfo()
+
+                              if (isIOS && isSafari) {
+                                return (
+                                  <ol className="text-sm text-gray-600 space-y-1.5 ml-1">
+                                    <li className="flex items-start gap-2">
+                                      <span className="bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs flex-shrink-0">1</span>
+                                      <span><strong>설정</strong> 앱을 열어주세요</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                      <span className="bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs flex-shrink-0">2</span>
+                                      <span><strong>Safari</strong> → <strong>위치</strong>를 찾아주세요</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                      <span className="bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs flex-shrink-0">3</span>
+                                      <span><strong>"허용"</strong>으로 변경해주세요</span>
+                                    </li>
+                                  </ol>
+                                )
+                              }
+
+                              if (isAndroid && (isChrome || isSamsung)) {
+                                return (
+                                  <ol className="text-sm text-gray-600 space-y-1.5 ml-1">
+                                    <li className="flex items-start gap-2">
+                                      <span className="bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs flex-shrink-0">1</span>
+                                      <span>주소창 왼쪽 <strong>🔒 자물쇠</strong> 아이콘을 눌러주세요</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                      <span className="bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs flex-shrink-0">2</span>
+                                      <span><strong>권한</strong> 또는 <strong>사이트 설정</strong>을 눌러주세요</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                      <span className="bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs flex-shrink-0">3</span>
+                                      <span><strong>위치</strong>를 <strong>"허용"</strong>으로 바꿔주세요</span>
+                                    </li>
+                                  </ol>
+                                )
+                              }
+
+                              // 기본 (데스크톱 Chrome 등)
+                              return (
+                                <ol className="text-sm text-gray-600 space-y-1.5 ml-1">
+                                  <li className="flex items-start gap-2">
+                                    <span className="bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs flex-shrink-0">1</span>
+                                    <span>주소창 왼쪽 <strong>🔒 자물쇠</strong> 아이콘 클릭</span>
+                                  </li>
+                                  <li className="flex items-start gap-2">
+                                    <span className="bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs flex-shrink-0">2</span>
+                                    <span><strong>사이트 설정</strong> 클릭</span>
+                                  </li>
+                                  <li className="flex items-start gap-2">
+                                    <span className="bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs flex-shrink-0">3</span>
+                                    <span><strong>위치</strong>를 <strong>"허용"</strong>으로 변경</span>
+                                  </li>
+                                </ol>
+                              )
+                            })()}
+                          </div>
+
+                          {/* 버튼 영역 */}
+                          <div className="flex gap-2">
+                            <button
+                              onClick={handleClosePermissionGuide}
+                              className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-lg font-medium text-sm hover:bg-gray-200 transition-colors"
+                            >
+                              닫기
+                            </button>
+                            <button
+                              onClick={() => {
+                                handleClosePermissionGuide()
+                                handleFindMyLocation()
+                              }}
+                              className="flex-1 py-2.5 bg-blue-500 text-white rounded-lg font-medium text-sm hover:bg-blue-600 transition-colors flex items-center justify-center gap-1"
+                            >
+                              <Navigation size={16} />
+                              다시 시도
+                            </button>
+                          </div>
+                        </motion.div>
+                      )}
+
+                      {/* 일반 위치 오류 메시지 (권한 거부 외) */}
+                      {locationError && !showPermissionGuide && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm text-center"
+                        >
+                          {locationError}
+                        </motion.div>
+                      )}
+
+                      {/* 수동 선택 안내 - 권한 거부 시 더 강조 */}
+                      <div className={`text-center mb-4 ${showPermissionGuide ? 'p-3 bg-blue-50 rounded-xl border border-blue-200' : ''}`}>
+                        <p className={`text-sm ${showPermissionGuide ? 'text-blue-700 font-medium' : 'text-gray-600'}`}>
+                          {showPermissionGuide ? (
+                            <>
+                              <MapPin size={16} className="inline mr-1 -mt-0.5" />
+                              또는 아래 지도에서 <strong>직접 지역을 선택</strong>하실 수 있어요
+                            </>
+                          ) : (
+                            '또는 지도에서 지역을 선택해주세요'
+                          )}
+                        </p>
+                      </div>
                       <KoreaMap
                         selectedProvince={selectedProvince}
                         availableProvinces={availableProvinces}

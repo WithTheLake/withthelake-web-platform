@@ -1,9 +1,10 @@
 import { Suspense } from 'react'
-import { getPosts } from '@/actions/communityActions'
+import { getPosts, type SearchType } from '@/actions/communityActions'
+import { checkIsAdmin } from '@/actions/profileActions'
 import BoardList from './_components/BoardList'
 
 interface PageProps {
-  searchParams: Promise<{ page?: string }>
+  searchParams: Promise<{ page?: string; search?: string; searchType?: string }>
 }
 
 export const metadata = {
@@ -18,8 +19,13 @@ export const metadata = {
 export default async function CommunityPage({ searchParams }: PageProps) {
   const params = await searchParams
   const page = Number(params.page) || 1
+  const search = params.search || ''
+  const searchType = (params.searchType as SearchType) || 'all'
 
-  const postsResult = await getPosts('notice', page, 20)
+  const [postsResult, adminStatus] = await Promise.all([
+    getPosts('notice', { page, limit: 20, search, searchType }),
+    checkIsAdmin()
+  ])
 
   return (
     <Suspense fallback={<div className="min-h-screen bg-gray-50" />}>
@@ -28,6 +34,8 @@ export default async function CommunityPage({ searchParams }: PageProps) {
         posts={postsResult.data || []}
         currentPage={page}
         totalPages={postsResult.totalPages || 1}
+        totalCount={postsResult.total || 0}
+        isAdmin={adminStatus.isAdmin}
       />
     </Suspense>
   )

@@ -1,60 +1,80 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { ShoppingBag, Star, Heart, Truck, Shield, Clock } from 'lucide-react'
+import { ShoppingBag, Star } from 'lucide-react'
 
 export const metadata = {
   title: '스토어 - WithTheLake',
   description: '맨발걷기를 위한 프리미엄 제품을 만나보세요.',
 }
 
-// 샘플 상품 데이터
+// 네이버 스토어 기본 URL
+const NAVER_STORE_BASE_URL = 'https://smartstore.naver.com/withlab201'
+
+// 상품 데이터 (네이버스토어 연동)
+// 새 상품 추가 시: naverProductUrl에 전체 링크, image에 /images/ 경로 이미지 추가
 const products = [
   {
     id: 1,
-    name: '맨발걷기 전용 발 보호 밴드',
-    price: 19800,
-    originalPrice: 25000,
-    rating: 4.8,
-    reviews: 127,
-    category: '발 보호',
+    name: '[위드웰미] 데일리 파워 쿨링 미스트 100ml 풋미스트 발관리',
+    price: 37800,
+    originalPrice: 42000,
+    rating: 5.0,
+    reviews: 18,
+    category: '케어',
     badge: '베스트',
-    image: null,
+    image: '/images/withwellme_powercoolingmist.jpg',
+    naverProductUrl: 'https://smartstore.naver.com/withlab201/products/12254246304',
   },
   {
     id: 2,
-    name: '어싱 그라운딩 매트 (실내용)',
-    price: 89000,
-    originalPrice: 110000,
-    rating: 4.9,
-    reviews: 89,
-    category: '어싱',
+    name: '[위드웰미] 데일리 풋샴푸 풋워시 200ml 지장수 맨발걷기 발세정제',
+    price: 17820,
+    originalPrice: 19800,
+    rating: 5.0,
+    reviews: 19,
+    category: '케어',
     badge: '인기',
-    image: null,
+    image: '/images/withwellme_dailyfootwash.jpg',
+    naverProductUrl: 'https://smartstore.naver.com/withlab201/products/12248115925',
   },
   {
     id: 3,
-    name: '맨발걷기 전용 세척 스프레이',
-    price: 12500,
+    name: '[숨토프랜드] 어싱 패드 접지 전자파차단 맨발걷기 맨땅밟기 매트 슈퍼싱글 퀸',
+    price: 270000,
     originalPrice: null,
-    rating: 4.6,
-    reviews: 56,
-    category: '케어',
+    rating: 0.0,
+    reviews: 0,
+    category: '어싱',
     badge: null,
-    image: null,
+    image: '/images/soomtofriend_earthingpad.jpg',
+    naverProductUrl: 'https://smartstore.naver.com/withlab201/products/12362102946',
   },
   {
     id: 4,
-    name: '휴대용 발 마사지 볼 세트',
-    price: 35000,
-    originalPrice: 42000,
-    rating: 4.7,
-    reviews: 203,
-    category: '마사지',
+    name: '[숨토프랜드] 접지 어싱 베개 커버 숙면 맨발걷기 효과 힐링 60X70cm',
+    price: 60000,
+    originalPrice: null,
+    rating: 0.0,
+    reviews: 0,
+    category: '어싱',
     badge: '추천',
-    image: null,
+    image: '/images/soomtofriend_earthingcover.jpg',
+    naverProductUrl: 'https://smartstore.naver.com/withlab201/products/12314861939',
   },
   {
     id: 5,
+    name: '[힐링로드ON] 태백 웰니스 걷기 투어 (당일형)',
+    price: 10000,
+    originalPrice: null,
+    rating: 0.0,
+    reviews: 0,
+    category: '기록',
+    badge: null,
+    image: '/images/withwellme_logo1.jpeg',
+    naverProductUrl: 'https://smartstore.naver.com/withlab201/products/12679438666',
+  },
+  {
+    id: 6,
     name: '맨발걷기 기록 다이어리',
     price: 18000,
     originalPrice: null,
@@ -63,9 +83,10 @@ const products = [
     category: '기록',
     badge: null,
     image: null,
+    naverProductUrl: null,
   },
   {
-    id: 6,
+    id: 7,
     name: '프리미엄 어싱 양말 (3켤레)',
     price: 45000,
     originalPrice: 54000,
@@ -74,6 +95,7 @@ const products = [
     category: '어싱',
     badge: '신상품',
     image: null,
+    naverProductUrl: null,
   },
 ]
 
@@ -93,43 +115,23 @@ function formatPrice(price: number): string {
 export default function StorePage() {
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* 히어로 섹션 */}
-      <section className="bg-gradient-to-r from-green-600 to-blue-600 text-white py-16 md:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="w-16 h-16 bg-white bg-opacity-20 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <ShoppingBag size={32} />
-          </div>
-          <h1 className="text-3xl md:text-4xl font-bold mb-4">위드더레이크 스토어</h1>
-          <p className="text-green-100 text-lg max-w-2xl mx-auto">
-            맨발걷기 전문가가 엄선한 프리미엄 제품으로
-            <br className="hidden md:block" />
-            더 건강하고 즐거운 걷기 경험을 만들어보세요
-          </p>
-        </div>
-      </section>
-
-      {/* 혜택 배너 */}
-      <section className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-            <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
-              <Truck size={18} className="text-green-600" />
-              <span>5만원 이상 무료배송</span>
-            </div>
-            <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
-              <Shield size={18} className="text-green-600" />
-              <span>100% 정품 보장</span>
-            </div>
-            <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
-              <Clock size={18} className="text-green-600" />
-              <span>평일 오후 2시 이전 주문 당일 발송</span>
-            </div>
+      {/* 히어로 섹션 - 이미지 배너 (중앙 정렬) */}
+      <section className="bg-white py-4 md:py-6">
+        <div className="max-w-lg mx-auto px-4">
+          <div className="relative w-full aspect-[3/1] rounded-xl overflow-hidden ">
+            <Image
+              src="/images/withwellme-market_logo.jpg"
+              alt="위드웰미 마켓 - 맨발걷기를 위한 프리미엄 제품"
+              fill
+              className="object-contain bg-white"
+              priority
+            />
           </div>
         </div>
       </section>
 
       {/* 카테고리 필터 */}
-      <section className="py-6 bg-white sticky top-16 md:top-20 z-30 border-b">
+      <section className="py-6 bg-white sticky top-16 md:top-20 z-30 border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-wrap gap-2">
             {categories.map((category, index) => (
@@ -152,80 +154,98 @@ export default function StorePage() {
       <section className="py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-            {products.map((product) => (
-              <article
-                key={product.id}
-                className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow group"
-              >
-                {/* 상품 이미지 */}
-                <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 relative">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <ShoppingBag size={48} className="text-gray-300" />
-                  </div>
+            {products.map((product) => {
+              // 네이버스토어 상품 링크 생성 (전체 URL 또는 기본 스토어)
+              const productUrl = product.naverProductUrl || NAVER_STORE_BASE_URL
 
-                  {/* 뱃지 */}
-                  {product.badge && (
-                    <span
-                      className={`absolute top-3 left-3 px-2 py-1 rounded-md text-xs font-bold ${
-                        badgeColors[product.badge]
-                      }`}
-                    >
-                      {product.badge}
-                    </span>
-                  )}
-
-                  {/* 찜하기 버튼 */}
-                  <button className="absolute top-3 right-3 w-8 h-8 bg-white rounded-full shadow flex items-center justify-center hover:bg-gray-50 transition-colors">
-                    <Heart size={16} className="text-gray-400" />
-                  </button>
-                </div>
-
-                {/* 상품 정보 */}
-                <div className="p-4">
-                  <span className="text-xs text-gray-500 mb-1 block">
-                    {product.category}
-                  </span>
-                  <h3 className="font-medium text-gray-900 text-sm md:text-base mb-2 line-clamp-2 group-hover:text-green-600 transition-colors">
-                    {product.name}
-                  </h3>
-
-                  {/* 평점 */}
-                  <div className="flex items-center gap-1 mb-2">
-                    <Star size={14} className="text-yellow-400 fill-yellow-400" />
-                    <span className="text-sm text-gray-600">
-                      {product.rating}
-                    </span>
-                    <span className="text-xs text-gray-400">
-                      ({product.reviews})
-                    </span>
-                  </div>
-
-                  {/* 가격 */}
-                  <div className="flex items-baseline gap-2">
-                    <span className="font-bold text-lg text-gray-900">
-                      {formatPrice(product.price)}원
-                    </span>
-                    {product.originalPrice && (
-                      <span className="text-sm text-gray-400 line-through">
-                        {formatPrice(product.originalPrice)}원
-                      </span>
-                    )}
-                  </div>
-
-                  {/* 할인율 */}
-                  {product.originalPrice && (
-                    <span className="text-sm text-red-500 font-medium">
-                      {Math.round(
-                        ((product.originalPrice - product.price) /
-                          product.originalPrice) *
-                          100
+              return (
+                <Link
+                  key={product.id}
+                  href={productUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all group hover:-translate-y-1"
+                >
+                  <article>
+                    {/* 상품 이미지 */}
+                    <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 relative">
+                      {product.image ? (
+                        <Image
+                          src={product.image}
+                          alt={product.name}
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <ShoppingBag size={48} className="text-gray-300" />
+                        </div>
                       )}
-                      % 할인
-                    </span>
-                  )}
-                </div>
-              </article>
-            ))}
+
+                      {/* 뱃지 */}
+                      {product.badge && (
+                        <span
+                          className={`absolute top-3 left-3 px-2 py-1 rounded-md text-xs font-bold ${
+                            badgeColors[product.badge]
+                          }`}
+                        >
+                          {product.badge}
+                        </span>
+                      )}
+
+                    </div>
+
+                    {/* 상품 정보 */}
+                    <div className="p-4">
+                      <span className="text-xs text-gray-500 mb-1 block">
+                        {product.category}
+                      </span>
+                      <h3 className="font-medium text-gray-900 text-sm md:text-base mb-2 line-clamp-2 group-hover:text-green-600 transition-colors">
+                        {product.name}
+                      </h3>
+
+                      {/* 평점 */}
+                      <div className="flex items-center gap-1 mb-2">
+                        <Star size={14} className="text-yellow-400 fill-yellow-400" />
+                        <span className="text-sm text-gray-600">
+                          {product.rating}
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          ({product.reviews})
+                        </span>
+                      </div>
+
+                      {/* 가격 */}
+                      <div className="flex items-baseline gap-2">
+                        <span className="font-bold text-lg text-gray-900">
+                          {formatPrice(product.price)}원
+                        </span>
+                        {product.originalPrice && (
+                          <span className="text-sm text-gray-400 line-through">
+                            {formatPrice(product.originalPrice)}원
+                          </span>
+                        )}
+                      </div>
+
+                      {/* 할인율 (고정 높이로 간격 일정하게) */}
+                      <div className="h-5">
+                        {product.originalPrice && (
+                          <span className="text-sm text-red-500 font-medium">
+                            {Math.round(
+                              ((product.originalPrice - product.price) /
+                                product.originalPrice) *
+                                100
+                            )}
+                            % 할인
+                          </span>
+                        )}
+                      </div>
+
+                    </div>
+                  </article>
+                </Link>
+              )
+            })}
           </div>
         </div>
       </section>

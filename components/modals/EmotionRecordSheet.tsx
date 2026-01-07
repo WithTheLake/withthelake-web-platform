@@ -60,6 +60,18 @@ export default function EmotionRecordSheet({ isOpen, onClose }: EmotionRecordShe
     return () => subscription.unsubscribe()
   }, [])
 
+  // 모달 열릴 때 배경 스크롤 방지
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [isOpen])
+
   const handleSubmit = async () => {
     if (!selectedEmotion) {
       alert('감정을 선택해주세요.')

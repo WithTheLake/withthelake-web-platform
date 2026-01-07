@@ -23,6 +23,17 @@ export default async function NoticeWritePage({ searchParams }: PageProps) {
     redirect('/healing')
   }
 
+  // 관리자 권한 확인 - 공지사항은 관리자만 작성 가능
+  const { data: profile } = await supabase
+    .from('user_profiles')
+    .select('is_admin')
+    .eq('user_id', user.id)
+    .single()
+
+  if (!profile?.is_admin) {
+    redirect('/community/notice')
+  }
+
   let existingPost = null
   if (postId) {
     const { data } = await supabase

@@ -4,6 +4,35 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
 /**
+ * 관리자 여부 확인
+ */
+export async function checkIsAdmin(): Promise<{ isAdmin: boolean; userId: string | null }> {
+  try {
+    const supabase = await createClient()
+
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return { isAdmin: false, userId: null }
+    }
+
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('is_admin')
+      .eq('user_id', user.id)
+      .single()
+
+    return {
+      isAdmin: profile?.is_admin === true,
+      userId: user.id
+    }
+  } catch (error) {
+    console.error('Check admin error:', error)
+    return { isAdmin: false, userId: null }
+  }
+}
+
+/**
  * 내 프로필 조회 (로그인 필수)
  */
 export async function getMyProfile() {

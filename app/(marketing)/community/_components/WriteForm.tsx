@@ -1,10 +1,17 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
-import { Save, X } from 'lucide-react'
-import { createPost, updatePost, type BoardType } from '@/actions/communityActions'
+import Image from 'next/image'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Save, X, ImagePlus, Trash2, Star, Loader2, Image as ImageIcon } from 'lucide-react'
+import { createPost, updatePost, type BoardType, type FreeBoardTopic } from '@/actions/communityActions'
+import { uploadCommunityImage, deleteCommunityImage } from '@/actions/imageActions'
+
+interface UploadedImage {
+  url: string
+  path: string
+}
 
 interface WriteFormProps {
   boardType: BoardType
@@ -13,15 +20,32 @@ interface WriteFormProps {
     title: string
     content: string
     board_type: BoardType
+    topic?: FreeBoardTopic | null
+    thumbnail_url?: string | null
+    images?: string[] | null
   } | null
   isEdit: boolean
 }
 
+const TOPIC_LABELS: Record<FreeBoardTopic, string> = {
+  chat: '잡담',
+  question: '질문',
+  info: '정보',
+  review: '후기',
+}
+
 const BOARD_LABELS: Record<BoardType, string> = {
   notice: '공지사항',
+  event: '이벤트',
   free: '자유게시판',
   review: '힐링 후기',
 }
+
+// 갤러리 스타일 이미지 업로드가 필요한 게시판 (이벤트/후기)
+const GALLERY_IMAGE_BOARDS: BoardType[] = ['event', 'review']
+
+// 인라인 이미지 삽입이 가능한 게시판 (공지사항/자유게시판)
+const INLINE_IMAGE_BOARDS: BoardType[] = ['notice', 'free']
 
 export default function WriteForm({
   boardType,
@@ -30,13 +54,141 @@ export default function WriteForm({
 }: WriteFormProps) {
   const router = useRouter()
   const formRef = useRef<HTMLFormElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const inlineFileInputRef = useRef<HTMLInputElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const [title, setTitle] = useState(existingPost?.title || '')
   const [content, setContent] = useState(existingPost?.content || '')
+  const [topic, setTopic] = useState<FreeBoardTopic>(existingPost?.topic || 'chat')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
 
+  // 이미지 관련 상태
+  const [images, setImages] = useState<UploadedImage[]>(() => {
+    // 기존 게시글의 이미지 복원
+    if (existingPost?.images) {
+      return existingPost.images.map((url) => ({
+        url,
+        path: '' // 기존 이미지는 path 정보 없음
+      }))
+    }
+    return []
+  })
+  const [thumbnailIndex, setThumbnailIndex] = useState(0)
+  const [isUploading, setIsUploading] = useState(false)
+  const [isInlineUploading, setIsInlineUploading] = useState(false)
+
   const actualBoardType = existingPost?.board_type || boardType
+  const showGalleryImageUpload = GALLERY_IMAGE_BOARDS.includes(actualBoardType)
+  const showInlineImageUpload = INLINE_IMAGE_BOARDS.includes(actualBoardType)
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    // 최대 5장 제한
+    if (images.length + files.length > 5) {
+      setError('이미지는 최대 5장까지 업로드 가능합니다.')
+      return
+    }
+
+    setIsUploading(true)
+    setError('')
+
+    for (const file of Array.from(files)) {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const result = await uploadCommunityImage(formData)
+
+      if (result.success && result.url && result.path) {
+        setImages((prev) => [...prev, { url: result.url!, path: result.path! }])
+      } else {
+        setError(result.message || '이미지 업로드에 실패했습니다.')
+        break
+      }
+    }
+
+    setIsUploading(false)
+
+    // input 초기화
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
+  const handleRemoveImage = async (index: number) => {
+    const image = images[index]
+
+    // path가 있으면 Storage에서도 삭제
+    if (image.path) {
+      await deleteCommunityImage(image.path)
+    }
+
+    setImages((prev) => prev.filter((_, i) => i !== index))
+
+    // 썸네일 인덱스 조정
+    if (thumbnailIndex === index) {
+      setThumbnailIndex(0)
+    } else if (thumbnailIndex > index) {
+      setThumbnailIndex((prev) => prev - 1)
+    }
+  }
+
+  const handleSetThumbnail = (index: number) => {
+    setThumbnailIndex(index)
+  }
+
+  // 인라인 이미지 업로드 (공지사항/자유게시판용)
+  const handleInlineImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    setIsInlineUploading(true)
+    setError('')
+
+    for (const file of Array.from(files)) {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const result = await uploadCommunityImage(formData)
+
+      if (result.success && result.url && result.path) {
+        // 이미지 URL을 마크다운 형식으로 현재 커서 위치에 삽입
+        const imageMarkdown = `\n![이미지](${result.url})\n`
+
+        if (textareaRef.current) {
+          const textarea = textareaRef.current
+          const start = textarea.selectionStart
+          const end = textarea.selectionEnd
+          const newContent = content.substring(0, start) + imageMarkdown + content.substring(end)
+          setContent(newContent)
+
+          // 커서 위치 조정
+          setTimeout(() => {
+            textarea.selectionStart = textarea.selectionEnd = start + imageMarkdown.length
+            textarea.focus()
+          }, 0)
+        } else {
+          setContent((prev) => prev + imageMarkdown)
+        }
+
+        // 이미지 배열에도 추가 (첨부파일 표시용)
+        setImages((prev) => [...prev, { url: result.url!, path: result.path! }])
+      } else {
+        setError(result.message || '이미지 업로드에 실패했습니다.')
+        break
+      }
+    }
+
+    setIsInlineUploading(false)
+
+    // input 초기화
+    if (inlineFileInputRef.current) {
+      inlineFileInputRef.current.value = ''
+    }
+  }, [content])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -52,6 +204,12 @@ export default function WriteForm({
       return
     }
 
+    // 이벤트/후기 게시판은 이미지 필수
+    if (showGalleryImageUpload && images.length === 0) {
+      setError('이미지를 최소 1장 이상 업로드해주세요.')
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
@@ -59,6 +217,17 @@ export default function WriteForm({
       formData.append('board_type', actualBoardType)
       formData.append('title', title.trim())
       formData.append('content', content.trim())
+
+      // 자유게시판은 주제 추가
+      if (actualBoardType === 'free') {
+        formData.append('topic', topic)
+      }
+
+      // 이미지 정보 추가
+      if (images.length > 0) {
+        formData.append('thumbnail_url', images[thumbnailIndex].url)
+        formData.append('images', JSON.stringify(images.map((img) => img.url)))
+      }
 
       let result
       if (isEdit && existingPost) {
@@ -116,6 +285,32 @@ export default function WriteForm({
 
         {/* 폼 */}
         <form ref={formRef} onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm p-6">
+          {/* 주제 (자유게시판만) */}
+          {actualBoardType === 'free' && (
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                주제
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {(['chat', 'question', 'info', 'review'] as FreeBoardTopic[]).map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setTopic(t)}
+                    disabled={isSubmitting}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      topic === t
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    {TOPIC_LABELS[t]}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* 제목 */}
           <div className="mb-6">
             <label htmlFor="title" className="block text-sm font-semibold text-gray-700 mb-2">
@@ -134,29 +329,182 @@ export default function WriteForm({
             <p className="text-xs text-gray-500 mt-1 text-right">{title.length} / 200</p>
           </div>
 
+          {/* 이미지 업로드 (이벤트/후기 게시판만) */}
+          {showGalleryImageUpload && (
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                이미지 <span className="text-red-500">*</span>
+                <span className="text-gray-400 font-normal ml-2">(최대 5장, 첫 번째 이미지가 썸네일)</span>
+              </label>
+
+              {/* 이미지 미리보기 그리드 */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-3">
+                <AnimatePresence>
+                  {images.map((image, index) => (
+                    <motion.div
+                      key={image.url}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      className={`relative aspect-square rounded-lg overflow-hidden border-2 ${
+                        index === thumbnailIndex
+                          ? 'border-amber-500'
+                          : 'border-gray-200'
+                      }`}
+                    >
+                      <Image
+                        src={image.url}
+                        alt={`업로드 이미지 ${index + 1}`}
+                        fill
+                        className="object-cover"
+                      />
+
+                      {/* 썸네일 뱃지 */}
+                      {index === thumbnailIndex && (
+                        <div className="absolute top-1 left-1 px-1.5 py-0.5 bg-amber-500 text-white text-xs font-bold rounded flex items-center gap-0.5">
+                          <Star size={10} fill="white" />
+                          대표
+                        </div>
+                      )}
+
+                      {/* 액션 버튼들 */}
+                      <div className="absolute bottom-1 right-1 flex gap-1">
+                        {index !== thumbnailIndex && (
+                          <button
+                            type="button"
+                            onClick={() => handleSetThumbnail(index)}
+                            className="p-1.5 bg-white/90 rounded-lg hover:bg-white transition-colors"
+                            title="대표 이미지로 설정"
+                          >
+                            <Star size={14} className="text-amber-500" />
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveImage(index)}
+                          className="p-1.5 bg-white/90 rounded-lg hover:bg-red-50 transition-colors"
+                          title="이미지 삭제"
+                        >
+                          <Trash2 size={14} className="text-red-500" />
+                        </button>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+
+                {/* 이미지 추가 버튼 */}
+                {images.length < 5 && (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                    className="aspect-square rounded-lg border-2 border-dashed border-gray-300 hover:border-emerald-500 hover:bg-emerald-50 transition-colors flex flex-col items-center justify-center text-gray-400 hover:text-emerald-600 disabled:opacity-50"
+                  >
+                    {isUploading ? (
+                      <Loader2 size={24} className="animate-spin" />
+                    ) : (
+                      <>
+                        <ImagePlus size={24} />
+                        <span className="text-xs mt-1">추가</span>
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/gif,image/webp"
+                multiple
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+
+              <p className="text-xs text-gray-500">
+                JPG, PNG, GIF, WEBP 형식 / 파일당 최대 5MB
+              </p>
+            </div>
+          )}
+
           {/* 내용 */}
           <div className="mb-6">
             <label htmlFor="content" className="block text-sm font-semibold text-gray-700 mb-2">
               내용
             </label>
+
+            {/* 공지사항/자유게시판: 이미지 삽입 툴바 */}
+            {showInlineImageUpload && (
+              <div className="flex items-center gap-2 mb-2 p-2 bg-gray-50 border border-gray-300 border-b-0 rounded-t-lg">
+                <button
+                  type="button"
+                  onClick={() => inlineFileInputRef.current?.click()}
+                  disabled={isInlineUploading || isSubmitting}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-colors disabled:opacity-50"
+                >
+                  {isInlineUploading ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <ImageIcon size={16} />
+                  )}
+                  이미지 삽입
+                </button>
+                <span className="text-xs text-gray-400">
+                  클릭하여 현재 커서 위치에 이미지를 삽입합니다
+                </span>
+                <input
+                  ref={inlineFileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/gif,image/webp"
+                  multiple
+                  onChange={handleInlineImageUpload}
+                  className="hidden"
+                />
+              </div>
+            )}
+
             <textarea
+              ref={textareaRef}
               id="content"
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder="내용을 입력하세요 (최대 10,000자)"
+              placeholder={showInlineImageUpload
+                ? "내용을 입력하세요. 이미지 삽입 버튼을 눌러 글 사이에 이미지를 추가할 수 있습니다. (최대 10,000자)"
+                : "내용을 입력하세요 (최대 10,000자)"}
               maxLength={10000}
               rows={15}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-base resize-none"
+              className={`w-full px-4 py-3 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-base resize-none ${
+                showInlineImageUpload ? 'rounded-b-lg rounded-t-none' : 'rounded-lg'
+              }`}
               disabled={isSubmitting}
             />
             <p className="text-xs text-gray-500 mt-1 text-right">{content.length} / 10,000</p>
+
+            {/* 인라인 이미지 미리보기 (공지사항/자유게시판) */}
+            {showInlineImageUpload && images.length > 0 && (
+              <div className="mt-3 p-3 bg-gray-50 rounded-lg border">
+                <p className="text-xs text-gray-500 mb-2">삽입된 이미지 ({images.length}개)</p>
+                <div className="flex flex-wrap gap-2">
+                  {images.map((image, index) => (
+                    <div key={index} className="relative w-16 h-16 rounded overflow-hidden border">
+                      <Image
+                        src={image.url}
+                        alt={`삽입 이미지 ${index + 1}`}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* 버튼 */}
           <div className="flex items-center gap-3">
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isUploading || isInlineUploading}
               className="flex-1 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg font-semibold hover:from-emerald-700 hover:to-teal-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               <Save size={20} />

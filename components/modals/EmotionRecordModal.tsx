@@ -11,9 +11,6 @@ import {
   HELPFUL_ACTIONS,
   POSITIVE_CHANGES,
   EXPERIENCE_LOCATIONS,
-  getEmotionByType,
-  ACTION_LABELS,
-  CHANGE_LABELS,
 } from '@/types/emotion'
 import type { User } from '@/types/user'
 
@@ -154,20 +151,19 @@ export default function EmotionRecordModal({ isOpen, onClose }: EmotionRecordMod
     setIsSubmitting(true)
 
     try {
-      // 감정 기록 데이터 구성
-      const note = `
-[걷기 전 감정] ${getEmotionByType(formData.preEmotion)?.label || formData.preEmotion}
-[감정 이유] ${formData.emotionReason}
-[도움이 된 행동] ${formData.helpfulActions.map(a => ACTION_LABELS[a] || a).join(', ')}
-[긍정적 변화] ${formData.positiveChanges.map(c => CHANGE_LABELS[c]?.label || c).join(', ')}
-[나를 위한 한마디] ${formData.selfMessage}
-${formData.location ? `[체험 장소] ${formData.location === '기타' ? formData.customLocation : formData.location}` : ''}
-      `.trim()
+      // 체험 장소 처리
+      const experienceLocation = formData.location
+        ? (formData.location === '기타' ? formData.customLocation : formData.location)
+        : undefined
 
+      // EAMRA 프레임워크에 맞게 데이터 전송
       const result = await saveEmotionRecord({
         emotionType: formData.preEmotion,
-        intensity: 3, // 기본값
-        note,
+        emotionReason: formData.emotionReason,
+        helpfulActions: formData.helpfulActions,
+        positiveChanges: formData.positiveChanges,
+        selfMessage: formData.selfMessage,
+        experienceLocation,
       })
 
       if (result.success) {

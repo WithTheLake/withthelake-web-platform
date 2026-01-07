@@ -42,26 +42,51 @@ CREATE TABLE IF NOT EXISTS user_profiles (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL UNIQUE,
   nickname VARCHAR(50),
+  avatar_url TEXT, -- 카카오 프로필 이미지 URL
   age_group VARCHAR(20), -- '50대', '60대', '70대 이상' 등
+  is_admin BOOLEAN DEFAULT FALSE, -- 관리자 여부
   total_walks INTEGER DEFAULT 0,
   total_duration INTEGER DEFAULT 0, -- 총 걷기 시간 (초)
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 관리자 인덱스
+CREATE INDEX IF NOT EXISTS idx_user_profiles_is_admin ON user_profiles(is_admin);
+
 -- Index for user_id lookups
 CREATE INDEX IF NOT EXISTS idx_user_profiles_user_id ON user_profiles(user_id);
 
 -- ============================================
--- 3. emotion_records 테이블 (감정 기록)
+-- 3. emotion_records 테이블 (감정 기록 - EAMRA 프레임워크)
 -- ============================================
+-- E: Emotion (감정), M: Meaning (의미), A: Action (행동), R: Reflect (성찰), A: Anchor (고정)
 CREATE TABLE IF NOT EXISTS emotion_records (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL, -- NULL 허용 (비로그인 사용자)
   session_id VARCHAR(100), -- 비로그인 사용자 식별용
-  emotion_type VARCHAR(50) NOT NULL, -- 'happy', 'sad', 'angry', 'calm', 'tired' 등
-  intensity INTEGER CHECK (intensity BETWEEN 1 AND 5), -- 감정 강도 1-5
-  note TEXT,
+
+  -- E. Emotion: 걷기 전 가장 크게 느꼈던 감정
+  emotion_type VARCHAR(50) NOT NULL, -- 'joy', 'calm', 'gratitude', 'neutral', 'bored', 'tired', 'anxious', 'sad', 'angry'
+
+  -- M. Meaning: 왜 그런 감정을 느꼈는지
+  emotion_reason TEXT,
+
+  -- A. Action: 도움이 된 행동들 (복수 선택)
+  helpful_actions TEXT[], -- ['walking', 'barefoot_walking', 'affirmation', 'deep_breathing', ...]
+
+  -- R. Reflect: 행동 후 느껴진 긍정적 변화 (복수 선택)
+  positive_changes TEXT[], -- ['lighter', 'calm', 'happy', 'comfortable', ...]
+
+  -- A. Anchor: 나를 위한 한마디
+  self_message TEXT,
+
+  -- 체험 장소 (선택)
+  experience_location VARCHAR(100),
+
+  -- 기존 필드 (하위 호환성)
+  note TEXT, -- 기존 메모 필드 유지 (마이그레이션 호환)
+
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -96,11 +121,15 @@ CREATE INDEX IF NOT EXISTS idx_walk_sessions_started_at ON walk_sessions(started
 CREATE TABLE IF NOT EXISTS community_posts (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
-  board_type VARCHAR(20) NOT NULL CHECK (board_type IN ('notice', 'free', 'review')),
+  board_type VARCHAR(20) NOT NULL CHECK (board_type IN ('notice', 'event', 'free', 'review')),
+  topic VARCHAR(20), -- 말머리 (자유게시판용: 잡담, 질문, 정보, 후기)
   title VARCHAR(200) NOT NULL,
   content TEXT NOT NULL,
+  thumbnail_url TEXT, -- 썸네일 이미지 URL (이벤트/후기 게시판용)
+  images TEXT[], -- 이미지 URL 배열 (여러 장 첨부 가능)
   author_nickname VARCHAR(50), -- 작성자 닉네임 (캐싱용)
   view_count INTEGER DEFAULT 0,
+  comment_count INTEGER DEFAULT 0, -- 댓글 수 (캐싱용)
   is_pinned BOOLEAN DEFAULT FALSE, -- 공지사항 상단 고정
   is_active BOOLEAN DEFAULT TRUE, -- 삭제 처리 (soft delete)
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -322,9 +351,74 @@ INSERT INTO audio_tracks (title, description, category, province, city, trail_na
   ('소양강 맨발 산책로', '춘천시 소양강을 따라 걷는 평화로운 맨발 코스', 'trail_guide', 'gangwon', 'chuncheon', '소양강 맨발 산책로', 'trail_chuncheon_1.wav', '🏞️', '2.5km', '약 40분', 'easy', 3),
   ('경포해변 맨발 워킹', '강릉시 경포해변의 모래사장을 걷는 해변 코스', 'trail_guide', 'gangwon', 'gangneung', '경포해변 맨발 워킹', 'trail_gangneung_1.wav', '🏖️', '2.8km', '약 45분', 'easy', 4);
 
+-- ============================================
+-- 7. emotion_reports 테이블 (주간 감정 보고서)
+-- ============================================
+CREATE TABLE IF NOT EXISTS emotion_reports (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  week_start DATE NOT NULL, -- 주간 시작일 (월요일)
+  week_end DATE NOT NULL, -- 주간 종료일 (일요일)
+  total_records INTEGER DEFAULT 0, -- 해당 주 총 기록 수
+  positive_ratio INTEGER DEFAULT 0, -- 긍정적 감정 비율 (%)
+  emotion_summary JSONB, -- 감정별 통계 (예: [{ "type": "calm", "count": 5, "avgIntensity": 3.5 }])
+  top_helpful_actions TEXT[], -- 도움이 된 행동 TOP 3
+  top_positive_changes TEXT[], -- 긍정적 변화 TOP 3
+  ai_insight TEXT, -- AI 생성 인사이트
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Indexes for emotion_reports
+CREATE INDEX IF NOT EXISTS idx_emotion_reports_user_id ON emotion_reports(user_id);
+CREATE INDEX IF NOT EXISTS idx_emotion_reports_week_start ON emotion_reports(week_start DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_emotion_reports_user_week ON emotion_reports(user_id, week_start);
+
+-- RLS for emotion_reports
+ALTER TABLE emotion_reports ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can read own reports"
+  ON emotion_reports
+  FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own reports"
+  ON emotion_reports
+  FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own reports"
+  ON emotion_reports
+  FOR DELETE
+  USING (auth.uid() = user_id);
+
 COMMENT ON TABLE audio_tracks IS '오디오 트랙 정보 (걷기 안내, 긍정확언)';
 COMMENT ON TABLE user_profiles IS '사용자 프로필 및 통계';
 COMMENT ON TABLE emotion_records IS '감정 기록 (비로그인 사용자 포함)';
 COMMENT ON TABLE walk_sessions IS '걷기 세션 기록';
 COMMENT ON TABLE community_posts IS '커뮤니티 게시판 글 (공지사항, 자유게시판, 힐링 후기)';
 COMMENT ON TABLE community_comments IS '커뮤니티 게시판 댓글';
+COMMENT ON TABLE emotion_reports IS '주간 감정 보고서 (AI 인사이트 포함)';
+
+-- ============================================
+-- RPC 함수: 댓글 수 증가/감소
+-- ============================================
+
+-- 댓글 수 증가 함수
+CREATE OR REPLACE FUNCTION increment_comment_count(post_id UUID)
+RETURNS VOID AS $$
+BEGIN
+  UPDATE community_posts
+  SET comment_count = comment_count + 1
+  WHERE id = post_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 댓글 수 감소 함수
+CREATE OR REPLACE FUNCTION decrement_comment_count(post_id UUID)
+RETURNS VOID AS $$
+BEGIN
+  UPDATE community_posts
+  SET comment_count = GREATEST(comment_count - 1, 0)
+  WHERE id = post_id;
+END;
+$$ LANGUAGE plpgsql;

@@ -75,6 +75,13 @@ export const CHANGE_LABELS: Record<string, { emoji: string; label: string }> =
     return acc
   }, {} as Record<string, { emoji: string; label: string }>)
 
+// 체험 장소 라벨 매핑
+export const LOCATION_LABELS: Record<string, string> =
+  EXPERIENCE_LOCATIONS.reduce((acc, location) => {
+    acc[location] = location
+    return acc
+  }, {} as Record<string, string>)
+
 // 타입 정의
 export type EmotionType = typeof PRE_EMOTIONS[number]['type']
 export type ActionType = typeof HELPFUL_ACTIONS[number]['type']

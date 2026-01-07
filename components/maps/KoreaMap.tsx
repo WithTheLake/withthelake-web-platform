@@ -139,7 +139,7 @@ export default function KoreaMap({
   const isAvailable = (provinceId: string) => availableProvinces.includes(provinceId)
 
   return (
-    <div className="w-full aspect-[3/4] max-w-[280px] mx-auto">
+    <div className="w-full aspect-[3/4] max-w-[340px] mx-auto">
       <svg
         viewBox="0 0 280 430"
         className="w-full h-full"

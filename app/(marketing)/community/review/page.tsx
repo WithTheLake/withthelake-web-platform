@@ -1,9 +1,9 @@
 import { Suspense } from 'react'
-import { getPosts } from '@/actions/communityActions'
-import BoardList from '../_components/BoardList'
+import { getPosts, type SearchType } from '@/actions/communityActions'
+import GalleryList from '../_components/GalleryList'
 
 interface PageProps {
-  searchParams: Promise<{ page?: string }>
+  searchParams: Promise<{ page?: string; search?: string; searchType?: string }>
 }
 
 export const metadata = {
@@ -18,16 +18,19 @@ export const metadata = {
 export default async function ReviewPage({ searchParams }: PageProps) {
   const params = await searchParams
   const page = Number(params.page) || 1
+  const search = params.search || ''
+  const searchType = (params.searchType as SearchType) || 'all'
 
-  const postsResult = await getPosts('review', page, 20)
+  const postsResult = await getPosts('review', { page, limit: 12, search, searchType })
 
   return (
     <Suspense fallback={<div className="min-h-screen bg-gray-50" />}>
-      <BoardList
+      <GalleryList
         boardType="review"
         posts={postsResult.data || []}
         currentPage={page}
         totalPages={postsResult.totalPages || 1}
+        totalCount={postsResult.total || 0}
       />
     </Suspense>
   )
