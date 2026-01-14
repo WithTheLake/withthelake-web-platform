@@ -3,16 +3,14 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Loader2, ChevronLeft, ChevronRight, Check } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 import { saveEmotionRecord } from '@/actions/emotionActions'
-import LoginModal from './LoginModal'
 import {
   PRE_EMOTIONS,
   HELPFUL_ACTIONS,
   POSITIVE_CHANGES,
   EXPERIENCE_LOCATIONS,
 } from '@/types/emotion'
-import type { User } from '@/types/user'
+import { useToast } from '@/components/ui/Toast'
 
 interface EmotionRecordModalProps {
   isOpen: boolean
@@ -32,6 +30,7 @@ interface FormData {
 const TOTAL_STEPS = 5
 
 export default function EmotionRecordModal({ isOpen, onClose }: EmotionRecordModalProps) {
+  const { showToast } = useToast()
   const [currentStep, setCurrentStep] = useState(1)
   const [formData, setFormData] = useState<FormData>({
     preEmotion: '',
@@ -43,37 +42,7 @@ export default function EmotionRecordModal({ isOpen, onClose }: EmotionRecordMod
     customLocation: '',
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
-  const [user, setUser] = useState<User | null>(null)
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
-
-  // 인증 상태 확인
-  useEffect(() => {
-    const checkAuth = async () => {
-      setIsCheckingAuth(true)
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
-      setIsCheckingAuth(false)
-    }
-
-    if (isOpen) {
-      checkAuth()
-    }
-  }, [isOpen])
-
-  // 인증 상태 변경 리스너
-  useEffect(() => {
-    const supabase = createClient()
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null)
-      if (event === 'SIGNED_IN') {
-        setIsLoginModalOpen(false)
-      }
-    })
-
-    return () => subscription.unsubscribe()
-  }, [])
+  const [isSuccess, setIsSuccess] = useState(false)
 
   // 모달 열림/닫힘 시 처리
   useEffect(() => {
@@ -84,6 +53,7 @@ export default function EmotionRecordModal({ isOpen, onClose }: EmotionRecordMod
       // 모달 닫힐 때 스크롤 복원 및 폼 초기화
       document.body.style.overflow = ''
       setCurrentStep(1)
+      setIsSuccess(false)
       setFormData({
         preEmotion: '',
         emotionReason: '',
@@ -142,12 +112,6 @@ export default function EmotionRecordModal({ isOpen, onClose }: EmotionRecordMod
   }
 
   const handleSubmit = async () => {
-    // 로그인 확인
-    if (!user) {
-      setIsLoginModalOpen(true)
-      return
-    }
-
     setIsSubmitting(true)
 
     try {
@@ -167,17 +131,24 @@ export default function EmotionRecordModal({ isOpen, onClose }: EmotionRecordMod
       })
 
       if (result.success) {
-        alert('감정이 기록되었습니다!')
-        onClose()
-      } else if (result.error === 'LOGIN_REQUIRED') {
-        setIsLoginModalOpen(true)
+        // 성공 애니메이션 표시
+        setIsSuccess(true)
+        // 1초 후 자동으로 모달 닫기
+        setTimeout(() => {
+          onClose()
+        }, 1000)
       } else {
-        alert('기록 저장에 실패했습니다. 다시 시도해주세요.')
+        showToast(
+          result.error === 'LOGIN_REQUIRED'
+            ? '로그인이 필요합니다.'
+            : '기록 저장에 실패했습니다. 다시 시도해주세요.',
+          'error'
+        )
+        setIsSubmitting(false)
       }
     } catch (error) {
       console.error('Save error:', error)
-      alert('오류가 발생했습니다. 다시 시도해주세요.')
-    } finally {
+      showToast('오류가 발생했습니다. 다시 시도해주세요.', 'error')
       setIsSubmitting(false)
     }
   }
@@ -416,80 +387,110 @@ export default function EmotionRecordModal({ isOpen, onClose }: EmotionRecordMod
               {/* Content */}
               <div className="flex-1 overflow-y-auto px-6 py-6">
                 <AnimatePresence mode="wait">
-                  <motion.div
-                    key={currentStep}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    {renderStepContent()}
-                  </motion.div>
+                  {isSuccess ? (
+                    // 성공 애니메이션
+                    <motion.div
+                      key="success"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="flex flex-col items-center justify-center h-full py-16"
+                    >
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: 'spring', damping: 15, stiffness: 300, delay: 0.1 }}
+                        className="w-20 h-20 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center mb-6 shadow-lg"
+                      >
+                        <motion.div
+                          initial={{ pathLength: 0 }}
+                          animate={{ pathLength: 1 }}
+                          transition={{ duration: 0.4, delay: 0.2 }}
+                        >
+                          <Check size={40} className="text-white" strokeWidth={3} />
+                        </motion.div>
+                      </motion.div>
+                      <motion.p
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="text-xl font-bold text-gray-900"
+                      >
+                        기록이 저장되었습니다
+                      </motion.p>
+                      <motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.4 }}
+                        className="text-gray-500 mt-2"
+                      >
+                        오늘도 수고하셨어요 🌿
+                      </motion.p>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key={currentStep}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      {renderStepContent()}
+                    </motion.div>
+                  )}
                 </AnimatePresence>
 
-                {/* 로그인 안내 */}
-                {!isCheckingAuth && !user && currentStep === TOTAL_STEPS && (
-                  <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-xl">
-                    <p className="text-sm text-yellow-800">
-                      감정 기록을 저장하려면 로그인이 필요합니다.
-                    </p>
+              </div>
+
+              {/* Footer - 성공 상태에서는 숨김 */}
+              {!isSuccess && (
+                <div className="px-6 py-4 border-t bg-white">
+                  <div className="flex gap-3">
+                    {currentStep > 1 && (
+                      <button
+                        onClick={handlePrev}
+                        className="flex-1 py-4 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors"
+                      >
+                        <ChevronLeft size={20} />
+                        이전
+                      </button>
+                    )}
+
+                    {currentStep < TOTAL_STEPS ? (
+                      <button
+                        onClick={handleNext}
+                        disabled={!isStepValid()}
+                        className="flex-1 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:from-purple-700 hover:to-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        다음
+                        <ChevronRight size={20} />
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleSubmit}
+                        disabled={!isStepValid() || isSubmitting}
+                        className="flex-1 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:from-purple-700 hover:to-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <Loader2 size={20} className="animate-spin" />
+                            저장 중...
+                          </>
+                        ) : (
+                          <>
+                            <Check size={20} />
+                            기록 완료
+                          </>
+                        )}
+                      </button>
+                    )}
                   </div>
-                )}
-              </div>
-
-              {/* Footer */}
-              <div className="px-6 py-4 border-t bg-white">
-                <div className="flex gap-3">
-                  {currentStep > 1 && (
-                    <button
-                      onClick={handlePrev}
-                      className="flex-1 py-4 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors"
-                    >
-                      <ChevronLeft size={20} />
-                      이전
-                    </button>
-                  )}
-
-                  {currentStep < TOTAL_STEPS ? (
-                    <button
-                      onClick={handleNext}
-                      disabled={!isStepValid()}
-                      className="flex-1 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:from-purple-700 hover:to-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      다음
-                      <ChevronRight size={20} />
-                    </button>
-                  ) : (
-                    <button
-                      onClick={handleSubmit}
-                      disabled={!isStepValid() || isSubmitting}
-                      className="flex-1 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:from-purple-700 hover:to-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <Loader2 size={20} className="animate-spin" />
-                          저장 중...
-                        </>
-                      ) : (
-                        <>
-                          <Check size={20} />
-                          기록 완료
-                        </>
-                      )}
-                    </button>
-                  )}
                 </div>
-              </div>
+              )}
             </motion.div>
           </>
         )}
       </AnimatePresence>
-
-      {/* Login Modal */}
-      <LoginModal
-        isOpen={isLoginModalOpen}
-        onClose={() => setIsLoginModalOpen(false)}
-      />
     </>
   )
 }

@@ -13,8 +13,13 @@ export default async function MypagePage() {
   let emotionRecords: Array<{
     id: string
     emotion_type: string
-    intensity: number
-    note: string | null
+    intensity?: number
+    emotion_reason?: string | null
+    helpful_actions?: string[] | null
+    positive_changes?: string[] | null
+    self_message?: string | null
+    experience_location?: string | null
+    note?: string | null
     created_at: string
   }> = []
   let userProfile: {

@@ -5,14 +5,19 @@ import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { MapPin, Play, Pause, Square } from 'lucide-react'
 import { useAudioStore } from '@/stores/useAudioStore'
+import { createClient } from '@/lib/supabase/client'
 import type { AudioItem } from '@/types/audio'
 import EmotionRecordModal from '@/components/modals/EmotionRecordModal'
+import LoginModal from '@/components/modals/LoginModal'
+import AlreadyRecordedModal from '@/components/modals/AlreadyRecordedModal'
 import TrailTextSelectModal from '@/components/modals/TrailTextSelectModal'
 import TrailMapSelectModal from '@/components/modals/TrailMapSelectModal'
 import WalkGuideModal from '@/components/modals/WalkGuideModal'
 import AffirmationModal from '@/components/modals/AffirmationModal'
 import AudioDescriptionModal from '@/components/modals/AudioDescriptionModal'
 import { formatTime } from '@/lib/utils/format'
+import { checkTodayEmotionRecord } from '@/actions/emotionActions'
+import { useToast } from '@/components/ui/Toast'
 
 interface HealingPageClientProps {
   walkGuides: AudioItem[]
@@ -21,12 +26,15 @@ interface HealingPageClientProps {
 }
 
 export default function HealingPageClient({ walkGuides, affirmations, trailGuides }: HealingPageClientProps) {
+  const { showToast } = useToast()
   const [isWalkGuideOpen, setIsWalkGuideOpen] = useState(false)
   const [isAffirmationOpen, setIsAffirmationOpen] = useState(false)
   const [isDescriptionOpen, setIsDescriptionOpen] = useState(false)
   const [isEmotionSheetOpen, setIsEmotionSheetOpen] = useState(false)
   const [isTrailTextSelectOpen, setIsTrailTextSelectOpen] = useState(false)
   const [isTrailMapSelectOpen, setIsTrailMapSelectOpen] = useState(false)
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
+  const [isAlreadyRecordedOpen, setIsAlreadyRecordedOpen] = useState(false)
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
   const audioRef = useRef<HTMLAudioElement>(null)
 
@@ -142,7 +150,7 @@ export default function HealingPageClient({ walkGuides, affirmations, trailGuide
         }
       }
       console.error('Audio error:', error?.message || 'Unknown error')
-      alert(errorMessage)
+      showToast(errorMessage, 'error')
     }
 
     audio.addEventListener('loadedmetadata', handleDurationChange)
@@ -219,8 +227,31 @@ export default function HealingPageClient({ walkGuides, affirmations, trailGuide
         '_blank'
       )
     } else {
-      alert('위치 정보를 가져오는 중입니다. 잠시 후 다시 시도해주세요.')
+      showToast('위치 정보를 가져오는 중입니다. 잠시 후 다시 시도해주세요.', 'warning')
     }
+  }
+
+  // 감정 기록 버튼 클릭 - 로그인 체크 + 오늘 기록 여부 체크 후 모달 열기
+  const handleEmotionButtonClick = async () => {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      // 비로그인 시 로그인 모달 먼저 표시
+      setIsLoginModalOpen(true)
+      return
+    }
+
+    // 오늘 기록 여부 체크
+    const result = await checkTodayEmotionRecord()
+    if (result.hasRecordedToday) {
+      // 이미 오늘 기록했으면 안내 모달 표시
+      setIsAlreadyRecordedOpen(true)
+      return
+    }
+
+    // 로그인 + 오늘 기록 안했으면 감정 기록 모달 열기
+    setIsEmotionSheetOpen(true)
   }
 
   return (
@@ -407,7 +438,7 @@ export default function HealingPageClient({ walkGuides, affirmations, trailGuide
           </div>
           <div className="flex gap-2">
             <button
-              onClick={() => setIsEmotionSheetOpen(true)}
+              onClick={handleEmotionButtonClick}
               className="flex-1 h-12 border border-gray-300 rounded-xl flex items-center justify-center hover:bg-gray-50"
             >
               <div className="w-7 h-7 flex items-center justify-center mr-2">
@@ -500,6 +531,18 @@ export default function HealingPageClient({ walkGuides, affirmations, trailGuide
         onTrailSelect={(trail) => {
           setCurrentAudio(trail)
         }}
+      />
+
+      {/* Login Modal */}
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+      />
+
+      {/* Already Recorded Modal */}
+      <AlreadyRecordedModal
+        isOpen={isAlreadyRecordedOpen}
+        onClose={() => setIsAlreadyRecordedOpen(false)}
       />
     </div>
   )

@@ -5,88 +5,24 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Plus, Search, ChevronLeft, ChevronRight, ChevronDown, MessageCircle, Image as ImageIcon } from 'lucide-react'
-import { type BoardType, type FreeBoardTopic, type SearchType } from '@/actions/communityActions'
 import { createClient } from '@/lib/supabase/client'
 import LoginModal from '@/components/modals/LoginModal'
+import type { FreeBoardListProps } from '@/types/community'
+import {
+  type BoardType,
+  type FreeBoardTopic,
+  type SearchType,
+  getBoardLabel,
+  getSearchTypeLabel,
+  getTopicLabel,
+  getTopicStyle,
+  FREE_BOARD_TOPICS,
+  PAGINATION,
+} from '@/lib/constants/community'
+import { formatSmartDate } from '@/lib/utils/format'
 
-interface CommunityPost {
-  id: string
-  user_id: string | null
-  board_type: BoardType
-  topic: FreeBoardTopic | null
-  title: string
-  content: string
-  thumbnail_url: string | null
-  images: string[] | null
-  author_nickname: string | null
-  view_count: number
-  comment_count: number
-  is_pinned: boolean
-  is_active: boolean
-  created_at: string
-  updated_at: string
-}
-
-interface FreeBoardListProps {
-  posts: CommunityPost[]
-  currentPage: number
-  totalPages: number
-  totalCount?: number
-}
-
-const BOARD_LABELS: Record<BoardType, string> = {
-  notice: '공지사항',
-  event: '이벤트',
-  free: '자유게시판',
-  review: '힐링 후기',
-}
-
-const TOPIC_LABELS: Record<FreeBoardTopic, string> = {
-  chat: '잡담',
-  question: '질문',
-  info: '정보',
-  review: '후기',
-}
-
-const TOPIC_COLORS: Record<FreeBoardTopic, string> = {
-  chat: 'text-gray-600 bg-gray-100',
-  question: 'text-blue-600 bg-blue-100',
-  info: 'text-emerald-600 bg-emerald-100',
-  review: 'text-purple-600 bg-purple-100',
-}
-
-const SEARCH_TYPE_LABELS: Record<SearchType, string> = {
-  all: '전체',
-  title: '제목만',
-  author: '작성자',
-}
-
-const POSTS_PER_PAGE = 20
-const PAGES_PER_GROUP = 10
-
-// 스마트 날짜 포맷 (오늘이면 시간, 오늘이 아니면 연-월-일)
-function formatSmartDate(dateString: string): string {
-  const date = new Date(dateString)
-  const now = new Date()
-
-  const isSameDay =
-    date.getFullYear() === now.getFullYear() &&
-    date.getMonth() === now.getMonth() &&
-    date.getDate() === now.getDate()
-
-  if (isSameDay) {
-    // 오늘이면 시간만 표시 (13:22)
-    const hours = String(date.getHours()).padStart(2, '0')
-    const minutes = String(date.getMinutes()).padStart(2, '0')
-    return `${hours}:${minutes}`
-  } else {
-    // 오늘이 아니면 전체 날짜 표시 (2026-01-02)
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
-    return `${year}-${month}-${day}`
-  }
-}
+// 페이지네이션 상수
+const { postsPerPage: POSTS_PER_PAGE, pagesPerGroup: PAGES_PER_GROUP } = PAGINATION
 
 export default function FreeBoardList({
   posts,
@@ -260,7 +196,7 @@ export default function FreeBoardList({
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                 }`}
               >
-                {BOARD_LABELS[tab]}
+                {getBoardLabel(tab)}
               </Link>
             ))}
           </div>
@@ -278,17 +214,17 @@ export default function FreeBoardList({
             >
               전체
             </button>
-            {(['chat', 'question', 'info', 'review'] as FreeBoardTopic[]).map((topic) => (
+            {FREE_BOARD_TOPICS.map((topic) => (
               <button
                 key={topic}
                 onClick={() => handleTopicChange(topic)}
                 className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
                   selectedTopic === topic
                     ? 'bg-blue-600 text-white'
-                    : `${TOPIC_COLORS[topic]} hover:opacity-80 border border-transparent`
+                    : `${getTopicStyle(topic)} hover:opacity-80 border border-transparent`
                 }`}
               >
-                {TOPIC_LABELS[topic]}
+                {getTopicLabel(topic)}
               </button>
             ))}
           </div>
@@ -423,8 +359,8 @@ export default function FreeBoardList({
                   <div className="hidden md:grid md:grid-cols-[80px_1fr_130px_100px_60px] text-sm">
                     <div className="px-3 py-3.5 text-center">
                       {post.topic && (
-                        <span className={`inline-block px-2 py-0.5 text-xs font-medium rounded ${TOPIC_COLORS[post.topic]}`}>
-                          {TOPIC_LABELS[post.topic]}
+                        <span className={`inline-block px-2 py-0.5 text-xs font-medium rounded ${getTopicStyle(post.topic)}`}>
+                          {getTopicLabel(post.topic)}
                         </span>
                       )}
                     </div>
@@ -457,8 +393,8 @@ export default function FreeBoardList({
                   <div className="md:hidden px-4 py-3.5">
                     <div className="flex items-center gap-2 mb-1.5">
                       {post.topic && (
-                        <span className={`px-2 py-0.5 text-xs font-medium rounded ${TOPIC_COLORS[post.topic]}`}>
-                          {TOPIC_LABELS[post.topic]}
+                        <span className={`px-2 py-0.5 text-xs font-medium rounded ${getTopicStyle(post.topic)}`}>
+                          {getTopicLabel(post.topic)}
                         </span>
                       )}
                       <span className="font-medium text-gray-900 text-sm truncate flex-1">
@@ -546,7 +482,7 @@ export default function FreeBoardList({
               onClick={() => setShowSearchTypeDropdown(!showSearchTypeDropdown)}
               className="flex items-center gap-1.5 px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors min-w-[100px]"
             >
-              {SEARCH_TYPE_LABELS[searchType]}
+              {getSearchTypeLabel(searchType)}
               <ChevronDown size={16} className={`transition-transform ${showSearchTypeDropdown ? 'rotate-180' : ''}`} />
             </button>
 
@@ -565,7 +501,7 @@ export default function FreeBoardList({
                         searchType === type ? 'text-blue-600 font-semibold bg-blue-50' : 'text-gray-700'
                       }`}
                     >
-                      {SEARCH_TYPE_LABELS[type]}
+                      {getSearchTypeLabel(type)}
                     </button>
                   ))}
                 </div>

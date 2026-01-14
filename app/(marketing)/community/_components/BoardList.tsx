@@ -5,76 +5,22 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Plus, Search, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react'
-import { type BoardType, type SearchType } from '@/actions/communityActions'
 import { createClient } from '@/lib/supabase/client'
 import LoginModal from '@/components/modals/LoginModal'
+import type { PostListProps } from '@/types/community'
+import {
+  type BoardType,
+  type SearchType,
+  BOARD_TYPES,
+  getBoardLabel,
+  getBoardDescription,
+  getSearchTypeLabel,
+  PAGINATION,
+} from '@/lib/constants/community'
+import { formatSmartDate } from '@/lib/utils/format'
 
-interface CommunityPost {
-  id: string
-  user_id: string | null
-  board_type: BoardType
-  title: string
-  content: string
-  author_nickname: string | null
-  view_count: number
-  is_pinned: boolean
-  is_active: boolean
-  created_at: string
-  updated_at: string
-}
-
-interface BoardListProps {
-  boardType: BoardType
-  posts: CommunityPost[]
-  currentPage: number
-  totalPages: number
-  totalCount?: number
-  isAdmin?: boolean
-}
-
-const BOARD_LABELS: Record<BoardType, string> = {
-  notice: '공지사항',
-  event: '이벤트',
-  free: '자유게시판',
-  review: '힐링 후기',
-}
-
-const BOARD_DESCRIPTIONS: Record<BoardType, string> = {
-  notice: '힐링로드 ON의 새로운 소식과 공지사항',
-  event: '다양한 이벤트와 캠페인에 참여하세요',
-  free: '자유롭게 이야기를 나눠보세요',
-  review: '힐링로드 ON 이용 후기를 공유해주세요',
-}
-
-const SEARCH_TYPE_LABELS: Record<SearchType, string> = {
-  all: '전체',
-  title: '제목만',
-  author: '작성자',
-}
-
-const POSTS_PER_PAGE = 10
-const PAGES_PER_GROUP = 10
-
-// 날짜 포맷 (오늘: 시간만, 아님: YYYY-MM-DD)
-function formatDate(dateString: string): string {
-  const date = new Date(dateString)
-  const now = new Date()
-  const isToday =
-    date.getFullYear() === now.getFullYear() &&
-    date.getMonth() === now.getMonth() &&
-    date.getDate() === now.getDate()
-
-  if (isToday) {
-    const hours = String(date.getHours()).padStart(2, '0')
-    const minutes = String(date.getMinutes()).padStart(2, '0')
-    return `${hours}:${minutes}`
-  }
-
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
+// 페이지네이션 상수
+const { postsPerPage: POSTS_PER_PAGE, pagesPerGroup: PAGES_PER_GROUP } = PAGINATION
 
 export default function BoardList({
   boardType,
@@ -83,7 +29,7 @@ export default function BoardList({
   totalPages,
   totalCount = 0,
   isAdmin = false,
-}: BoardListProps) {
+}: PostListProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -215,10 +161,10 @@ export default function BoardList({
             className="text-center"
           >
             <h1 className="text-2xl md:text-3xl font-bold mb-2">
-              {BOARD_LABELS[boardType]}
+              {getBoardLabel(boardType)}
             </h1>
             <p className="text-white/80 text-sm md:text-base">
-              {BOARD_DESCRIPTIONS[boardType]}
+              {getBoardDescription(boardType)}
             </p>
           </motion.div>
         </div>
@@ -238,7 +184,7 @@ export default function BoardList({
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                 }`}
               >
-                {BOARD_LABELS[tab]}
+                {getBoardLabel(tab)}
               </Link>
             ))}
           </div>
@@ -313,7 +259,7 @@ export default function BoardList({
                       {post.author_nickname || '관리자'}
                     </div>
                     <div className="px-3 py-3.5 text-center text-gray-500 whitespace-nowrap">
-                      {formatDate(post.created_at)}
+                      {formatSmartDate(post.created_at)}
                     </div>
                     <div className="px-3 py-3.5 text-center text-gray-500">
                       {post.view_count}
@@ -332,7 +278,7 @@ export default function BoardList({
                     </div>
                     <div className="flex items-center gap-2.5 text-sm text-gray-500">
                       <span>{post.author_nickname || '관리자'}</span>
-                      <span className="whitespace-nowrap">{formatDate(post.created_at)}</span>
+                      <span className="whitespace-nowrap">{formatSmartDate(post.created_at)}</span>
                       <span>조회 {post.view_count}</span>
                     </div>
                   </div>
@@ -364,7 +310,7 @@ export default function BoardList({
                       {post.author_nickname || '익명'}
                     </div>
                     <div className="px-3 py-3.5 text-center text-gray-500 whitespace-nowrap">
-                      {formatDate(post.created_at)}
+                      {formatSmartDate(post.created_at)}
                     </div>
                     <div className="px-3 py-3.5 text-center text-gray-500">
                       {post.view_count}
@@ -381,7 +327,7 @@ export default function BoardList({
                     </div>
                     <div className="flex items-center gap-2.5 text-sm text-gray-500 pl-9">
                       <span>{post.author_nickname || '익명'}</span>
-                      <span className="whitespace-nowrap">{formatDate(post.created_at)}</span>
+                      <span className="whitespace-nowrap">{formatSmartDate(post.created_at)}</span>
                       <span>조회 {post.view_count}</span>
                     </div>
                   </div>
@@ -463,7 +409,7 @@ export default function BoardList({
               onClick={() => setShowSearchTypeDropdown(!showSearchTypeDropdown)}
               className="flex items-center gap-1.5 px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors min-w-[100px]"
             >
-              {SEARCH_TYPE_LABELS[searchType]}
+              {getSearchTypeLabel(searchType)}
               <ChevronDown size={16} className={`transition-transform ${showSearchTypeDropdown ? 'rotate-180' : ''}`} />
             </button>
 
@@ -482,7 +428,7 @@ export default function BoardList({
                         searchType === type ? 'text-emerald-600 font-semibold bg-emerald-50' : 'text-gray-700'
                       }`}
                     >
-                      {SEARCH_TYPE_LABELS[type]}
+                      {getSearchTypeLabel(type)}
                     </button>
                   ))}
                 </div>

@@ -6,6 +6,7 @@ import { X, Sparkles, TrendingUp, Calendar, History, ChevronLeft, Trash2, FlaskC
 import { getWeeklyEmotionRecords, getCurrentWeekEmotionRecords } from '@/actions/emotionActions'
 import { generateEmotionInsight, saveEmotionReport, getEmotionReports, deleteEmotionReport, type EmotionReport } from '@/actions/reportActions'
 import { analyzeEmotionData, ACTION_LABELS, CHANGE_LABELS } from '@/lib/utils/emotionAnalysis'
+import { useToast } from '@/components/ui/Toast'
 
 /**
  * EAMRA 프레임워크 기반 감정 기록 타입
@@ -30,6 +31,7 @@ interface WeeklyEmotionReportProps {
 type ViewMode = 'menu' | 'current' | 'thisWeek' | 'history' | 'detail'
 
 export default function WeeklyEmotionReport({ isOpen, onClose }: WeeklyEmotionReportProps) {
+  const { showToast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [isGeneratingInsight, setIsGeneratingInsight] = useState(false)
   const [records, setRecords] = useState<EmotionRecord[]>([])
@@ -165,12 +167,13 @@ export default function WeeklyEmotionReport({ isOpen, onClose }: WeeklyEmotionRe
           setSelectedReport(null)
           setViewMode('history')
         }
+        showToast('보고서가 삭제되었습니다.', 'success')
       } else {
-        alert(result.error || '보고서 삭제에 실패했습니다.')
+        showToast(result.error || '보고서 삭제에 실패했습니다.', 'error')
       }
     } catch (error) {
       console.error('Failed to delete report:', error)
-      alert('보고서 삭제에 실패했습니다.')
+      showToast('보고서 삭제에 실패했습니다.', 'error')
     }
   }
 

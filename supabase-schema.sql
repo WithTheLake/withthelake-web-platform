@@ -400,6 +400,90 @@ COMMENT ON TABLE community_comments IS '커뮤니티 게시판 댓글';
 COMMENT ON TABLE emotion_reports IS '주간 감정 보고서 (AI 인사이트 포함)';
 
 -- ============================================
+-- 8. news_articles 테이블 (뉴스/언론 보도)
+-- ============================================
+CREATE TABLE IF NOT EXISTS news_articles (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  title VARCHAR(500) NOT NULL,
+  source VARCHAR(100) NOT NULL, -- 언론사명 (예: '중앙이코노미뉴스', 'Times of India')
+  category VARCHAR(50) NOT NULL CHECK (category IN ('언론보도', '해외자료', '블로그', '보도자료')),
+  link TEXT NOT NULL, -- 기사 원문 링크
+  thumbnail_url TEXT, -- 썸네일 이미지 URL (해외자료에서 주로 사용)
+  published_at DATE NOT NULL, -- 기사 발행일
+  is_active BOOLEAN DEFAULT TRUE,
+  order_index INTEGER DEFAULT 0, -- 정렬 순서 (낮을수록 먼저)
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Indexes for news_articles
+CREATE INDEX IF NOT EXISTS idx_news_articles_category ON news_articles(category);
+CREATE INDEX IF NOT EXISTS idx_news_articles_published_at ON news_articles(published_at DESC);
+CREATE INDEX IF NOT EXISTS idx_news_articles_is_active ON news_articles(is_active);
+CREATE INDEX IF NOT EXISTS idx_news_articles_order_index ON news_articles(order_index);
+
+-- RLS for news_articles: 모든 사용자가 읽기 가능, 관리자만 쓰기 가능
+ALTER TABLE news_articles ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can read active news"
+  ON news_articles
+  FOR SELECT
+  USING (is_active = TRUE);
+
+-- 관리자만 뉴스 작성/수정/삭제 (service_role 키 사용)
+-- INSERT/UPDATE/DELETE는 Server Action에서 service_role 키로 수행
+
+-- Trigger for updated_at
+CREATE TRIGGER update_news_articles_updated_at
+  BEFORE UPDATE ON news_articles
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+COMMENT ON TABLE news_articles IS '뉴스/언론 보도 (관리자만 작성 가능)';
+
+-- ============================================
+-- 9. store_products 테이블 (스토어 상품)
+-- ============================================
+CREATE TABLE IF NOT EXISTS store_products (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name VARCHAR(500) NOT NULL, -- 상품명
+  price INTEGER NOT NULL, -- 판매가 (원)
+  original_price INTEGER, -- 정가 (할인 전, NULL이면 할인 없음)
+  category VARCHAR(50) NOT NULL, -- 카테고리 (케어, 어싱, 기록 등)
+  badge VARCHAR(20), -- 뱃지 (베스트, 인기, 추천, 신상품)
+  rating DECIMAL(2,1) DEFAULT 0.0, -- 평점 (0.0 ~ 5.0)
+  review_count INTEGER DEFAULT 0, -- 리뷰 수
+  image_url TEXT, -- 상품 이미지 URL
+  naver_product_url TEXT, -- 네이버 스마트스토어 상품 링크
+  description TEXT, -- 상품 설명 (선택)
+  is_active BOOLEAN DEFAULT TRUE,
+  order_index INTEGER DEFAULT 0, -- 정렬 순서 (낮을수록 먼저)
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Indexes for store_products
+CREATE INDEX IF NOT EXISTS idx_store_products_category ON store_products(category);
+CREATE INDEX IF NOT EXISTS idx_store_products_is_active ON store_products(is_active);
+CREATE INDEX IF NOT EXISTS idx_store_products_order_index ON store_products(order_index);
+
+-- RLS for store_products: 모든 사용자가 읽기 가능, 관리자만 쓰기 가능
+ALTER TABLE store_products ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can read active products"
+  ON store_products
+  FOR SELECT
+  USING (is_active = TRUE);
+
+-- Trigger for updated_at
+CREATE TRIGGER update_store_products_updated_at
+  BEFORE UPDATE ON store_products
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+COMMENT ON TABLE store_products IS '스토어 상품 (관리자만 작성 가능)';
+
+-- ============================================
 -- RPC 함수: 댓글 수 증가/감소
 -- ============================================
 
@@ -422,3 +506,37 @@ BEGIN
   WHERE id = post_id;
 END;
 $$ LANGUAGE plpgsql;
+
+-- ============================================
+-- 초기 데이터: news_articles
+-- ============================================
+INSERT INTO news_articles (title, source, category, link, thumbnail_url, published_at, order_index) VALUES
+-- 국내 언론 보도 (최신순)
+('화성시, 맨발걷기 산책로 24곳 조성 완료…일상 속 힐링 공간 확대', '중앙이코노미뉴스', '언론보도', 'https://www.joongangenews.com/news/articleView.html?idxno=478843', NULL, '2025-01-23', 1),
+('''맨발로 느끼는 힐링'' 보령시, 해변 맨발 걷기 ''눈길''', '서울신문', '언론보도', 'https://news.zum.com/articles/100313495', NULL, '2025-01-02', 2),
+('양홍식 제주도의원, 해변 맨발걷기 활성화 조례안 대표발의', '겟뉴스', '언론보도', 'https://www.getnews.co.kr/news/articleView.html?idxno=854027', NULL, '2024-12-18', 3),
+('속초시, 맨발걷기 성지 입지 다진다…청초호 맨발걷기 길 본격 착공', '뉴스로', '언론보도', 'https://www.newsro.kr/article243/1005387/', NULL, '2024-12-20', 4),
+('순천시, 노르딕워킹·맨발걷기 교실 수강생 모집', '뉴스로', '언론보도', 'https://www.newsro.kr/article243/779144/', NULL, '2024-12-15', 5),
+('양평군, 맨발걷기국민운동본부와 ''맨발 걷기 딱 좋은 양평!'' 개최', '천지일보', '언론보도', 'https://www.newscj.com/news/articleView.html?idxno=3334562', NULL, '2024-10-31', 6),
+('전진선 양평군수, 맨발걷기국민운동본부와 ''맨발걷기 활성화'' 협약', '위키트리', '언론보도', 'https://www.wikitree.co.kr/articles/1091779', NULL, '2024-10-30', 7),
+('완도군, ''제2회 명사십리 치유길 맨발 걷기 페스티벌'' 개최', '더팩트', '언론보도', 'https://news.tf.co.kr/read/national/2256646.htm', NULL, '2024-10-28', 8),
+('문경새재 맨발페스티벌, 국내 최고의 힐링 걷기 축제와 건강 여행 명소 부상', '한국일보', '언론보도', 'https://www.hankookilbo.com/News/Read/A2025081708090000676', NULL, '2024-08-17', 9),
+('산림치유·힐링·관광 한번에…대청호가 반기는 ''맨발걷기 성지''', '서울경제', '언론보도', 'https://www.sedaily.com/NewsView/2H0FULUQ6F', NULL, '2024-11-13', 10),
+('강원관광재단, 맨발걷기 프로그램 운영', '아주경제', '언론보도', 'https://www.ajunews.com/view/20240508134819150', NULL, '2024-05-08', 11),
+('목포시, 부흥동 둥근공원에 황토맨발길 조성', '파이낸셜뉴스', '언론보도', 'https://www.fnnews.com/news/202405031446421698', NULL, '2024-05-03', 12),
+-- 해외 건강/웰니스 기사
+('Walking barefoot on grass: 7 health benefits', 'Times of India', '해외자료', 'https://timesofindia.indiatimes.com/life-style/health-fitness/health-news/walking-barefoot-on-grass-in-the-morning-7-health-benefits-from-improved-sleep-to-heart-health/articleshow/125869191.cms', '/images/news/news_walking-barefoot-on-grass.jpg', '2024-12-10', 13),
+('Why walking barefoot can actually help your feet', 'National Geographic', '해외자료', 'https://www.nationalgeographic.com/science/article/why-walking-barefoot-can-actually-help-your-feet', '/images/news/news_why-walking-barefoot-help.jpg', '2024-11-15', 14),
+('"Ditch your shoes": Why podiatrists advise 5-minute barefoot walking everyday', 'Economic Times', '해외자료', 'https://economictimes.indiatimes.com/news/india/ditch-your-shoes-why-podiatrists-advise-5-minute-barefoot-walking-everyday/boost-circulation-naturally/slideshow/123852206.cms', '/images/news/news_ditch-your-shoes.jpg', '2024-10-20', 15)
+ON CONFLICT DO NOTHING;
+
+-- ============================================
+-- 초기 데이터: store_products (상품 1-5)
+-- ============================================
+INSERT INTO store_products (name, price, original_price, category, badge, rating, review_count, image_url, naver_product_url, order_index) VALUES
+('[위드웰미] 데일리 파워 쿨링 미스트 100ml 풋미스트 발관리', 37800, 42000, '케어', '베스트', 5.0, 18, '/images/withwellme_powercoolingmist.jpg', 'https://smartstore.naver.com/withlab201/products/12254246304', 1),
+('[위드웰미] 데일리 풋샴푸 풋워시 200ml 지장수 맨발걷기 발세정제', 17820, 19800, '케어', '인기', 5.0, 19, '/images/withwellme_dailyfootwash.jpg', 'https://smartstore.naver.com/withlab201/products/12248115925', 2),
+('[숨토프랜드] 어싱 패드 접지 전자파차단 맨발걷기 맨땅밟기 매트 슈퍼싱글 퀸', 270000, NULL, '어싱', NULL, 0.0, 0, '/images/soomtofriend_earthingpad.jpg', 'https://smartstore.naver.com/withlab201/products/12362102946', 3),
+('[숨토프랜드] 접지 어싱 베개 커버 숙면 맨발걷기 효과 힐링 60X70cm', 60000, NULL, '어싱', '추천', 0.0, 0, '/images/soomtofriend_earthingcover.jpg', 'https://smartstore.naver.com/withlab201/products/12314861939', 4),
+('[힐링로드ON] 태백 웰니스 걷기 투어 (당일형)', 10000, NULL, '기록', NULL, 0.0, 0, '/images/withwellme_logo1.jpeg', 'https://smartstore.naver.com/withlab201/products/12679438666', 5)
+ON CONFLICT DO NOTHING;

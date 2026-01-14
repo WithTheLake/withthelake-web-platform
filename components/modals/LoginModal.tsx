@@ -4,13 +4,16 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Loader2, MessageCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { useToast } from '@/components/ui/Toast'
 
 interface LoginModalProps {
   isOpen: boolean
   onClose: () => void
+  focusOnComment?: boolean // 로그인 후 댓글 입력창에 포커스할지 여부
 }
 
-export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
+export default function LoginModal({ isOpen, onClose, focusOnComment = false }: LoginModalProps) {
+  const { showToast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
 
   // 모달 열릴 때 배경 스크롤 방지
@@ -31,8 +34,11 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
     try {
       const supabase = createClient()
 
-      // 현재 페이지 경로를 next 파라미터로 전달
-      const currentPath = window.location.pathname + window.location.search
+      // 현재 페이지 경로를 next 파라미터로 전달 (댓글 포커스 플래그 포함)
+      let currentPath = window.location.pathname + window.location.search
+      if (focusOnComment) {
+        currentPath += (currentPath.includes('?') ? '&' : '?') + 'focusComment=1'
+      }
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'kakao',
@@ -43,13 +49,13 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
       if (error) {
         console.error('Kakao login error:', error)
-        alert('로그인에 실패했습니다. 다시 시도해주세요.')
+        showToast('로그인에 실패했습니다. 다시 시도해주세요.', 'error')
         setIsLoading(false)
       }
       // 성공 시 리다이렉트되므로 별도 처리 불필요
     } catch (error) {
       console.error('Login error:', error)
-      alert('로그인 중 오류가 발생했습니다.')
+      showToast('로그인 중 오류가 발생했습니다.', 'error')
       setIsLoading(false)
     }
   }

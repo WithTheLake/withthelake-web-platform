@@ -27,7 +27,7 @@ export default function HomePage() {
         {/* 텍스트 콘텐츠 */}
         <div className="relative z-10 h-full flex items-center">
           <div className="container mx-auto px-4">
-            <h1 className="text-6xl lg:text-7xl font-bold text-white mb-2">
+            <h1 className="text-6xl lg:text-7xl font-bold text-white mb-3">
               맨발걷기,
             </h1>
             <p className="text-3xl text-white mb-4">

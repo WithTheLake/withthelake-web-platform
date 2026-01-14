@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -22,117 +22,25 @@ import {
   Pin,
   PinOff,
 } from 'lucide-react'
-import { createComment, deletePost, deleteComment, togglePinPost, type BoardType, type FreeBoardTopic } from '@/actions/communityActions'
+import { createComment, deletePost, deleteComment, togglePinPost } from '@/actions/communityActions'
 import LoginModal from '@/components/modals/LoginModal'
-
-interface CommunityPost {
-  id: string
-  user_id: string | null
-  board_type: BoardType
-  topic: FreeBoardTopic | null
-  title: string
-  content: string
-  thumbnail_url: string | null
-  images: string[] | null
-  author_nickname: string | null
-  view_count: number
-  comment_count: number
-  is_pinned: boolean
-  created_at: string
-  updated_at: string
-}
-
-interface Comment {
-  id: string
-  post_id: string
-  user_id: string | null
-  content: string
-  author_nickname: string | null
-  created_at: string
-}
-
-interface AdjacentPost {
-  id: string
-  title: string
-}
+import { useToast } from '@/components/ui/Toast'
+import type { CommunityPost, CommunityComment, AdjacentPost } from '@/types/community'
+import {
+  getBoardLabel,
+  getTopicLabel,
+  getTopicStyle,
+} from '@/lib/constants/community'
+import { formatDate, formatDateTime, formatRelativeTimeKorean } from '@/lib/utils/format'
+import { getFirstLine } from '@/lib/utils/text'
 
 interface PostDetailProps {
   post: CommunityPost
-  comments: Comment[]
+  comments: CommunityComment[]
   prevPost?: AdjacentPost | null
   nextPost?: AdjacentPost | null
   currentUserId?: string | null
   isAdmin?: boolean
-}
-
-const BOARD_LABELS: Record<BoardType, string> = {
-  notice: '공지사항',
-  event: '이벤트',
-  free: '자유게시판',
-  review: '힐링 후기',
-}
-
-const TOPIC_LABELS: Record<FreeBoardTopic, string> = {
-  chat: '잡담',
-  question: '질문',
-  info: '정보',
-  review: '후기',
-}
-
-const TOPIC_COLORS: Record<FreeBoardTopic, string> = {
-  chat: 'text-gray-600 bg-gray-100',
-  question: 'text-blue-600 bg-blue-100',
-  info: 'text-emerald-600 bg-emerald-100',
-  review: 'text-purple-600 bg-purple-100',
-}
-
-// 날짜 포맷 (YYYY-MM-DD)
-function formatDate(dateString: string): string {
-  const date = new Date(dateString)
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
-
-// 날짜+시간 포맷 (YYYY-MM-DD HH:mm)
-function formatDateTime(dateString: string): string {
-  const date = new Date(dateString)
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  const hours = String(date.getHours()).padStart(2, '0')
-  const minutes = String(date.getMinutes()).padStart(2, '0')
-  return `${year}-${month}-${day} ${hours}:${minutes}`
-}
-
-// 한국어 상대 시간 포맷 (댓글용)
-// - 1분 미만: "1 분 전"
-// - 1시간 미만: "X 분 전"
-// - 24시간 미만: "X 시간 전" (내림)
-// - 24시간 이상: "YYYY-MM-DD HH:mm"
-function formatRelativeTimeKorean(dateString: string): string {
-  const date = new Date(dateString)
-  const now = new Date()
-  const diffMs = now.getTime() - date.getTime()
-  const diffMinutes = Math.floor(diffMs / (1000 * 60))
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
-
-  if (diffMinutes < 1) {
-    return '1 분 전'
-  } else if (diffMinutes < 60) {
-    return `${diffMinutes} 분 전`
-  } else if (diffHours < 24) {
-    return `${diffHours} 시간 전`
-  } else {
-    // 24시간 이상이면 전체 날짜+시간 표시
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
-    const hours = String(date.getHours()).padStart(2, '0')
-    const minutes = String(date.getMinutes()).padStart(2, '0')
-    return `${year}-${month}-${day} ${hours}:${minutes}`
-  }
 }
 
 export default function PostDetail({
@@ -144,6 +52,9 @@ export default function PostDetail({
   isAdmin = false,
 }: PostDetailProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const { showToast } = useToast()
+  const commentTextareaRef = useRef<HTMLTextAreaElement>(null)
   const [comments, setComments] = useState(initialComments)
   const [commentContent, setCommentContent] = useState('')
   const [isSubmittingComment, setIsSubmittingComment] = useState(false)
@@ -152,9 +63,40 @@ export default function PostDetail({
   const [isPinned, setIsPinned] = useState(post.is_pinned)
   const [isTogglingPin, setIsTogglingPin] = useState(false)
 
+  // 로그인 후 댓글 입력창 자동 포커스
+  useEffect(() => {
+    const focusComment = searchParams.get('focusComment')
+    if (focusComment === '1' && currentUserId && commentTextareaRef.current) {
+      // 약간의 딜레이 후 포커스 (페이지 렌더링 완료 대기)
+      setTimeout(() => {
+        commentTextareaRef.current?.focus()
+        commentTextareaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }, 300)
+    }
+  }, [searchParams, currentUserId])
+
   // 이미지 갤러리 상태
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+
+  // 라이트박스 닫기 함수 (useCallback으로 메모이제이션)
+  const closeLightbox = useCallback(() => {
+    setLightboxOpen(false)
+  }, [])
+
+  // ESC 키로 라이트박스 닫기
+  useEffect(() => {
+    if (!lightboxOpen) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        closeLightbox()
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [lightboxOpen, closeLightbox])
 
   // 비회원 여부
   const isGuest = !currentUserId
@@ -164,6 +106,7 @@ export default function PostDetail({
   const isEventBoard = post.board_type === 'event'
   const isNoticeBoard = post.board_type === 'notice'
   const isFreeBoard = post.board_type === 'free'
+  const isReviewBoard = post.board_type === 'review'
   const isInlineImageBoard = isNoticeBoard || isFreeBoard
 
   // 현재 사용자가 게시글 작성자인지 확인
@@ -228,17 +171,13 @@ export default function PostDetail({
       window.URL.revokeObjectURL(url)
     } catch (error) {
       console.error('Download failed:', error)
-      alert('다운로드에 실패했습니다.')
+      showToast('다운로드에 실패했습니다.', 'error')
     }
   }
 
   const openLightbox = (index: number) => {
     setCurrentImageIndex(index)
     setLightboxOpen(true)
-  }
-
-  const closeLightbox = () => {
-    setLightboxOpen(false)
   }
 
   const goToPrevImage = () => {
@@ -262,10 +201,10 @@ export default function PostDetail({
 
     const result = await deletePost(post.id)
     if (result.success) {
-      alert('글이 삭제되었습니다.')
+      showToast('글이 삭제되었습니다.', 'success')
       router.push(boardPath)
     } else {
-      alert(result.message || '삭제에 실패했습니다.')
+      showToast(result.message || '삭제에 실패했습니다.', 'error')
     }
   }
 
@@ -303,9 +242,10 @@ export default function PostDetail({
     const result = await deleteComment(commentId)
     if (result.success) {
       setComments(comments.filter((c) => c.id !== commentId))
+      showToast('댓글이 삭제되었습니다.', 'success')
       router.refresh()
     } else {
-      alert(result.message || '삭제에 실패했습니다.')
+      showToast(result.message || '삭제에 실패했습니다.', 'error')
     }
   }
 
@@ -318,9 +258,10 @@ export default function PostDetail({
 
     if (result.success) {
       setIsPinned(result.isPinned ?? !isPinned)
+      showToast(result.isPinned ? '글이 고정되었습니다.' : '글 고정이 해제되었습니다.', 'success')
       router.refresh()
     } else {
-      alert(result.message || '고정 상태 변경에 실패했습니다.')
+      showToast(result.message || '고정 상태 변경에 실패했습니다.', 'error')
     }
     setIsTogglingPin(false)
   }
@@ -412,7 +353,7 @@ export default function PostDetail({
 
     <div className="min-h-screen bg-gray-50 pb-16">
       {/* 헤더 - 뒤로가기 + 게시판명 */}
-      <section className="bg-white border-b px-4 pb-3">
+      <section className="bg-white border-b px-4 py-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <Link
             href={boardPath}
@@ -421,7 +362,7 @@ export default function PostDetail({
             <ArrowLeft size={22} />
           </Link>
           <span className="text-lg font-bold text-gray-800">
-            {BOARD_LABELS[post.board_type]}
+            {getBoardLabel(post.board_type)}
           </span>
           <div className="w-9" /> {/* 균형을 위한 빈 공간 */}
         </div>
@@ -508,11 +449,11 @@ export default function PostDetail({
           {isFreeBoard && (
             <div className="px-5 py-5">
               {/* 첫번째 줄: 주제 뱃지 + 제목 + 작성일시 */}
-              <div className="flex items-start justify-between mb-3">
+              <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2 flex-1">
                   {post.topic && (
-                    <span className={`px-2 py-0.5 text-xs font-medium rounded shrink-0 ${TOPIC_COLORS[post.topic]}`}>
-                      {TOPIC_LABELS[post.topic]}
+                    <span className={`px-2 py-0.5 text-xs font-medium rounded shrink-0 ${getTopicStyle(post.topic)}`}>
+                      {getTopicLabel(post.topic)}
                     </span>
                   )}
                   <h1 className="text-xl md:text-2xl font-bold text-gray-900">
@@ -540,8 +481,66 @@ export default function PostDetail({
             </div>
           )}
 
-          {/* 메타 정보 - 이벤트/후기 게시판 (기존 스타일) */}
-          {!isNoticeBoard && !isFreeBoard && (
+          {/* 메타 정보 - 후기 게시판 (제목 없이 간소화) */}
+          {isReviewBoard && (
+            <div className="px-5 py-4">
+              <div className="flex items-center justify-between border-b pb-3">
+                <div className="flex items-center gap-3 text-xs text-gray-600">
+                  <span className="font-semibold">
+                    {post.author_nickname || '익명'}
+                  </span>
+                  <span>{formatRelativeTimeKorean(post.created_at)}</span>
+                  <div className="flex items-center gap-1">
+                    <Eye size={12} />
+                    {post.view_count}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <MessageCircle size={12} />
+                    {comments.length}
+                  </div>
+                </div>
+                {/* 관리자/작성자 버튼 */}
+                <div className="flex items-center gap-0.5">
+                  {/* 고정/해제 버튼 - 관리자만 표시 */}
+                  {isAdmin && (
+                    <button
+                      onClick={handleTogglePin}
+                      disabled={isTogglingPin}
+                      className={`p-1.5 rounded-lg transition-colors ${
+                        isPinned
+                          ? 'text-amber-600 hover:bg-amber-50'
+                          : 'text-gray-500 hover:bg-gray-100'
+                      } disabled:opacity-50`}
+                      title={isPinned ? '고정 해제' : '고정'}
+                    >
+                      {isPinned ? <PinOff size={14} /> : <Pin size={14} />}
+                    </button>
+                  )}
+                  {/* 수정 버튼 - 작성자만 표시 */}
+                  {isPostOwner && (
+                    <Link
+                      href={`${boardPath}/write?id=${post.id}`}
+                      className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      <Edit size={14} />
+                    </Link>
+                  )}
+                  {/* 삭제 버튼 - 작성자 또는 관리자 표시 */}
+                  {canDelete && (
+                    <button
+                      onClick={handleDeletePost}
+                      className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 메타 정보 - 이벤트 게시판 (제목 포함) */}
+          {isEventBoard && (
             <div className="px-5 py-4">
               <div className="flex items-center gap-1.5 mb-1.5">
                 {isPinned && (
@@ -803,6 +802,7 @@ export default function PostDetail({
                 )}
                 <div className="flex gap-2">
                   <textarea
+                    ref={commentTextareaRef}
                     value={commentContent}
                     onChange={(e) => setCommentContent(e.target.value)}
                     placeholder="댓글을 입력하세요 (최대 1,000자)"
@@ -830,6 +830,7 @@ export default function PostDetail({
             <LoginModal
               isOpen={showLoginModal}
               onClose={() => setShowLoginModal(false)}
+              focusOnComment={true}
             />
 
             {/* 댓글 목록 */}
@@ -858,15 +859,15 @@ export default function PostDetail({
                             {formatRelativeTimeKorean(comment.created_at)}
                           </span>
                         </div>
-                        {/* 댓글 삭제 버튼 - 작성자 또는 관리자 표시 */}
-                        {(currentUserId && comment.user_id === currentUserId) || isAdmin ? (
+                        {/* 댓글 삭제 버튼 - 작성자만 표시 */}
+                        {currentUserId && comment.user_id === currentUserId && (
                           <button
                             onClick={() => handleDeleteComment(comment.id)}
                             className="text-gray-400 hover:text-red-600 transition-colors"
                           >
                             <Trash2 size={12} />
                           </button>
-                        ) : null}
+                        )}
                       </div>
                       <p className="text-gray-800 text-xs whitespace-pre-wrap">
                         {comment.content}
@@ -892,7 +893,7 @@ export default function PostDetail({
                 href={`${boardPath}/${prevPost.id}`}
                 className="flex-1 px-3 py-3 text-xs text-gray-800 hover:text-emerald-600 hover:bg-gray-50 transition-colors truncate"
               >
-                {prevPost.title}
+                {isReviewBoard && prevPost.content ? getFirstLine(prevPost.content, 60) : prevPost.title}
               </Link>
             ) : (
               <span className="flex-1 px-3 py-3 text-xs text-gray-400">
@@ -911,7 +912,7 @@ export default function PostDetail({
                 href={`${boardPath}/${nextPost.id}`}
                 className="flex-1 px-3 py-3 text-xs text-gray-800 hover:text-emerald-600 hover:bg-gray-50 transition-colors truncate"
               >
-                {nextPost.title}
+                {isReviewBoard && nextPost.content ? getFirstLine(nextPost.content, 60) : nextPost.title}
               </Link>
             ) : (
               <span className="flex-1 px-3 py-3 text-xs text-gray-400">

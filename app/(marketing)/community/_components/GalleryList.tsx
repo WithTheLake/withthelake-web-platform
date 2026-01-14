@@ -6,64 +6,29 @@ import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Plus, Search, Eye, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react'
-import { type BoardType, type SearchType } from '@/actions/communityActions'
 import { formatRelativeTime } from '@/lib/utils/format'
 import { createClient } from '@/lib/supabase/client'
 import LoginModal from '@/components/modals/LoginModal'
+import type { PostListProps } from '@/types/community'
+import {
+  type BoardType,
+  type SearchType,
+  getBoardLabel,
+  getBoardDescription,
+  getSearchTypeLabel,
+  PAGINATION,
+} from '@/lib/constants/community'
 
-interface CommunityPost {
-  id: string
-  user_id: string | null
-  board_type: BoardType
-  title: string
-  content: string
-  thumbnail_url: string | null
-  images: string[] | null
-  author_nickname: string | null
-  view_count: number
-  is_pinned: boolean
-  is_active: boolean
-  created_at: string
-  updated_at: string
-}
+// 페이지네이션 상수
+const { pagesPerGroup: PAGES_PER_GROUP } = PAGINATION
 
-interface GalleryListProps {
-  boardType: BoardType
-  posts: CommunityPost[]
-  currentPage: number
-  totalPages: number
-  totalCount?: number
-  isAdmin?: boolean
-}
-
-const BOARD_LABELS: Record<BoardType, string> = {
-  notice: '공지사항',
-  event: '이벤트',
-  free: '자유게시판',
-  review: '힐링 후기',
-}
-
-const BOARD_DESCRIPTIONS: Record<BoardType, string> = {
-  notice: '힐링로드 ON의 새로운 소식과 공지사항',
-  event: '다양한 이벤트와 캠페인에 참여하세요',
-  free: '자유롭게 이야기를 나눠보세요',
-  review: '힐링로드 ON 이용 후기를 공유해주세요',
-}
-
+// 게시판별 색상 테마 (갤러리 전용)
 const BOARD_COLORS: Record<BoardType, { from: string; to: string; bg: string; ring: string }> = {
   notice: { from: 'from-emerald-600', to: 'to-teal-600', bg: 'bg-emerald-600', ring: 'ring-emerald-500' },
   event: { from: 'from-amber-500', to: 'to-orange-500', bg: 'bg-amber-500', ring: 'ring-amber-500' },
   free: { from: 'from-emerald-600', to: 'to-teal-600', bg: 'bg-emerald-600', ring: 'ring-emerald-500' },
   review: { from: 'from-purple-600', to: 'to-pink-600', bg: 'bg-purple-600', ring: 'ring-purple-500' },
 }
-
-const SEARCH_TYPE_LABELS: Record<SearchType, string> = {
-  all: '전체',
-  title: '제목만',
-  author: '작성자',
-}
-
-const PAGES_PER_GROUP = 10
 
 export default function GalleryList({
   boardType,
@@ -72,7 +37,7 @@ export default function GalleryList({
   totalPages,
   totalCount = 0,
   isAdmin = false,
-}: GalleryListProps) {
+}: PostListProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -195,10 +160,10 @@ export default function GalleryList({
             className="text-center"
           >
             <h1 className="text-2xl md:text-3xl font-bold mb-2">
-              {BOARD_LABELS[boardType]}
+              {getBoardLabel(boardType)}
             </h1>
             <p className="text-white/80 text-sm md:text-base">
-              {BOARD_DESCRIPTIONS[boardType]}
+              {getBoardDescription(boardType)}
             </p>
           </motion.div>
         </div>
@@ -218,7 +183,7 @@ export default function GalleryList({
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                 }`}
               >
-                {BOARD_LABELS[tab]}
+                {getBoardLabel(tab)}
               </Link>
             ))}
           </div>
@@ -449,7 +414,7 @@ export default function GalleryList({
               onClick={() => setShowSearchTypeDropdown(!showSearchTypeDropdown)}
               className="flex items-center gap-1.5 px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors min-w-[100px]"
             >
-              {SEARCH_TYPE_LABELS[searchType]}
+              {getSearchTypeLabel(searchType)}
               <ChevronDown size={16} className={`transition-transform ${showSearchTypeDropdown ? 'rotate-180' : ''}`} />
             </button>
 
@@ -468,7 +433,7 @@ export default function GalleryList({
                         searchType === type ? `text-${boardType === 'event' ? 'amber' : 'purple'}-600 font-semibold bg-${boardType === 'event' ? 'amber' : 'purple'}-50` : 'text-gray-700'
                       }`}
                     >
-                      {SEARCH_TYPE_LABELS[type]}
+                      {getSearchTypeLabel(type)}
                     </button>
                   ))}
                 </div>

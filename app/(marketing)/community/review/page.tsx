@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { getPosts, type SearchType } from '@/actions/communityActions'
-import GalleryList from '../_components/GalleryList'
+import ReviewList from '../_components/ReviewList'
 
 interface PageProps {
   searchParams: Promise<{ page?: string; search?: string; searchType?: string }>
@@ -25,8 +25,7 @@ export default async function ReviewPage({ searchParams }: PageProps) {
 
   return (
     <Suspense fallback={<div className="min-h-screen bg-gray-50" />}>
-      <GalleryList
-        boardType="review"
+      <ReviewList
         posts={postsResult.data || []}
         currentPage={page}
         totalPages={postsResult.totalPages || 1}

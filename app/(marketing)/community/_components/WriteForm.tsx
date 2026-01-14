@@ -1,12 +1,19 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Save, X, ImagePlus, Trash2, Star, Loader2, Image as ImageIcon } from 'lucide-react'
-import { createPost, updatePost, type BoardType, type FreeBoardTopic } from '@/actions/communityActions'
+import { createPost, updatePost } from '@/actions/communityActions'
 import { uploadCommunityImage, deleteCommunityImage } from '@/actions/imageActions'
+import {
+  type BoardType,
+  type FreeBoardTopic,
+  getBoardLabel,
+  getTopicLabel,
+  FREE_BOARD_TOPICS,
+} from '@/lib/constants/community'
 
 interface UploadedImage {
   url: string
@@ -27,25 +34,14 @@ interface WriteFormProps {
   isEdit: boolean
 }
 
-const TOPIC_LABELS: Record<FreeBoardTopic, string> = {
-  chat: '잡담',
-  question: '질문',
-  info: '정보',
-  review: '후기',
-}
-
-const BOARD_LABELS: Record<BoardType, string> = {
-  notice: '공지사항',
-  event: '이벤트',
-  free: '자유게시판',
-  review: '힐링 후기',
-}
-
 // 갤러리 스타일 이미지 업로드가 필요한 게시판 (이벤트/후기)
 const GALLERY_IMAGE_BOARDS: BoardType[] = ['event', 'review']
 
 // 인라인 이미지 삽입이 가능한 게시판 (공지사항/자유게시판)
 const INLINE_IMAGE_BOARDS: BoardType[] = ['notice', 'free']
+
+// 제목이 없는 게시판 (후기)
+const NO_TITLE_BOARDS: BoardType[] = ['review']
 
 export default function WriteForm({
   boardType,
@@ -82,6 +78,41 @@ export default function WriteForm({
   const actualBoardType = existingPost?.board_type || boardType
   const showGalleryImageUpload = GALLERY_IMAGE_BOARDS.includes(actualBoardType)
   const showInlineImageUpload = INLINE_IMAGE_BOARDS.includes(actualBoardType)
+  const showTitleField = !NO_TITLE_BOARDS.includes(actualBoardType)
+
+  // localStorage 키 (게시판별로 분리)
+  const STORAGE_KEY = `writeForm_${actualBoardType}${isEdit && existingPost ? `_edit_${existingPost.id}` : '_new'}`
+
+  // 폼 내용 자동 저장 (localStorage)
+  useEffect(() => {
+    // 수정 모드가 아니고 새 글 작성일 때만 복원
+    if (!isEdit) {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved)
+          if (parsed.title) setTitle(parsed.title)
+          if (parsed.content) setContent(parsed.content)
+          if (parsed.topic) setTopic(parsed.topic)
+        } catch {
+          // 파싱 실패 시 무시
+        }
+      }
+    }
+  }, [STORAGE_KEY, isEdit])
+
+  // 폼 내용 변경 시 자동 저장 (500ms 디바운스)
+  useEffect(() => {
+    // 수정 모드가 아닐 때만 저장
+    if (isEdit) return
+
+    const timeoutId = setTimeout(() => {
+      const dataToSave = { title, content, topic }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave))
+    }, 500)
+
+    return () => clearTimeout(timeoutId)
+  }, [title, content, topic, STORAGE_KEY, isEdit])
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
@@ -194,7 +225,8 @@ export default function WriteForm({
     e.preventDefault()
     setError('')
 
-    if (!title.trim()) {
+    // 제목 필드가 있는 게시판만 제목 검증
+    if (showTitleField && !title.trim()) {
       setError('제목을 입력해주세요.')
       return
     }
@@ -215,7 +247,14 @@ export default function WriteForm({
     try {
       const formData = new FormData()
       formData.append('board_type', actualBoardType)
-      formData.append('title', title.trim())
+      // 후기 게시판은 제목을 본문 첫 줄로 자동 생성
+      if (showTitleField) {
+        formData.append('title', title.trim())
+      } else {
+        // 본문에서 첫 줄 추출 (최대 50자)
+        const firstLine = content.trim().split('\n')[0].substring(0, 50)
+        formData.append('title', firstLine || '후기')
+      }
       formData.append('content', content.trim())
 
       // 자유게시판은 주제 추가
@@ -242,6 +281,9 @@ export default function WriteForm({
         return
       }
 
+      // 성공 시 localStorage 정리
+      localStorage.removeItem(STORAGE_KEY)
+
       router.push(`/community/${actualBoardType}`)
       router.refresh()
     } catch (err) {
@@ -266,7 +308,7 @@ export default function WriteForm({
             {isEdit ? '글 수정' : '글 쓰기'}
           </h1>
           <p className="text-emerald-100 mt-1">
-            {BOARD_LABELS[actualBoardType]}
+            {getBoardLabel(actualBoardType)}
           </p>
         </div>
       </section>
@@ -292,7 +334,7 @@ export default function WriteForm({
                 주제
               </label>
               <div className="flex flex-wrap gap-2">
-                {(['chat', 'question', 'info', 'review'] as FreeBoardTopic[]).map((t) => (
+                {FREE_BOARD_TOPICS.map((t) => (
                   <button
                     key={t}
                     type="button"
@@ -304,30 +346,32 @@ export default function WriteForm({
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                   >
-                    {TOPIC_LABELS[t]}
+                    {getTopicLabel(t)}
                   </button>
                 ))}
               </div>
             </div>
           )}
 
-          {/* 제목 */}
-          <div className="mb-6">
-            <label htmlFor="title" className="block text-sm font-semibold text-gray-700 mb-2">
-              제목
-            </label>
-            <input
-              type="text"
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="제목을 입력하세요 (최대 200자)"
-              maxLength={200}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-base"
-              disabled={isSubmitting}
-            />
-            <p className="text-xs text-gray-500 mt-1 text-right">{title.length} / 200</p>
-          </div>
+          {/* 제목 (후기 게시판 제외) */}
+          {showTitleField && (
+            <div className="mb-6">
+              <label htmlFor="title" className="block text-sm font-semibold text-gray-700 mb-2">
+                제목
+              </label>
+              <input
+                type="text"
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="제목을 입력하세요 (최대 200자)"
+                maxLength={200}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-base"
+                disabled={isSubmitting}
+              />
+              <p className="text-xs text-gray-500 mt-1 text-right">{title.length} / 200</p>
+            </div>
+          )}
 
           {/* 이미지 업로드 (이벤트/후기 게시판만) */}
           {showGalleryImageUpload && (

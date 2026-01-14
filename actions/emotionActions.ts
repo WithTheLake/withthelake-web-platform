@@ -405,3 +405,55 @@ export async function checkAuthStatus() {
     }
   }
 }
+
+/**
+ * 오늘 감정 기록 여부 확인
+ * 한국 시간 기준으로 오늘 00:00:00 이후 기록이 있는지 체크
+ */
+export async function checkTodayEmotionRecord() {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return {
+        success: false,
+        error: 'LOGIN_REQUIRED',
+        hasRecordedToday: false
+      }
+    }
+
+    // 한국 시간 기준 오늘 00:00:00 계산
+    const now = new Date()
+    // 한국은 UTC+9
+    const koreaOffset = 9 * 60 * 60 * 1000
+    const koreaTime = new Date(now.getTime() + koreaOffset)
+
+    // 한국 시간 기준 오늘 00:00:00 (UTC로 변환)
+    const todayStartKorea = new Date(koreaTime)
+    todayStartKorea.setUTCHours(0, 0, 0, 0)
+    const todayStartUTC = new Date(todayStartKorea.getTime() - koreaOffset)
+
+    const { data, error } = await supabase
+      .from('emotion_records')
+      .select('id, created_at')
+      .eq('user_id', user.id)
+      .gte('created_at', todayStartUTC.toISOString())
+      .limit(1)
+
+    if (error) throw error
+
+    return {
+      success: true,
+      hasRecordedToday: data && data.length > 0,
+      lastRecord: data && data.length > 0 ? data[0] : null
+    }
+  } catch (error) {
+    console.error('Check today emotion record error:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to check today record',
+      hasRecordedToday: false
+    }
+  }
+}

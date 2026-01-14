@@ -37,6 +37,13 @@ interface Comment {
 
 export type SearchType = 'all' | 'title' | 'author'
 
+// 이전/다음 게시글 타입
+export interface AdjacentPost {
+  id: string
+  title: string
+  content?: string  // 후기 게시판에서만 사용 (제목 대신 본문 첫 줄 표시)
+}
+
 interface GetPostsOptions {
   page?: number
   limit?: number
@@ -726,8 +733,14 @@ export async function deleteComment(commentId: string) {
 
 /**
  * 이전글/다음글 조회
+ * - 후기 게시판: content도 포함 (제목 대신 본문 첫 줄 표시용)
  */
-export async function getAdjacentPosts(postId: string, boardType: BoardType) {
+export async function getAdjacentPosts(postId: string, boardType: BoardType): Promise<{
+  success: boolean
+  error?: string
+  prevPost: AdjacentPost | null
+  nextPost: AdjacentPost | null
+}> {
   try {
     const supabase = await createClient()
 
@@ -740,13 +753,16 @@ export async function getAdjacentPosts(postId: string, boardType: BoardType) {
 
     if (currentError) throw currentError
     if (!currentPost) {
-      return { success: false, error: 'Post not found' }
+      return { success: false, error: 'Post not found', prevPost: null, nextPost: null }
     }
+
+    // 후기 게시판은 content도 조회 (제목 대신 본문 첫 줄 표시)
+    const selectFields = boardType === 'review' ? 'id, title, content' : 'id, title'
 
     // 이전글 (현재 글보다 오래된 글 중 가장 최신)
     const { data: prevPost } = await supabase
       .from('community_posts')
-      .select('id, title')
+      .select(selectFields)
       .eq('board_type', boardType)
       .eq('is_active', true)
       .lt('created_at', currentPost.created_at)
@@ -757,7 +773,7 @@ export async function getAdjacentPosts(postId: string, boardType: BoardType) {
     // 다음글 (현재 글보다 최신 글 중 가장 오래된)
     const { data: nextPost } = await supabase
       .from('community_posts')
-      .select('id, title')
+      .select(selectFields)
       .eq('board_type', boardType)
       .eq('is_active', true)
       .gt('created_at', currentPost.created_at)
@@ -767,8 +783,8 @@ export async function getAdjacentPosts(postId: string, boardType: BoardType) {
 
     return {
       success: true,
-      prevPost: prevPost || null,
-      nextPost: nextPost || null
+      prevPost: (prevPost as unknown as AdjacentPost) || null,
+      nextPost: (nextPost as unknown as AdjacentPost) || null
     }
   } catch (error) {
     console.error('Get adjacent posts error:', error)

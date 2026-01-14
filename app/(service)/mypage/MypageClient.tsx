@@ -9,16 +9,18 @@ import LoginModal from '@/components/modals/LoginModal'
 import WeeklyEmotionReport from '@/components/report/WeeklyEmotionReport'
 import { EMOTION_LABELS, ACTION_LABELS, CHANGE_LABELS } from '@/types/emotion'
 import { formatRelativeTime } from '@/lib/utils/format'
+import { useToast } from '@/components/ui/Toast'
 
 interface EmotionRecord {
   id: string
   emotion_type: string
-  emotion_reason: string | null
-  helpful_actions: string[] | null
-  positive_changes: string[] | null
-  self_message: string | null
-  experience_location: string | null
-  note: string | null // 하위 호환성
+  intensity?: number
+  emotion_reason?: string | null
+  helpful_actions?: string[] | null
+  positive_changes?: string[] | null
+  self_message?: string | null
+  experience_location?: string | null
+  note?: string | null // 하위 호환성
   created_at: string
 }
 
@@ -42,6 +44,7 @@ export default function MypageClient({
   emotionRecords,
   userProfile,
 }: MypageClientProps) {
+  const { showToast } = useToast()
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [isReportOpen, setIsReportOpen] = useState(false)
@@ -55,7 +58,7 @@ export default function MypageClient({
       window.location.href = '/'
     } catch (error) {
       console.error('Logout error:', error)
-      alert('로그아웃에 실패했습니다.')
+      showToast('로그아웃에 실패했습니다.', 'error')
       setIsLoggingOut(false)
     }
   }

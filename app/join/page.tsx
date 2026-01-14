@@ -6,9 +6,11 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Loader2, MessageCircle, ArrowLeft, UserPlus } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { useToast } from '@/components/ui/Toast'
 
 export default function JoinPage() {
   const router = useRouter()
+  const { showToast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
 
@@ -43,12 +45,12 @@ export default function JoinPage() {
 
       if (error) {
         console.error('Kakao join error:', error)
-        alert('회원가입에 실패했습니다. 다시 시도해주세요.')
+        showToast('회원가입에 실패했습니다. 다시 시도해주세요.', 'error')
         setIsLoading(false)
       }
     } catch (error) {
       console.error('Join error:', error)
-      alert('회원가입 중 오류가 발생했습니다.')
+      showToast('회원가입 중 오류가 발생했습니다.', 'error')
       setIsLoading(false)
     }
   }
