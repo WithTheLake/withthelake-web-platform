@@ -4,10 +4,20 @@ import { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, ChevronLeft, ChevronRight, Star, Eye, Edit, Trash2, Loader2 } from 'lucide-react'
+import { X, ChevronLeft, ChevronRight, Star, Eye, Edit, Trash2, Loader2, Footprints, ShoppingBag } from 'lucide-react'
 import { deletePost } from '@/actions/communityActions'
 import { useToast } from '@/components/ui/Toast'
 import { formatDate } from '@/lib/utils/format'
+import { maskNickname } from '@/lib/utils/text'
+
+// 상품 정보 타입
+interface ProductInfo {
+  id: string
+  name: string
+  image_url: string | null
+  rating: number // 평균 평점
+  review_count: number
+}
 
 interface ReviewPost {
   id: string
@@ -24,10 +34,10 @@ interface ReviewPost {
   is_active?: boolean
   created_at: string
   updated_at?: string
-  // 추후 구현될 필드 (현재는 임시 데이터)
-  rating?: number
-  review_type?: 'activity' | 'product'
-  related_item?: string
+  // 후기 게시판 전용 필드
+  rating?: number | null // 작성자가 매긴 평점 (1-5)
+  product_id?: string | null // 연결된 상품 ID
+  product?: ProductInfo | null // JOIN된 상품 정보
 }
 
 interface ReviewDetailModalProps {
@@ -38,43 +48,48 @@ interface ReviewDetailModalProps {
   currentUserId?: string | null
   onNavigate: (postId: string) => void
   onDelete?: () => void  // 삭제 후 콜백
+  productsMap?: Map<string, ProductInfo> // 상품 정보 매핑
 }
 
-// 별점 렌더링 컴포넌트
-function StarRating({ rating }: { rating: number }) {
+// 별점 렌더링 컴포넌트 (0.5 단위 지원)
+function StarRating({ rating, size = 16 }: { rating: number; size?: number }) {
   return (
     <div className="flex gap-0.5">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <Star
-          key={star}
-          size={16}
-          className={star <= rating ? 'text-amber-400 fill-amber-400' : 'text-gray-200'}
-        />
-      ))}
+      {[1, 2, 3, 4, 5].map((star) => {
+        const isFull = rating >= star
+        const isHalf = !isFull && rating >= star - 0.5
+
+        return (
+          <div key={star} className="relative" style={{ width: size, height: size }}>
+            {/* 빈 별 (배경) */}
+            <Star size={size} className="absolute text-gray-200" />
+            {/* 채워진 별 (반별 지원) */}
+            {(isFull || isHalf) && (
+              <div
+                className="absolute overflow-hidden"
+                style={{ width: isFull ? '100%' : '50%' }}
+              >
+                <Star size={size} className="text-amber-400 fill-amber-400" />
+              </div>
+            )}
+          </div>
+        )
+      })}
     </div>
   )
 }
 
-// 임시 더미 데이터 생성 함수 (실제 DB 연동 전까지 사용)
+// 활동 후기용 임시 데이터 (아직 활동 DB 없음)
+const ACTIVITY_ITEMS = ['춘천 맨발걷기', '강릉 해변길', '속초 힐링로드', '평창 자연숲길']
+
+const getRandomActivityItem = (id: string): string => {
+  const hash = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+  return ACTIVITY_ITEMS[hash % ACTIVITY_ITEMS.length]
+}
+
 const getRandomRating = (id: string): number => {
   const hash = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
   return (hash % 2) + 4 // 4 또는 5
-}
-
-const getRandomReviewType = (id: string): 'activity' | 'product' => {
-  const hash = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
-  return hash % 3 === 0 ? 'product' : 'activity'
-}
-
-const getRandomRelatedItem = (id: string, type: 'activity' | 'product'): string => {
-  const hash = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
-  if (type === 'activity') {
-    const activities = ['춘천 맨발걷기', '강릉 해변길', '속초 힐링로드', '평창 자연숲길']
-    return activities[hash % activities.length]
-  } else {
-    const products = ['르무통 업 발 편한 메리노울 운동화', '힐링로드 발 마사지기', '맨발걷기 양말']
-    return products[hash % products.length]
-  }
 }
 
 export default function ReviewDetailModal({
@@ -85,6 +100,7 @@ export default function ReviewDetailModal({
   currentUserId,
   onNavigate,
   onDelete,
+  productsMap,
 }: ReviewDetailModalProps) {
   const { showToast } = useToast()
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
@@ -95,10 +111,18 @@ export default function ReviewDetailModal({
   const prevPost = currentIndex > 0 ? posts[currentIndex - 1] : null
   const nextPost = currentIndex < posts.length - 1 ? posts[currentIndex + 1] : null
 
-  // 임시 데이터
+  // 리뷰 타입 결정: product_id가 있으면 제품 후기, 없으면 활동 후기
+  const isProductReview = !!post?.product_id
+  const reviewType: 'product' | 'activity' = isProductReview ? 'product' : 'activity'
+
+  // 개별 리뷰 평점 (작성자가 매긴 평점)
   const rating = post?.rating ?? (post ? getRandomRating(post.id) : 5)
-  const reviewType = post?.review_type ?? (post ? getRandomReviewType(post.id) : 'activity')
-  const relatedItem = post?.related_item ?? (post ? getRandomRelatedItem(post.id, reviewType) : '')
+
+  // 상품 정보 (제품 후기인 경우 JOIN된 데이터에서 직접 가져옴, 없으면 productsMap에서 fallback)
+  const productInfo = post?.product ?? (isProductReview && post?.product_id && productsMap ? productsMap.get(post.product_id) : null)
+
+  // 관련 항목명
+  const relatedItem = productInfo?.name ?? (post ? getRandomActivityItem(post.id) : '')
 
   // 작성자 여부
   const isOwner = currentUserId && post?.user_id === currentUserId
@@ -241,11 +265,19 @@ export default function ReviewDetailModal({
               {/* 관련 상품/활동 정보 */}
               <div className="px-6 py-3 bg-gray-50/70">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
+                  <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm overflow-hidden">
                     {reviewType === 'activity' ? (
-                      <span className="text-lg">🚶</span>
+                      <Footprints size={20} className="text-purple-500" />
+                    ) : productInfo?.image_url ? (
+                      <Image
+                        src={productInfo.image_url}
+                        alt={productInfo.name}
+                        width={40}
+                        height={40}
+                        className="object-cover w-full h-full"
+                      />
                     ) : (
-                      <span className="text-lg">👟</span>
+                      <ShoppingBag size={20} className="text-pink-500" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -311,7 +343,7 @@ export default function ReviewDetailModal({
                 {/* 1줄: 닉네임 + 날짜 */}
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium text-gray-900">
-                    {post.author_nickname || '익명'}
+                    {maskNickname(post.author_nickname)}
                   </span>
                   <span className="text-xs text-gray-400">
                     {formatDate(post.created_at)}

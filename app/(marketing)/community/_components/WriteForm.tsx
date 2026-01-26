@@ -4,9 +4,10 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Save, X, ImagePlus, Trash2, Star, Loader2, Image as ImageIcon } from 'lucide-react'
+import { Save, X, ImagePlus, Trash2, Star, Loader2, Image as ImageIcon, ChevronDown, Package } from 'lucide-react'
 import { createPost, updatePost } from '@/actions/communityActions'
 import { uploadCommunityImage, deleteCommunityImage } from '@/actions/imageActions'
+import { getProductsForSelect } from '@/actions/storeActions'
 import {
   type BoardType,
   type FreeBoardTopic,
@@ -20,6 +21,12 @@ interface UploadedImage {
   path: string
 }
 
+interface ProductOption {
+  id: string
+  name: string
+  image_url: string | null
+}
+
 interface WriteFormProps {
   boardType: BoardType
   existingPost?: {
@@ -30,6 +37,9 @@ interface WriteFormProps {
     topic?: FreeBoardTopic | null
     thumbnail_url?: string | null
     images?: string[] | null
+    // 후기 게시판 전용 필드
+    rating?: number | null
+    product_id?: string | null
   } | null
   isEdit: boolean
 }
@@ -59,6 +69,13 @@ export default function WriteForm({
   const [topic, setTopic] = useState<FreeBoardTopic>(existingPost?.topic || 'chat')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
+
+  // 후기 게시판 전용 상태
+  const [rating, setRating] = useState<number>(existingPost?.rating || 5)
+  const [selectedProductId, setSelectedProductId] = useState<string>(existingPost?.product_id || '')
+  const [products, setProducts] = useState<ProductOption[]>([])
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false)
+  const [showProductDropdown, setShowProductDropdown] = useState(false)
 
   // 이미지 관련 상태
   const [images, setImages] = useState<UploadedImage[]>(() => {
@@ -114,13 +131,53 @@ export default function WriteForm({
     return () => clearTimeout(timeoutId)
   }, [title, content, topic, STORAGE_KEY, isEdit])
 
+  // 후기 게시판: 상품 목록 로드
+  useEffect(() => {
+    if (actualBoardType !== 'review') return
+
+    const loadProducts = async () => {
+      setIsLoadingProducts(true)
+      try {
+        const productList = await getProductsForSelect()
+        setProducts(productList)
+      } catch (error) {
+        console.error('상품 목록 로드 실패:', error)
+      } finally {
+        setIsLoadingProducts(false)
+      }
+    }
+
+    loadProducts()
+  }, [actualBoardType])
+
+  // 드롭다운 외부 클릭 시 닫기
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      if (!target.closest('.product-dropdown')) {
+        setShowProductDropdown(false)
+      }
+    }
+
+    if (showProductDropdown) {
+      document.addEventListener('click', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('click', handleClickOutside)
+    }
+  }, [showProductDropdown])
+
+  // 선택된 상품 정보
+  const selectedProduct = products.find(p => p.id === selectedProductId)
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
     if (!files || files.length === 0) return
 
-    // 최대 5장 제한
-    if (images.length + files.length > 5) {
-      setError('이미지는 최대 5장까지 업로드 가능합니다.')
+    // 최대 10장 제한
+    if (images.length + files.length > 10) {
+      setError('이미지는 최대 10장까지 업로드 가능합니다.')
       return
     }
 
@@ -242,6 +299,12 @@ export default function WriteForm({
       return
     }
 
+    // 후기 게시판은 상품 선택 필수
+    if (actualBoardType === 'review' && !selectedProductId) {
+      setError('리뷰할 상품을 선택해주세요.')
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
@@ -260,6 +323,12 @@ export default function WriteForm({
       // 자유게시판은 주제 추가
       if (actualBoardType === 'free') {
         formData.append('topic', topic)
+      }
+
+      // 후기 게시판은 평점과 상품 ID 추가
+      if (actualBoardType === 'review') {
+        formData.append('rating', rating.toString())
+        formData.append('product_id', selectedProductId)
       }
 
       // 이미지 정보 추가
@@ -353,6 +422,156 @@ export default function WriteForm({
             </div>
           )}
 
+          {/* 후기 게시판: 상품 선택 */}
+          {actualBoardType === 'review' && (
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                리뷰할 상품 <span className="text-red-500">*</span>
+              </label>
+              <div className="relative product-dropdown">
+                <button
+                  type="button"
+                  onClick={() => setShowProductDropdown(!showProductDropdown)}
+                  disabled={isLoadingProducts || isSubmitting}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-base text-left flex items-center justify-between bg-white disabled:bg-gray-50"
+                >
+                  {isLoadingProducts ? (
+                    <span className="text-gray-400 flex items-center gap-2">
+                      <Loader2 size={16} className="animate-spin" />
+                      상품 목록 불러오는 중...
+                    </span>
+                  ) : selectedProduct ? (
+                    <span className="flex items-center gap-3">
+                      {selectedProduct.image_url ? (
+                        <Image
+                          src={selectedProduct.image_url}
+                          alt={selectedProduct.name}
+                          width={32}
+                          height={32}
+                          className="rounded object-cover"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center">
+                          <Package size={16} className="text-gray-400" />
+                        </div>
+                      )}
+                      <span className="text-gray-900">{selectedProduct.name}</span>
+                    </span>
+                  ) : (
+                    <span className="text-gray-400">상품을 선택해주세요</span>
+                  )}
+                  <ChevronDown size={20} className={`text-gray-400 transition-transform ${showProductDropdown ? 'rotate-180' : ''}`} />
+                </button>
+
+                {/* 드롭다운 목록 */}
+                <AnimatePresence>
+                  {showProductDropdown && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="absolute z-10 top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                    >
+                      {products.length === 0 ? (
+                        <div className="px-4 py-3 text-gray-500 text-sm">
+                          등록된 상품이 없습니다
+                        </div>
+                      ) : (
+                        products.map((product) => (
+                          <button
+                            key={product.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedProductId(product.id)
+                              setShowProductDropdown(false)
+                            }}
+                            className={`w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-emerald-50 transition-colors ${
+                              selectedProductId === product.id ? 'bg-emerald-50' : ''
+                            }`}
+                          >
+                            {product.image_url ? (
+                              <Image
+                                src={product.image_url}
+                                alt={product.name}
+                                width={40}
+                                height={40}
+                                className="rounded object-cover"
+                              />
+                            ) : (
+                              <div className="w-10 h-10 bg-gray-100 rounded flex items-center justify-center">
+                                <Package size={20} className="text-gray-400" />
+                              </div>
+                            )}
+                            <span className="text-gray-900">{product.name}</span>
+                            {selectedProductId === product.id && (
+                              <span className="ml-auto text-emerald-600 text-sm font-medium">선택됨</span>
+                            )}
+                          </button>
+                        ))
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+          )}
+
+          {/* 후기 게시판: 평점 선택 (0.5 단위) */}
+          {actualBoardType === 'review' && (
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                평점 <span className="text-red-500">*</span>
+              </label>
+              <div className="flex items-center gap-0.5">
+                {[1, 2, 3, 4, 5].map((star) => {
+                  const isFull = rating >= star
+                  const isHalf = !isFull && rating >= star - 0.5
+
+                  return (
+                    <div key={star} className="relative" style={{ width: 36, height: 36 }}>
+                      {/* 왼쪽 반 클릭 = n-0.5점 */}
+                      <button
+                        type="button"
+                        onClick={() => setRating(star - 0.5)}
+                        disabled={isSubmitting}
+                        className="absolute left-0 top-0 w-1/2 h-full z-10 cursor-pointer disabled:cursor-not-allowed"
+                        aria-label={`${star - 0.5}점`}
+                      />
+                      {/* 오른쪽 반 클릭 = n점 */}
+                      <button
+                        type="button"
+                        onClick={() => setRating(star)}
+                        disabled={isSubmitting}
+                        className="absolute right-0 top-0 w-1/2 h-full z-10 cursor-pointer disabled:cursor-not-allowed"
+                        aria-label={`${star}점`}
+                      />
+                      {/* 별 아이콘 */}
+                      <div className="relative w-9 h-9 hover:scale-110 transition-transform">
+                        {/* 빈 별 (배경) */}
+                        <Star size={36} className="absolute text-gray-300" />
+                        {/* 채워진 별 (반별 지원) */}
+                        {(isFull || isHalf) && (
+                          <div
+                            className="absolute overflow-hidden"
+                            style={{ width: isFull ? '100%' : '50%' }}
+                          >
+                            <Star size={36} className="text-amber-400 fill-amber-400" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+                <span className="ml-3 text-lg font-semibold text-gray-700">
+                  {rating}점
+                </span>
+              </div>
+              <p className="mt-1 text-xs text-gray-500">
+                별의 왼쪽/오른쪽을 클릭해서 0.5 단위로 선택할 수 있습니다
+              </p>
+            </div>
+          )}
+
           {/* 제목 (후기 게시판 제외) */}
           {showTitleField && (
             <div className="mb-6">
@@ -378,7 +597,7 @@ export default function WriteForm({
             <div className="mb-6">
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 이미지 <span className="text-red-500">*</span>
-                <span className="text-gray-400 font-normal ml-2">(최대 5장, 첫 번째 이미지가 썸네일)</span>
+                <span className="text-gray-400 font-normal ml-2">(최대 10장, 첫 번째 이미지가 썸네일)</span>
               </label>
 
               {/* 이미지 미리보기 그리드 */}

@@ -132,6 +132,9 @@ CREATE TABLE IF NOT EXISTS community_posts (
   comment_count INTEGER DEFAULT 0, -- 댓글 수 (캐싱용)
   is_pinned BOOLEAN DEFAULT FALSE, -- 공지사항 상단 고정
   is_active BOOLEAN DEFAULT TRUE, -- 삭제 처리 (soft delete)
+  -- 후기 게시판 전용 필드
+  rating DECIMAL(2,1) CHECK (rating >= 1 AND rating <= 5 AND (rating * 2) = FLOOR(rating * 2)), -- 평점 (1-5점, 0.5 단위)
+  product_id UUID REFERENCES store_products(id) ON DELETE SET NULL, -- 연결된 상품 (후기 게시판용)
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -142,6 +145,8 @@ CREATE INDEX IF NOT EXISTS idx_community_posts_user_id ON community_posts(user_i
 CREATE INDEX IF NOT EXISTS idx_community_posts_created_at ON community_posts(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_community_posts_is_active ON community_posts(is_active);
 CREATE INDEX IF NOT EXISTS idx_community_posts_is_pinned ON community_posts(is_pinned);
+CREATE INDEX IF NOT EXISTS idx_community_posts_product_id ON community_posts(product_id);
+CREATE INDEX IF NOT EXISTS idx_community_posts_rating ON community_posts(rating);
 
 -- ============================================
 -- 6. community_comments 테이블 (댓글)
@@ -538,5 +543,83 @@ INSERT INTO store_products (name, price, original_price, category, badge, rating
 ('[위드웰미] 데일리 풋샴푸 풋워시 200ml 지장수 맨발걷기 발세정제', 17820, 19800, '케어', '인기', 5.0, 19, '/images/withwellme_dailyfootwash.jpg', 'https://smartstore.naver.com/withlab201/products/12248115925', 2),
 ('[숨토프랜드] 어싱 패드 접지 전자파차단 맨발걷기 맨땅밟기 매트 슈퍼싱글 퀸', 270000, NULL, '어싱', NULL, 0.0, 0, '/images/soomtofriend_earthingpad.jpg', 'https://smartstore.naver.com/withlab201/products/12362102946', 3),
 ('[숨토프랜드] 접지 어싱 베개 커버 숙면 맨발걷기 효과 힐링 60X70cm', 60000, NULL, '어싱', '추천', 0.0, 0, '/images/soomtofriend_earthingcover.jpg', 'https://smartstore.naver.com/withlab201/products/12314861939', 4),
-('[힐링로드ON] 태백 웰니스 걷기 투어 (당일형)', 10000, NULL, '기록', NULL, 0.0, 0, '/images/withwellme_logo1.jpeg', 'https://smartstore.naver.com/withlab201/products/12679438666', 5)
+('[힐링로드ON] 태백 웰니스 걷기 투어 (당일형)', 10000, NULL, '체험', NULL, 0.0, 0, '/images/withwellme_logo1.jpeg', 'https://smartstore.naver.com/withlab201/products/12679438666', 5)
 ON CONFLICT DO NOTHING;
+
+-- ============================================
+-- 마이그레이션: community_posts에 후기 관련 컬럼 추가
+-- (기존 테이블에 컬럼이 없는 경우 실행)
+-- ============================================
+DO $$
+BEGIN
+  -- rating 컬럼 추가 (DECIMAL 타입, 0.5 단위 지원)
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'community_posts' AND column_name = 'rating'
+  ) THEN
+    ALTER TABLE community_posts ADD COLUMN rating DECIMAL(2,1) CHECK (rating >= 1 AND rating <= 5 AND (rating * 2) = FLOOR(rating * 2));
+  END IF;
+
+  -- 기존 INTEGER rating을 DECIMAL로 변환 (이미 존재하는 경우)
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'community_posts' AND column_name = 'rating' AND data_type = 'integer'
+  ) THEN
+    ALTER TABLE community_posts ALTER COLUMN rating TYPE DECIMAL(2,1);
+    ALTER TABLE community_posts DROP CONSTRAINT IF EXISTS community_posts_rating_check;
+    ALTER TABLE community_posts ADD CONSTRAINT community_posts_rating_check CHECK (rating >= 1 AND rating <= 5 AND (rating * 2) = FLOOR(rating * 2));
+  END IF;
+
+  -- product_id 컬럼 추가
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'community_posts' AND column_name = 'product_id'
+  ) THEN
+    ALTER TABLE community_posts ADD COLUMN product_id UUID REFERENCES store_products(id) ON DELETE SET NULL;
+  END IF;
+END $$;
+
+-- ============================================
+-- RPC 함수: 상품 평점/리뷰수 업데이트
+-- ============================================
+
+-- 상품의 평균 평점과 리뷰 수 재계산 함수
+CREATE OR REPLACE FUNCTION update_product_rating(p_product_id UUID)
+RETURNS VOID AS $$
+DECLARE
+  avg_rating DECIMAL(2,1);
+  total_reviews INTEGER;
+BEGIN
+  -- 해당 상품의 활성화된 리뷰에서 평균 평점과 리뷰 수 계산
+  SELECT
+    COALESCE(ROUND(AVG(rating)::numeric, 1), 0),
+    COUNT(*)
+  INTO avg_rating, total_reviews
+  FROM community_posts
+  WHERE product_id = p_product_id
+    AND board_type = 'review'
+    AND is_active = TRUE
+    AND rating IS NOT NULL;
+
+  -- store_products 테이블 업데이트
+  UPDATE store_products
+  SET
+    rating = avg_rating,
+    review_count = total_reviews,
+    updated_at = NOW()
+  WHERE id = p_product_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 모든 상품의 평점/리뷰수 일괄 업데이트 함수
+CREATE OR REPLACE FUNCTION update_all_product_ratings()
+RETURNS VOID AS $$
+DECLARE
+  product RECORD;
+BEGIN
+  FOR product IN SELECT id FROM store_products WHERE is_active = TRUE
+  LOOP
+    PERFORM update_product_rating(product.id);
+  END LOOP;
+END;
+$$ LANGUAGE plpgsql;

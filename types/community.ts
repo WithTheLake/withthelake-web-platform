@@ -2,6 +2,15 @@
 
 import type { BoardType, FreeBoardTopic } from '@/lib/constants/community'
 
+// JOIN된 상품 정보 타입
+export interface ProductInfo {
+  id: string
+  name: string
+  image_url: string | null
+  rating: number
+  review_count: number
+}
+
 // 게시글 인터페이스 (통합)
 export interface CommunityPost {
   id: string
@@ -17,6 +26,10 @@ export interface CommunityPost {
   comment_count: number
   is_pinned: boolean
   is_active: boolean
+  // 후기 게시판 전용 필드
+  rating?: number | null
+  product_id?: string | null
+  product?: ProductInfo | null  // JOIN된 상품 정보
   created_at: string
   updated_at: string
 }

@@ -2,11 +2,21 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath, unstable_noStore as noStore } from 'next/cache'
+import { updateProductRating } from './storeActions'
 
 export type BoardType = 'notice' | 'event' | 'free' | 'review'
 export type FreeBoardTopic = 'chat' | 'question' | 'info' | 'review'
 
-interface CommunityPost {
+// JOIN된 상품 정보 타입
+export interface ProductInfo {
+  id: string
+  name: string
+  image_url: string | null
+  rating: number
+  review_count: number
+}
+
+export interface CommunityPost {
   id: string
   user_id: string | null
   board_type: BoardType
@@ -20,6 +30,10 @@ interface CommunityPost {
   comment_count: number
   is_pinned: boolean
   is_active: boolean
+  // 후기 게시판 전용 필드
+  rating: number | null
+  product_id: string | null
+  product?: ProductInfo | null  // JOIN된 상품 정보
   created_at: string
   updated_at: string
 }
@@ -36,6 +50,7 @@ interface Comment {
 }
 
 export type SearchType = 'all' | 'title' | 'author'
+export type SortBy = 'newest' | 'rating_high' | 'rating_low'
 
 // 이전/다음 게시글 타입
 export interface AdjacentPost {
@@ -50,19 +65,25 @@ interface GetPostsOptions {
   search?: string
   searchType?: SearchType
   topic?: FreeBoardTopic
+  sortBy?: SortBy  // 정렬 옵션 (기본: newest)
 }
 
 /**
  * 게시글 목록 조회 (검색 기능 포함)
  */
 export async function getPosts(boardType: BoardType, options: GetPostsOptions = {}) {
-  const { page = 1, limit = 20, search = '', searchType = 'all', topic } = options
+  const { page = 1, limit = 20, search = '', searchType = 'all', topic, sortBy = 'newest' } = options
 
   try {
     const supabase = await createClient()
 
     const offset = (page - 1) * limit
     const searchTerm = search.trim()
+
+    // 리뷰 게시판일 경우 상품 정보를 JOIN
+    const selectFields = boardType === 'review'
+      ? '*, product:store_products(id, name, image_url, rating, review_count)'
+      : '*'
 
     // 기본 쿼리 조건
     let countQuery = supabase
@@ -73,7 +94,7 @@ export async function getPosts(boardType: BoardType, options: GetPostsOptions = 
 
     let dataQuery = supabase
       .from('community_posts')
-      .select('*')
+      .select(selectFields)
       .eq('board_type', boardType)
       .eq('is_active', true)
 
@@ -108,23 +129,38 @@ export async function getPosts(boardType: BoardType, options: GetPostsOptions = 
     // 총 게시글 수 조회 (페이지네이션용)
     const { count } = await countQuery
 
-    // 게시글 조회 (고정 글 먼저, 그 다음 최신순)
-    const { data, error } = await dataQuery
-      .order('is_pinned', { ascending: false })
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1)
+    // 정렬 조건 적용
+    // 고정 글은 항상 최상단
+    dataQuery = dataQuery.order('is_pinned', { ascending: false })
+
+    // 정렬 옵션에 따른 추가 정렬
+    if (boardType === 'review' && sortBy !== 'newest') {
+      // 후기 게시판에서 평점순 정렬
+      if (sortBy === 'rating_high') {
+        dataQuery = dataQuery.order('rating', { ascending: false })
+      } else if (sortBy === 'rating_low') {
+        dataQuery = dataQuery.order('rating', { ascending: true })
+      }
+      // 같은 평점일 경우 최신순
+      dataQuery = dataQuery.order('created_at', { ascending: false })
+    } else {
+      // 기본: 최신순
+      dataQuery = dataQuery.order('created_at', { ascending: false })
+    }
+
+    const { data, error } = await dataQuery.range(offset, offset + limit - 1)
 
     if (error) throw error
 
     return {
       success: true,
-      data: data as CommunityPost[],
+      data: data as unknown as CommunityPost[],
       total: count || 0,
       page,
       totalPages: Math.ceil((count || 0) / limit)
     }
   } catch (error) {
-    console.error('Get posts error:', error)
+    console.error('Get posts error:', JSON.stringify(error, null, 2))
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to fetch posts',
@@ -153,13 +189,15 @@ export async function getPost(postId: string) {
       .eq('is_active', true)
       .single()
 
-    if (postError) throw postError
-    if (!post) {
+    // 게시글이 없거나 삭제된 경우
+    if (postError?.code === 'PGRST116' || !post) {
       return {
         success: false,
-        error: 'Post not found'
+        error: 'NOT_FOUND',
+        message: '삭제되었거나 존재하지 않는 게시글입니다.'
       }
     }
+    if (postError) throw postError
 
     // 조회수 증가
     await supabase
@@ -232,6 +270,11 @@ export async function createPost(formData: FormData) {
     const imagesJson = formData.get('images') as string | null
     const images = imagesJson ? JSON.parse(imagesJson) : null
 
+    // 후기 게시판 전용 필드
+    const ratingStr = formData.get('rating') as string | null
+    const rating = ratingStr ? parseFloat(ratingStr) : null
+    const productId = formData.get('product_id') as string | null
+
     // 입력값 검증
     if (!boardType || !['notice', 'event', 'free', 'review'].includes(boardType)) {
       return {
@@ -273,6 +316,26 @@ export async function createPost(formData: FormData) {
       }
     }
 
+    // 후기 게시판 유효성 검사
+    if (boardType === 'review') {
+      // 평점은 1~5 사이, 0.5 단위만 허용
+      const isValidRating = rating && rating >= 1 && rating <= 5 && (rating * 2) % 1 === 0
+      if (!isValidRating) {
+        return {
+          success: false,
+          error: 'INVALID_RATING',
+          message: '평점을 선택해주세요. (1~5점, 0.5 단위)'
+        }
+      }
+      if (!productId) {
+        return {
+          success: false,
+          error: 'INVALID_PRODUCT',
+          message: '리뷰할 상품을 선택해주세요.'
+        }
+      }
+    }
+
     const { data, error } = await supabase
       .from('community_posts')
       .insert({
@@ -283,12 +346,20 @@ export async function createPost(formData: FormData) {
         content: content.trim(),
         thumbnail_url: thumbnailUrl || null,
         images: images || null,
-        author_nickname: profile?.nickname || user.email?.split('@')[0] || '익명'
+        author_nickname: profile?.nickname || user.email?.split('@')[0] || '익명',
+        // 후기 게시판 전용 필드
+        rating: boardType === 'review' ? rating : null,
+        product_id: boardType === 'review' ? productId : null
       })
       .select()
       .single()
 
     if (error) throw error
+
+    // 후기 게시판인 경우 상품 평점 업데이트
+    if (boardType === 'review' && productId) {
+      await updateProductRating(productId)
+    }
 
     revalidatePath(`/community`)
 
@@ -329,6 +400,11 @@ export async function updatePost(postId: string, formData: FormData) {
     const imagesJson = formData.get('images') as string | null
     const images = imagesJson ? JSON.parse(imagesJson) : null
 
+    // 후기 게시판 전용 필드
+    const ratingStr = formData.get('rating') as string | null
+    const rating = ratingStr ? parseFloat(ratingStr) : null
+    const productId = formData.get('product_id') as string | null
+
     // 입력값 검증
     if (!title || title.trim().length === 0) {
       return {
@@ -362,6 +438,15 @@ export async function updatePost(postId: string, formData: FormData) {
       }
     }
 
+    // 기존 게시글 정보 조회 (board_type, product_id 확인용)
+    const { data: existingPost } = await supabase
+      .from('community_posts')
+      .select('board_type, product_id')
+      .eq('id', postId)
+      .single()
+
+    const boardType = existingPost?.board_type as BoardType | undefined
+
     // topic이 있으면 함께 업데이트
     const updateData: Record<string, unknown> = {
       title: title.trim(),
@@ -373,6 +458,16 @@ export async function updatePost(postId: string, formData: FormData) {
       updateData.topic = topic
     }
 
+    // 후기 게시판인 경우 rating, product_id 업데이트
+    if (boardType === 'review') {
+      if (rating !== null) {
+        updateData.rating = rating
+      }
+      if (productId !== null) {
+        updateData.product_id = productId
+      }
+    }
+
     const { data, error } = await supabase
       .from('community_posts')
       .update(updateData)
@@ -382,6 +477,18 @@ export async function updatePost(postId: string, formData: FormData) {
       .single()
 
     if (error) throw error
+
+    // 후기 게시판인 경우 상품 평점 업데이트
+    if (boardType === 'review') {
+      // 기존 상품과 새 상품 모두 업데이트
+      const oldProductId = existingPost?.product_id
+      if (oldProductId && oldProductId !== productId) {
+        await updateProductRating(oldProductId)
+      }
+      if (productId) {
+        await updateProductRating(productId)
+      }
+    }
 
     revalidatePath(`/community`)
 
@@ -426,10 +533,10 @@ export async function deletePost(postId: string) {
 
     const isAdmin = profile?.is_admin === true
 
-    // 게시글 정보 확인
+    // 게시글 정보 확인 (product_id 포함)
     const { data: post } = await supabase
       .from('community_posts')
-      .select('user_id, board_type')
+      .select('user_id, board_type, product_id')
       .eq('id', postId)
       .single()
 
@@ -463,6 +570,11 @@ export async function deletePost(postId: string) {
     const { error } = await query
 
     if (error) throw error
+
+    // 후기 게시판인 경우 상품 평점 업데이트
+    if (post.board_type === 'review' && post.product_id) {
+      await updateProductRating(post.product_id)
+    }
 
     revalidatePath(`/community`)
     revalidatePath(`/community/${post.board_type}`)

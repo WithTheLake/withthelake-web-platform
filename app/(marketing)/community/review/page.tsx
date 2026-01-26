@@ -1,9 +1,9 @@
 import { Suspense } from 'react'
-import { getPosts, type SearchType } from '@/actions/communityActions'
+import { getPosts, type SearchType, type SortBy } from '@/actions/communityActions'
 import ReviewList from '../_components/ReviewList'
 
 interface PageProps {
-  searchParams: Promise<{ page?: string; search?: string; searchType?: string }>
+  searchParams: Promise<{ page?: string; search?: string; searchType?: string; sortBy?: string }>
 }
 
 export const metadata = {
@@ -20,8 +20,9 @@ export default async function ReviewPage({ searchParams }: PageProps) {
   const page = Number(params.page) || 1
   const search = params.search || ''
   const searchType = (params.searchType as SearchType) || 'all'
+  const sortBy = (params.sortBy as SortBy) || 'newest'
 
-  const postsResult = await getPosts('review', { page, limit: 12, search, searchType })
+  const postsResult = await getPosts('review', { page, limit: 12, search, searchType, sortBy })
 
   return (
     <Suspense fallback={<div className="min-h-screen bg-gray-50" />}>

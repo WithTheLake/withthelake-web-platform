@@ -26,11 +26,12 @@ interface EmotionRecord {
 interface WeeklyEmotionReportProps {
   isOpen: boolean
   onClose: () => void
+  isAdmin?: boolean
 }
 
 type ViewMode = 'menu' | 'current' | 'thisWeek' | 'history' | 'detail'
 
-export default function WeeklyEmotionReport({ isOpen, onClose }: WeeklyEmotionReportProps) {
+export default function WeeklyEmotionReport({ isOpen, onClose, isAdmin = false }: WeeklyEmotionReportProps) {
   const { showToast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [isGeneratingInsight, setIsGeneratingInsight] = useState(false)
@@ -183,8 +184,12 @@ export default function WeeklyEmotionReport({ isOpen, onClose }: WeeklyEmotionRe
     loadSavedReports()
   }
 
-  // 지난 주 보고서 생성하기
+  // 지난 주 보고서 생성하기 (관리자만 가능)
   const handleGenerateReport = () => {
+    if (!isAdmin) {
+      showToast('관리자만 보고서를 생성할 수 있습니다.', 'warning')
+      return
+    }
     setViewMode('current')
     loadReport()
   }
@@ -274,22 +279,24 @@ export default function WeeklyEmotionReport({ isOpen, onClose }: WeeklyEmotionRe
         </div>
       </motion.button>
 
-      {/* 이번 주 보고서 생성 버튼 (테스트용) */}
-      <motion.button
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        onClick={handleGenerateThisWeekReport}
-        className="w-full p-5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-2xl flex items-center gap-4 hover:from-amber-600 hover:to-orange-600 transition-colors"
-      >
-        <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-          <FlaskConical size={24} />
-        </div>
-        <div className="text-left">
-          <h3 className="font-bold text-lg">이번 주 보고서 (테스트)</h3>
-          <p className="text-amber-100 text-sm">이번 주 감정을 미리 확인해요</p>
-        </div>
-      </motion.button>
+      {/* 이번 주 보고서 생성 버튼 (테스트용) - 관리자만 표시 */}
+      {isAdmin && (
+        <motion.button
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          onClick={handleGenerateThisWeekReport}
+          className="w-full p-5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-2xl flex items-center gap-4 hover:from-amber-600 hover:to-orange-600 transition-colors"
+        >
+          <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+            <FlaskConical size={24} />
+          </div>
+          <div className="text-left">
+            <h3 className="font-bold text-lg">이번 주 보고서 (테스트)</h3>
+            <p className="text-amber-100 text-sm">이번 주 감정을 미리 확인해요</p>
+          </div>
+        </motion.button>
+      )}
     </div>
   )
 

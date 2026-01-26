@@ -36,6 +36,7 @@ interface MypageClientProps {
   user: { id: string; email?: string | null } | null
   emotionRecords: EmotionRecord[]
   userProfile: UserProfile | null
+  isAdmin?: boolean
 }
 
 export default function MypageClient({
@@ -43,6 +44,7 @@ export default function MypageClient({
   user,
   emotionRecords,
   userProfile,
+  isAdmin = false,
 }: MypageClientProps) {
   const { showToast } = useToast()
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
@@ -367,6 +369,7 @@ export default function MypageClient({
       <WeeklyEmotionReport
         isOpen={isReportOpen}
         onClose={() => setIsReportOpen(false)}
+        isAdmin={isAdmin}
       />
 
       <LoginModal

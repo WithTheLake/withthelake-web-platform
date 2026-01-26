@@ -63,6 +63,15 @@ export const SEARCH_TYPE_LABELS = {
   author: '작성자',
 } as const
 
+// 정렬 옵션
+export const SORT_OPTIONS = ['newest', 'rating_high', 'rating_low'] as const
+
+export const SORT_LABELS = {
+  newest: '최신순',
+  rating_high: '평점 높은순',
+  rating_low: '평점 낮은순',
+} as const
+
 // 페이지네이션 설정
 export const PAGINATION = {
   postsPerPage: 10,
@@ -73,6 +82,7 @@ export const PAGINATION = {
 export type BoardType = typeof BOARD_TYPES[number]
 export type FreeBoardTopic = typeof FREE_BOARD_TOPICS[number]
 export type SearchType = typeof SEARCH_TYPES[number]
+export type SortBy = typeof SORT_OPTIONS[number]
 
 // 헬퍼 함수
 export const getBoardInfo = (type: string) => {
@@ -97,4 +107,8 @@ export const getTopicLabel = (topic: string): string => {
 
 export const getSearchTypeLabel = (type: string): string => {
   return SEARCH_TYPE_LABELS[type as SearchType] || type
+}
+
+export const getSortLabel = (sortBy: string): string => {
+  return SORT_LABELS[sortBy as SortBy] || sortBy
 }

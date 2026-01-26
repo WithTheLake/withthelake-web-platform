@@ -1,7 +1,7 @@
 // 스토어 관련 상수
 
 // 카테고리
-export const STORE_CATEGORIES = ['전체', '케어', '어싱', '기록'] as const
+export const STORE_CATEGORIES = ['전체', '케어', '어싱', '체험'] as const
 
 // 뱃지 스타일
 export const STORE_BADGES = {

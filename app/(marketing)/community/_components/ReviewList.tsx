@@ -5,27 +5,23 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Plus, Search, ChevronLeft, ChevronRight, ChevronDown, Star, Image as ImageIcon, Footprints, ShoppingBag } from 'lucide-react'
+import { Plus, Search, ChevronLeft, ChevronRight, ChevronDown, Star, Image as ImageIcon, ShoppingBag, Footprints } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import LoginModal from '@/components/modals/LoginModal'
 import ReviewDetailModal from './ReviewDetailModal'
 import { formatDate } from '@/lib/utils/format'
-import { getFirstLine } from '@/lib/utils/text'
 import {
   type BoardType,
   type SearchType,
+  type SortBy,
   getBoardLabel,
-  getSearchTypeLabel,
   PAGINATION,
+  SORT_LABELS,
 } from '@/lib/constants/community'
-import type { CommunityPost } from '@/types/community'
+import type { CommunityPost, ProductInfo } from '@/types/community'
 
-// ReviewList 전용 확장 타입 (후기 게시판 전용 필드)
-interface ReviewPost extends CommunityPost {
-  rating?: number // 1-5 별점
-  review_type?: 'activity' | 'product' // 활동 후기 / 제품 후기
-  related_item?: string // 활동명 또는 제품명
-}
+// ReviewList에서 사용하는 타입 (CommunityPost와 동일)
+type ReviewPost = CommunityPost
 
 interface ReviewListProps {
   posts: ReviewPost[]
@@ -53,37 +49,44 @@ const REVIEW_SEARCH_TYPE_LABELS: Record<SearchType, string> = {
 
 const { pagesPerGroup: PAGES_PER_GROUP } = PAGINATION
 
-// 임시 더미 데이터 (별점, 리뷰 타입 등)
-// 실제 DB 연동 전까지 랜덤하게 생성
+// 활동 후기용 임시 데이터 (아직 활동 DB 없음)
+const ACTIVITY_ITEMS = ['춘천 맨발걷기', '강릉 바닷가 힐링', '속초 설악 트레킹', '양양 숲길 산책', '원주 치악산']
+
+const getRandomActivityItem = (id: string): string => {
+  const hash = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+  return ACTIVITY_ITEMS[hash % ACTIVITY_ITEMS.length]
+}
+
 const getRandomRating = (id: string): number => {
   const hash = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
-  return (hash % 3) + 3 // 3, 4, 5점 중 하나
+  return (hash % 2) + 4 // 4 또는 5
 }
 
-const getRandomReviewType = (id: string): 'activity' | 'product' => {
-  const hash = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
-  return hash % 3 === 0 ? 'product' : 'activity'
-}
 
-const getRandomRelatedItem = (id: string, reviewType: 'activity' | 'product'): string => {
-  const activityItems = ['춘천 맨발걷기', '강릉 바닷가 힐링', '속초 설악 트레킹', '양양 숲길 산책', '원주 치악산']
-  const productItems = ['맨발걷기 키트', '발 보습 크림', '힐링 매트', '워킹 슈즈', '발 마사지기']
-  const items = reviewType === 'activity' ? activityItems : productItems
-  const hash = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
-  return items[hash % items.length]
-}
-
-// 별점 렌더링 컴포넌트
-function StarRating({ rating }: { rating: number }) {
+// 별점 렌더링 컴포넌트 (0.5 단위 지원)
+function StarRating({ rating, size = 14 }: { rating: number; size?: number }) {
   return (
     <div className="flex gap-0.5">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <Star
-          key={star}
-          size={14}
-          className={star <= rating ? 'fill-amber-400 text-amber-400' : 'fill-gray-200 text-gray-200'}
-        />
-      ))}
+      {[1, 2, 3, 4, 5].map((star) => {
+        const isFull = rating >= star
+        const isHalf = !isFull && rating >= star - 0.5
+
+        return (
+          <div key={star} className="relative" style={{ width: size, height: size }}>
+            {/* 빈 별 (배경) */}
+            <Star size={size} className="absolute fill-gray-200 text-gray-200" />
+            {/* 채워진 별 (반별 지원) */}
+            {(isFull || isHalf) && (
+              <div
+                className="absolute overflow-hidden"
+                style={{ width: isFull ? '100%' : '50%' }}
+              >
+                <Star size={size} className="fill-amber-400 text-amber-400" />
+              </div>
+            )}
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -102,26 +105,41 @@ export default function ReviewList({
   const urlSearch = searchParams.get('search') || ''
   const urlSearchType = (searchParams.get('searchType') as SearchType) || 'all'
   const urlReviewType = (searchParams.get('reviewType') as ReviewTypeFilter) || 'all'
+  const urlSortBy = (searchParams.get('sortBy') as SortBy) || 'newest'
 
   const [searchQuery, setSearchQuery] = useState(urlSearch)
   const [searchType, setSearchType] = useState<SearchType>(urlSearchType)
   const [reviewTypeFilter, setReviewTypeFilter] = useState<ReviewTypeFilter>(urlReviewType)
+  const [sortBy, setSortBy] = useState<SortBy>(urlSortBy)
   const [showSearchTypeDropdown, setShowSearchTypeDropdown] = useState(false)
   const [showReviewTypeDropdown, setShowReviewTypeDropdown] = useState(false)
+  const [showSortDropdown, setShowSortDropdown] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [showLoginModal, setShowLoginModal] = useState(false)
 
   // 모달 상태
-  const [selectedPost, setSelectedPost] = useState<CommunityPost | null>(null)
+  const [selectedPost, setSelectedPost] = useState<ReviewPost | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+
+  // posts에서 상품 정보 맵 생성 (ReviewDetailModal용)
+  const productsMap = useMemo(() => {
+    const map = new Map<string, ProductInfo>()
+    posts.forEach((post) => {
+      if (post.product_id && post.product) {
+        map.set(post.product_id, post.product)
+      }
+    })
+    return map
+  }, [posts])
 
   // URL 파라미터 변경 시 상태 동기화
   useEffect(() => {
     setSearchQuery(urlSearch)
     setSearchType(urlSearchType)
     setReviewTypeFilter(urlReviewType)
-  }, [urlSearch, urlSearchType, urlReviewType])
+    setSortBy(urlSortBy)
+  }, [urlSearch, urlSearchType, urlReviewType, urlSortBy])
 
   // 로그인 상태 확인
   useEffect(() => {
@@ -135,7 +153,7 @@ export default function ReviewList({
   }, [])
 
   // 카드 클릭 핸들러 (모달 열기)
-  const handleCardClick = useCallback((post: CommunityPost) => {
+  const handleCardClick = useCallback((post: ReviewPost) => {
     setSelectedPost(post)
     setIsModalOpen(true)
   }, [])
@@ -169,7 +187,7 @@ export default function ReviewList({
   const basePath = '/community/review'
 
   // URL 파라미터 빌드 함수
-  const buildUrl = (params: { page?: number; search?: string; searchType?: SearchType; reviewType?: ReviewTypeFilter }) => {
+  const buildUrl = (params: { page?: number; search?: string; searchType?: SearchType; reviewType?: ReviewTypeFilter; sortBy?: SortBy }) => {
     const queryParams = new URLSearchParams()
 
     if (params.page && params.page > 1) {
@@ -183,6 +201,9 @@ export default function ReviewList({
     }
     if (params.reviewType && params.reviewType !== 'all') {
       queryParams.set('reviewType', params.reviewType)
+    }
+    if (params.sortBy && params.sortBy !== 'newest') {
+      queryParams.set('sortBy', params.sortBy)
     }
 
     const queryString = queryParams.toString()
@@ -203,7 +224,7 @@ export default function ReviewList({
   }, [groupStartPage, groupEndPage])
 
   const handlePageChange = (page: number) => {
-    router.push(buildUrl({ page, search: urlSearch, searchType: urlSearchType, reviewType: urlReviewType }))
+    router.push(buildUrl({ page, search: urlSearch, searchType: urlSearchType, reviewType: urlReviewType, sortBy: urlSortBy }))
   }
 
   const handlePrevGroup = () => {
@@ -223,7 +244,7 @@ export default function ReviewList({
   // 검색 실행
   const handleSearch = () => {
     const trimmedQuery = searchQuery.trim()
-    router.push(buildUrl({ page: 1, search: trimmedQuery, searchType, reviewType: reviewTypeFilter }))
+    router.push(buildUrl({ page: 1, search: trimmedQuery, searchType, reviewType: reviewTypeFilter, sortBy }))
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -243,7 +264,15 @@ export default function ReviewList({
     setReviewTypeFilter(type)
     setShowReviewTypeDropdown(false)
     // 필터 변경 시 바로 적용
-    router.push(buildUrl({ page: 1, search: urlSearch, searchType: urlSearchType, reviewType: type }))
+    router.push(buildUrl({ page: 1, search: urlSearch, searchType: urlSearchType, reviewType: type, sortBy: urlSortBy }))
+  }
+
+  // 정렬 옵션 선택
+  const handleSortSelect = (sort: SortBy) => {
+    setSortBy(sort)
+    setShowSortDropdown(false)
+    // 정렬 변경 시 바로 적용
+    router.push(buildUrl({ page: 1, search: urlSearch, searchType: urlSearchType, reviewType: urlReviewType, sortBy: sort }))
   }
 
   return (
@@ -330,12 +359,37 @@ export default function ReviewList({
             )}
           </div>
 
-          {/* 정렬 옵션 (UI만) */}
+          {/* 정렬 옵션 */}
           <div className="relative ml-auto">
-            <button className="flex items-center gap-1.5 px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-              최신순
-              <ChevronDown size={16} />
+            <button
+              onClick={() => setShowSortDropdown(!showSortDropdown)}
+              className="flex items-center gap-1.5 px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              {SORT_LABELS[sortBy]}
+              <ChevronDown size={16} className={`transition-transform ${showSortDropdown ? 'rotate-180' : ''}`} />
             </button>
+
+            {showSortDropdown && (
+              <>
+                <div
+                  className="fixed inset-0 z-10"
+                  onClick={() => setShowSortDropdown(false)}
+                />
+                <div className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-20 min-w-[140px]">
+                  {(['newest', 'rating_high', 'rating_low'] as SortBy[]).map((sort) => (
+                    <button
+                      key={sort}
+                      onClick={() => handleSortSelect(sort)}
+                      className={`block w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg ${
+                        sortBy === sort ? 'text-purple-600 font-semibold bg-purple-50' : 'text-gray-700'
+                      }`}
+                    >
+                      {SORT_LABELS[sort]}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -373,10 +427,19 @@ export default function ReviewList({
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
             {posts.map((post, index) => {
-              // 임시 데이터 생성
-              const rating = post.rating ?? getRandomRating(post.id)
-              const reviewType = post.review_type ?? getRandomReviewType(post.id)
-              const relatedItem = post.related_item ?? getRandomRelatedItem(post.id, reviewType)
+              // 리뷰 타입 결정: product_id가 있으면 제품 후기, 없으면 활동 후기
+              const isProductReview = !!post.product_id
+              const reviewType: 'product' | 'activity' = isProductReview ? 'product' : 'activity'
+
+              // 개별 리뷰 평점 (작성자가 매긴 평점)
+              const reviewRating = post.rating ?? getRandomRating(post.id)
+
+              // 상품 정보 (제품 후기인 경우 JOIN된 데이터에서 직접 가져옴)
+              const productInfo = post.product
+
+              // 관련 항목명과 평균 평점
+              const relatedItemName = productInfo?.name ?? getRandomActivityItem(post.id)
+              const avgRating = productInfo?.rating ?? getRandomRating(post.id)
 
               return (
                 <motion.div
@@ -428,8 +491,8 @@ export default function ReviewList({
 
                     {/* 카드 정보 */}
                     <div className="p-3 space-y-1.5">
-                      {/* 별점 */}
-                      <StarRating rating={rating} />
+                      {/* 별점 (작성자가 매긴 개별 평점) */}
+                      <StarRating rating={reviewRating} />
 
                       {/* 본문 첫 줄 (제목 대신) */}
                       <p className="font-medium text-gray-900 text-sm line-clamp-1 group-hover:text-purple-600 transition-colors">
@@ -443,20 +506,29 @@ export default function ReviewList({
 
                       {/* 관련 상품/활동 */}
                       <div className="flex items-center gap-1.5 pt-2 border-t border-gray-100">
-                        <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center flex-shrink-0">
+                        <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center flex-shrink-0 overflow-hidden">
                           {reviewType === 'activity' ? (
                             <Footprints size={14} className="text-purple-500" />
+                          ) : productInfo?.image_url ? (
+                            <Image
+                              src={productInfo.image_url}
+                              alt={productInfo.name}
+                              width={32}
+                              height={32}
+                              className="object-cover w-full h-full"
+                            />
                           ) : (
                             <ShoppingBag size={14} className="text-pink-500" />
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs text-gray-600 truncate font-medium">
-                            {relatedItem}
+                            {relatedItemName}
                           </p>
+                          {/* 상품 평균 평점 (store_products.rating) */}
                           <div className="flex items-center gap-0.5">
                             <Star size={10} className="fill-amber-400 text-amber-400" />
-                            <span className="text-xs text-gray-400">4.9</span>
+                            <span className="text-xs text-gray-400">{avgRating.toFixed(1)}</span>
                           </div>
                         </div>
                       </div>
@@ -598,6 +670,7 @@ export default function ReviewList({
         currentUserId={currentUserId}
         onNavigate={handleNavigate}
         onDelete={handleDelete}
+        productsMap={productsMap}
       />
     </div>
   )

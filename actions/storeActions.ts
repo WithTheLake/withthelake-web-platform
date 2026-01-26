@@ -224,5 +224,70 @@ export async function deleteStoreProduct(id: string): Promise<{ success: boolean
 
 // 카테고리 목록 조회
 export async function getStoreCategories(): Promise<string[]> {
-  return ['전체', '케어', '어싱', '기록']
+  return ['전체', '케어', '어싱', '체험']
+}
+
+// 상품 평점 및 리뷰 수 업데이트 (리뷰 작성/수정/삭제 시 호출)
+export async function updateProductRating(productId: string): Promise<{ success: boolean; message?: string }> {
+  const supabase = await createClient()
+
+  // 해당 상품의 활성화된 리뷰에서 평균 평점과 리뷰 수 계산
+  const { data: reviews, error: reviewError } = await supabase
+    .from('community_posts')
+    .select('rating')
+    .eq('product_id', productId)
+    .eq('board_type', 'review')
+    .eq('is_active', true)
+    .not('rating', 'is', null)
+
+  if (reviewError) {
+    console.error('리뷰 조회 오류:', reviewError)
+    return { success: false, message: '리뷰 조회에 실패했습니다.' }
+  }
+
+  // 평균 평점 계산
+  const reviewCount = reviews?.length || 0
+  let avgRating = 0
+
+  if (reviewCount > 0) {
+    const totalRating = reviews.reduce((sum, r) => sum + (r.rating || 0), 0)
+    avgRating = Math.round((totalRating / reviewCount) * 10) / 10 // 소수점 1자리
+  }
+
+  // store_products 테이블 업데이트
+  const { error: updateError } = await supabase
+    .from('store_products')
+    .update({
+      rating: avgRating,
+      review_count: reviewCount,
+    })
+    .eq('id', productId)
+
+  if (updateError) {
+    console.error('상품 평점 업데이트 오류:', updateError)
+    return { success: false, message: '상품 평점 업데이트에 실패했습니다.' }
+  }
+
+  revalidatePath('/store')
+  revalidatePath('/community/review')
+
+  return { success: true }
+}
+
+// 간단한 상품 목록 조회 (드롭다운용 - id, name, image만)
+export async function getProductsForSelect(): Promise<{ id: string; name: string; image_url: string | null }[]> {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from('store_products')
+    .select('id, name, image_url')
+    .eq('is_active', true)
+    .order('order_index', { ascending: true })
+
+  if (error) {
+    console.error('상품 목록 조회 오류:', error)
+    return []
+  }
+
+  return data || []
 }

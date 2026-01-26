@@ -1,5 +1,5 @@
 import { getEmotionRecords, checkAuthStatus } from '@/actions/emotionActions'
-import { getMyProfile } from '@/actions/profileActions'
+import { getMyProfile, checkIsAdmin } from '@/actions/profileActions'
 import MypageClient from './MypageClient'
 
 export const metadata = {
@@ -8,7 +8,10 @@ export const metadata = {
 }
 
 export default async function MypagePage() {
-  const authStatus = await checkAuthStatus()
+  const [authStatus, adminStatus] = await Promise.all([
+    checkAuthStatus(),
+    checkIsAdmin(),
+  ])
 
   let emotionRecords: Array<{
     id: string
@@ -49,6 +52,7 @@ export default async function MypagePage() {
       user={authStatus.user}
       emotionRecords={emotionRecords}
       userProfile={userProfile}
+      isAdmin={adminStatus.isAdmin}
     />
   )
 }
