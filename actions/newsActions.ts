@@ -211,7 +211,73 @@ export async function deleteNewsArticle(id: string): Promise<{ success: boolean;
   return { success: true }
 }
 
+// 뉴스 활성화/비활성화 토글 (관리자 전용)
+export async function toggleNewsActive(id: string, isActive: boolean): Promise<{ success: boolean; message?: string }> {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { success: false, message: '로그인이 필요합니다.' }
+
+  const { data: profile } = await supabase
+    .from('user_profiles')
+    .select('is_admin')
+    .eq('user_id', user.id)
+    .single()
+
+  if (!profile?.is_admin) return { success: false, message: '관리자 권한이 필요합니다.' }
+
+  const { error } = await supabase
+    .from('news_articles')
+    .update({ is_active: isActive })
+    .eq('id', id)
+
+  if (error) {
+    console.error('뉴스 상태 변경 오류:', error)
+    return { success: false, message: '상태 변경에 실패했습니다.' }
+  }
+
+  revalidatePath('/news')
+  return { success: true }
+}
+
 // 카테고리 목록 조회
 export async function getNewsCategories(): Promise<string[]> {
   return ['전체', '언론보도', '해외자료', '블로그', '보도자료']
+}
+
+// 관리자용 - 모든 뉴스 조회 (비활성 포함)
+export async function getAdminNewsArticles(options?: {
+  category?: string
+  search?: string
+  limit?: number
+  offset?: number
+}): Promise<{ data: NewsArticle[]; count: number }> {
+  const supabase = await createClient()
+
+  let query = supabase
+    .from('news_articles')
+    .select('*', { count: 'exact' })
+    .order('published_at', { ascending: false })
+
+  if (options?.category && options.category !== '전체') {
+    query = query.eq('category', options.category)
+  }
+
+  if (options?.search) {
+    query = query.or(`title.ilike.%${options.search}%,source.ilike.%${options.search}%`)
+  }
+
+  if (options?.limit) {
+    const start = options.offset || 0
+    query = query.range(start, start + options.limit - 1)
+  }
+
+  const { data, error, count } = await query
+
+  if (error) {
+    console.error('관리자 뉴스 조회 오류:', error)
+    return { data: [], count: 0 }
+  }
+
+  return { data: data || [], count: count || 0 }
 }

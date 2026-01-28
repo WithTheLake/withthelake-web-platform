@@ -5,7 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { ShoppingBag, Star } from 'lucide-react'
 import type { StoreProduct } from '@/actions/storeActions'
-import { STORE_CATEGORIES, NAVER_STORE_URL, getBadgeStyle } from '@/lib/constants'
+import { NAVER_STORE_URL, getBadgeStyle } from '@/lib/constants'
 
 function formatPrice(price: number): string {
   return price.toLocaleString('ko-KR')
@@ -13,9 +13,10 @@ function formatPrice(price: number): string {
 
 interface StoreClientProps {
   products: StoreProduct[]
+  categories?: string[]
 }
 
-export default function StoreClient({ products }: StoreClientProps) {
+export default function StoreClient({ products, categories = ['전체'] }: StoreClientProps) {
   const [selectedCategory, setSelectedCategory] = useState('전체')
 
   // 카테고리별 필터링
@@ -29,7 +30,7 @@ export default function StoreClient({ products }: StoreClientProps) {
       <section className="py-6 bg-white sticky top-16 md:top-20 z-30 border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-wrap gap-2">
-            {STORE_CATEGORIES.map((category) => (
+            {categories.map((category) => (
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}

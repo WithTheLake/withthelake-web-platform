@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS audio_tracks (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   title VARCHAR(200) NOT NULL,
   description TEXT,
-  category VARCHAR(50) NOT NULL CHECK (category IN ('walk_guide', 'affirmation', 'trail_guide')),
+  category VARCHAR(50) NOT NULL, -- 동적 카테고리 (audio_categories.slug 참조)
   subcategory VARCHAR(100), -- 세분류 (예: '자기수용', '성장', '자신감' 등)
   province VARCHAR(50), -- 도 (trail_guide용, 예: 'gangwon')
   city VARCHAR(50), -- 시군구 (trail_guide용, 예: 'chuncheon')
@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS user_profiles (
   avatar_url TEXT, -- 카카오 프로필 이미지 URL
   age_group VARCHAR(20), -- '50대', '60대', '70대 이상' 등
   is_admin BOOLEAN DEFAULT FALSE, -- 관리자 여부
+  is_blocked BOOLEAN DEFAULT FALSE, -- 차단 여부 (차단 시 글쓰기/댓글 제한)
   total_walks INTEGER DEFAULT 0,
   total_duration INTEGER DEFAULT 0, -- 총 걷기 시간 (초)
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -623,3 +624,76 @@ BEGIN
   END LOOP;
 END;
 $$ LANGUAGE plpgsql;
+
+-- ============================================
+-- 오디오 카테고리 테이블
+-- ============================================
+CREATE TABLE IF NOT EXISTS audio_categories (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  slug VARCHAR(50) UNIQUE NOT NULL, -- Storage 폴더명과 매칭 (예: walk_guide)
+  label VARCHAR(100) NOT NULL, -- 한국어 표시명 (예: 걷기 안내)
+  color VARCHAR(20) DEFAULT 'gray', -- 뱃지 색상 테마 (예: green, purple, blue)
+  order_index INTEGER DEFAULT 0,
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 초기 데이터
+INSERT INTO audio_categories (slug, label, color, order_index) VALUES
+('walk_guide', '걷기 안내', 'green', 1),
+('affirmation', '긍정확언', 'purple', 2),
+('trail_guide', '길 안내', 'blue', 3)
+ON CONFLICT (slug) DO NOTHING;
+
+-- RLS
+ALTER TABLE audio_categories ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can read active audio categories"
+  ON audio_categories FOR SELECT
+  USING (true);
+
+CREATE POLICY "Admins can manage audio categories"
+  ON audio_categories FOR ALL
+  USING (
+    EXISTS (
+      SELECT 1 FROM user_profiles
+      WHERE user_profiles.user_id = auth.uid()
+      AND user_profiles.is_admin = true
+    )
+  );
+
+-- ============================================
+-- 스토어 카테고리 테이블
+-- ============================================
+CREATE TABLE IF NOT EXISTS store_categories (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name VARCHAR(100) UNIQUE NOT NULL, -- 카테고리명 (예: 케어)
+  description TEXT, -- 설명
+  order_index INTEGER DEFAULT 0,
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 초기 데이터
+INSERT INTO store_categories (name, description, order_index) VALUES
+('케어', '발 관리 및 케어 제품', 1),
+('어싱', '어싱(접지) 관련 제품', 2),
+('체험', '힐링로드 체험 프로그램', 3)
+ON CONFLICT (name) DO NOTHING;
+
+-- RLS
+ALTER TABLE store_categories ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can read active store categories"
+  ON store_categories FOR SELECT
+  USING (true);
+
+CREATE POLICY "Admins can manage store categories"
+  ON store_categories FOR ALL
+  USING (
+    EXISTS (
+      SELECT 1 FROM user_profiles
+      WHERE user_profiles.user_id = auth.uid()
+      AND user_profiles.is_admin = true
+    )
+  );

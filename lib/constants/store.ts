@@ -1,7 +1,5 @@
 // 스토어 관련 상수
-
-// 카테고리
-export const STORE_CATEGORIES = ['전체', '케어', '어싱', '체험'] as const
+// 카테고리는 DB(store_categories 테이블)에서 동적으로 관리됩니다.
 
 // 뱃지 스타일
 export const STORE_BADGES = {
@@ -15,7 +13,6 @@ export const STORE_BADGES = {
 export const NAVER_STORE_URL = 'https://smartstore.naver.com/withlab201'
 
 // 타입 정의
-export type StoreCategory = typeof STORE_CATEGORIES[number]
 export type StoreBadge = keyof typeof STORE_BADGES
 
 // 헬퍼 함수

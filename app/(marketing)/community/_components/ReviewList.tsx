@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { ThumbnailImage } from '@/components/ui/LazyImage'
 import { motion } from 'framer-motion'
 import { Plus, Search, ChevronLeft, ChevronRight, ChevronDown, Star, Image as ImageIcon, ShoppingBag, Footprints } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -455,14 +456,14 @@ export default function ReviewList({
                     {/* 썸네일 이미지 */}
                     <div className="relative aspect-square bg-gray-100 overflow-hidden">
                       {post.thumbnail_url ? (
-                        <Image
+                        <ThumbnailImage
                           src={post.thumbnail_url}
                           alt="후기 이미지"
                           fill
                           className="object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       ) : post.images && post.images.length > 0 ? (
-                        <Image
+                        <ThumbnailImage
                           src={post.images[0]}
                           alt="후기 이미지"
                           fill

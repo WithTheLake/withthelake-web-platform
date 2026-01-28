@@ -8,6 +8,7 @@ import { Save, X, ImagePlus, Trash2, Star, Loader2, Image as ImageIcon, ChevronD
 import { createPost, updatePost } from '@/actions/communityActions'
 import { uploadCommunityImage, deleteCommunityImage } from '@/actions/imageActions'
 import { getProductsForSelect } from '@/actions/storeActions'
+import { compressImage, formatFileSize } from '@/lib/utils/imageCompression'
 import {
   type BoardType,
   type FreeBoardTopic,
@@ -185,15 +186,34 @@ export default function WriteForm({
     setError('')
 
     for (const file of Array.from(files)) {
-      const formData = new FormData()
-      formData.append('file', file)
+      try {
+        // 이미지 압축 (최대 1MB, 1920px)
+        const originalSize = file.size
+        const compressedFile = await compressImage(file, {
+          maxSizeMB: 1,
+          maxWidthOrHeight: 1920,
+          quality: 0.8,
+        })
 
-      const result = await uploadCommunityImage(formData)
+        // 압축 결과 로그 (개발용)
+        if (compressedFile.size < originalSize) {
+          console.log(`[이미지 압축] ${file.name}: ${formatFileSize(originalSize)} → ${formatFileSize(compressedFile.size)}`)
+        }
 
-      if (result.success && result.url && result.path) {
-        setImages((prev) => [...prev, { url: result.url!, path: result.path! }])
-      } else {
-        setError(result.message || '이미지 업로드에 실패했습니다.')
+        const formData = new FormData()
+        formData.append('file', compressedFile)
+
+        const result = await uploadCommunityImage(formData)
+
+        if (result.success && result.url && result.path) {
+          setImages((prev) => [...prev, { url: result.url!, path: result.path! }])
+        } else {
+          setError(result.message || '이미지 업로드에 실패했습니다.')
+          break
+        }
+      } catch (err) {
+        console.error('이미지 처리 실패:', err)
+        setError('이미지 처리 중 오류가 발생했습니다.')
         break
       }
     }
@@ -237,35 +257,54 @@ export default function WriteForm({
     setError('')
 
     for (const file of Array.from(files)) {
-      const formData = new FormData()
-      formData.append('file', file)
+      try {
+        // 이미지 압축 (최대 1MB, 1920px)
+        const originalSize = file.size
+        const compressedFile = await compressImage(file, {
+          maxSizeMB: 1,
+          maxWidthOrHeight: 1920,
+          quality: 0.8,
+        })
 
-      const result = await uploadCommunityImage(formData)
-
-      if (result.success && result.url && result.path) {
-        // 이미지 URL을 마크다운 형식으로 현재 커서 위치에 삽입
-        const imageMarkdown = `\n![이미지](${result.url})\n`
-
-        if (textareaRef.current) {
-          const textarea = textareaRef.current
-          const start = textarea.selectionStart
-          const end = textarea.selectionEnd
-          const newContent = content.substring(0, start) + imageMarkdown + content.substring(end)
-          setContent(newContent)
-
-          // 커서 위치 조정
-          setTimeout(() => {
-            textarea.selectionStart = textarea.selectionEnd = start + imageMarkdown.length
-            textarea.focus()
-          }, 0)
-        } else {
-          setContent((prev) => prev + imageMarkdown)
+        // 압축 결과 로그 (개발용)
+        if (compressedFile.size < originalSize) {
+          console.log(`[이미지 압축] ${file.name}: ${formatFileSize(originalSize)} → ${formatFileSize(compressedFile.size)}`)
         }
 
-        // 이미지 배열에도 추가 (첨부파일 표시용)
-        setImages((prev) => [...prev, { url: result.url!, path: result.path! }])
-      } else {
-        setError(result.message || '이미지 업로드에 실패했습니다.')
+        const formData = new FormData()
+        formData.append('file', compressedFile)
+
+        const result = await uploadCommunityImage(formData)
+
+        if (result.success && result.url && result.path) {
+          // 이미지 URL을 마크다운 형식으로 현재 커서 위치에 삽입
+          const imageMarkdown = `\n![이미지](${result.url})\n`
+
+          if (textareaRef.current) {
+            const textarea = textareaRef.current
+            const start = textarea.selectionStart
+            const end = textarea.selectionEnd
+            const newContent = content.substring(0, start) + imageMarkdown + content.substring(end)
+            setContent(newContent)
+
+            // 커서 위치 조정
+            setTimeout(() => {
+              textarea.selectionStart = textarea.selectionEnd = start + imageMarkdown.length
+              textarea.focus()
+            }, 0)
+          } else {
+            setContent((prev) => prev + imageMarkdown)
+          }
+
+          // 이미지 배열에도 추가 (첨부파일 표시용)
+          setImages((prev) => [...prev, { url: result.url!, path: result.path! }])
+        } else {
+          setError(result.message || '이미지 업로드에 실패했습니다.')
+          break
+        }
+      } catch (err) {
+        console.error('이미지 처리 실패:', err)
+        setError('이미지 처리 중 오류가 발생했습니다.')
         break
       }
     }

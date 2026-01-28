@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { getPosts, type SearchType, type FreeBoardTopic } from '@/actions/communityActions'
 import FreeBoardList from '../_components/FreeBoardList'
+import { BoardListSkeleton } from '@/components/ui/Skeleton'
 
 interface PageProps {
   searchParams: Promise<{ page?: string; search?: string; searchType?: string; topic?: string }>
@@ -25,7 +26,19 @@ export default async function FreeBoardPage({ searchParams }: PageProps) {
   const postsResult = await getPosts('free', { page, limit: 20, search, searchType, topic })
 
   return (
-    <Suspense fallback={<div className="min-h-screen bg-gray-50" />}>
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50">
+        <section className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-5 py-8">
+          <div className="max-w-4xl mx-auto">
+            <div className="h-8 w-32 bg-white/20 rounded animate-pulse" />
+            <div className="h-4 w-48 bg-white/20 rounded animate-pulse mt-2" />
+          </div>
+        </section>
+        <div className="max-w-4xl mx-auto px-5 py-8">
+          <BoardListSkeleton count={20} />
+        </div>
+      </div>
+    }>
       <FreeBoardList
         posts={postsResult.data || []}
         currentPage={page}

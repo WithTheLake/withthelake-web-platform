@@ -222,9 +222,220 @@ export async function deleteStoreProduct(id: string): Promise<{ success: boolean
   return { success: true }
 }
 
-// 카테고리 목록 조회
+// 제품 활성화/비활성화 토글 (관리자 전용)
+export async function toggleProductActive(id: string, isActive: boolean): Promise<{ success: boolean; message?: string }> {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { success: false, message: '로그인이 필요합니다.' }
+
+  const { data: profile } = await supabase
+    .from('user_profiles')
+    .select('is_admin')
+    .eq('user_id', user.id)
+    .single()
+
+  if (!profile?.is_admin) return { success: false, message: '관리자 권한이 필요합니다.' }
+
+  const { error } = await supabase
+    .from('store_products')
+    .update({ is_active: isActive })
+    .eq('id', id)
+
+  if (error) {
+    console.error('제품 상태 변경 오류:', error)
+    return { success: false, message: '상태 변경에 실패했습니다.' }
+  }
+
+  revalidatePath('/store')
+  return { success: true }
+}
+
+// ============================================
+// 스토어 카테고리 관리 Server Actions
+// ============================================
+
+export interface StoreCategoryItem {
+  id: string
+  name: string
+  description: string | null
+  order_index: number
+  is_active: boolean
+  created_at: string
+}
+
+/**
+ * 스토어 카테고리 목록 조회 (활성화된 것만)
+ * 프론트엔드 필터용 - '전체'를 앞에 추가하여 반환
+ */
 export async function getStoreCategories(): Promise<string[]> {
-  return ['전체', '케어', '어싱', '체험']
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from('store_categories')
+    .select('name')
+    .eq('is_active', true)
+    .order('order_index', { ascending: true })
+
+  if (error) {
+    console.error('스토어 카테고리 조회 오류:', error)
+    return ['전체']
+  }
+
+  return ['전체', ...(data || []).map(c => c.name)]
+}
+
+/**
+ * 관리자용 - 모든 스토어 카테고리 조회 (비활성 포함)
+ */
+export async function getAdminStoreCategories(): Promise<StoreCategoryItem[]> {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from('store_categories')
+    .select('*')
+    .order('order_index', { ascending: true })
+
+  if (error) {
+    console.error('관리자 스토어 카테고리 조회 오류:', error)
+    return []
+  }
+
+  return data || []
+}
+
+/**
+ * 스토어 카테고리 생성 (관리자 전용)
+ */
+export async function createStoreCategory(data: {
+  name: string
+  description?: string
+  order_index?: number
+}): Promise<{ success: boolean; message?: string }> {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { success: false, message: '로그인이 필요합니다.' }
+
+  const { data: profile } = await supabase
+    .from('user_profiles')
+    .select('is_admin')
+    .eq('user_id', user.id)
+    .single()
+
+  if (!profile?.is_admin) return { success: false, message: '관리자 권한이 필요합니다.' }
+
+  if (!data.name.trim()) {
+    return { success: false, message: '카테고리명을 입력해주세요.' }
+  }
+
+  const { error } = await supabase
+    .from('store_categories')
+    .insert({
+      name: data.name.trim(),
+      description: data.description || null,
+      order_index: data.order_index || 0,
+    })
+
+  if (error) {
+    if (error.code === '23505') {
+      return { success: false, message: '이미 존재하는 카테고리명입니다.' }
+    }
+    console.error('스토어 카테고리 생성 오류:', error)
+    return { success: false, message: '카테고리 생성에 실패했습니다.' }
+  }
+
+  revalidatePath('/admin/store')
+  revalidatePath('/store')
+  return { success: true }
+}
+
+/**
+ * 스토어 카테고리 수정 (관리자 전용)
+ */
+export async function updateStoreCategory(
+  id: string,
+  data: { name?: string; description?: string; order_index?: number; is_active?: boolean }
+): Promise<{ success: boolean; message?: string }> {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { success: false, message: '로그인이 필요합니다.' }
+
+  const { data: profile } = await supabase
+    .from('user_profiles')
+    .select('is_admin')
+    .eq('user_id', user.id)
+    .single()
+
+  if (!profile?.is_admin) return { success: false, message: '관리자 권한이 필요합니다.' }
+
+  const { error } = await supabase
+    .from('store_categories')
+    .update(data)
+    .eq('id', id)
+
+  if (error) {
+    console.error('스토어 카테고리 수정 오류:', error)
+    return { success: false, message: '카테고리 수정에 실패했습니다.' }
+  }
+
+  revalidatePath('/admin/store')
+  revalidatePath('/store')
+  return { success: true }
+}
+
+/**
+ * 스토어 카테고리 삭제 (관리자 전용)
+ * 해당 카테고리를 사용하는 상품이 있으면 삭제 불가
+ */
+export async function deleteStoreCategory(id: string): Promise<{ success: boolean; message?: string }> {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { success: false, message: '로그인이 필요합니다.' }
+
+  const { data: profile } = await supabase
+    .from('user_profiles')
+    .select('is_admin')
+    .eq('user_id', user.id)
+    .single()
+
+  if (!profile?.is_admin) return { success: false, message: '관리자 권한이 필요합니다.' }
+
+  // 해당 카테고리명 조회
+  const { data: cat } = await supabase
+    .from('store_categories')
+    .select('name')
+    .eq('id', id)
+    .single()
+
+  if (!cat) return { success: false, message: '카테고리를 찾을 수 없습니다.' }
+
+  // 해당 카테고리를 사용하는 상품이 있는지 확인
+  const { count } = await supabase
+    .from('store_products')
+    .select('id', { count: 'exact', head: true })
+    .eq('category', cat.name)
+    .eq('is_active', true)
+
+  if (count && count > 0) {
+    return { success: false, message: `해당 카테고리를 사용하는 상품이 ${count}개 있습니다. 먼저 상품의 카테고리를 변경해주세요.` }
+  }
+
+  const { error } = await supabase
+    .from('store_categories')
+    .delete()
+    .eq('id', id)
+
+  if (error) {
+    console.error('스토어 카테고리 삭제 오류:', error)
+    return { success: false, message: '카테고리 삭제에 실패했습니다.' }
+  }
+
+  revalidatePath('/admin/store')
+  revalidatePath('/store')
+  return { success: true }
 }
 
 // 상품 평점 및 리뷰 수 업데이트 (리뷰 작성/수정/삭제 시 호출)
@@ -272,6 +483,44 @@ export async function updateProductRating(productId: string): Promise<{ success:
   revalidatePath('/community/review')
 
   return { success: true }
+}
+
+// 관리자용 - 모든 상품 조회 (비활성 포함)
+export async function getAdminStoreProducts(options?: {
+  category?: string
+  search?: string
+  limit?: number
+  offset?: number
+}): Promise<{ data: StoreProduct[]; count: number }> {
+  const supabase = await createClient()
+
+  let query = supabase
+    .from('store_products')
+    .select('*', { count: 'exact' })
+    .order('order_index', { ascending: true })
+    .order('created_at', { ascending: false })
+
+  if (options?.category && options.category !== '전체') {
+    query = query.eq('category', options.category)
+  }
+
+  if (options?.search) {
+    query = query.ilike('name', `%${options.search}%`)
+  }
+
+  if (options?.limit) {
+    const start = options.offset || 0
+    query = query.range(start, start + options.limit - 1)
+  }
+
+  const { data, error, count } = await query
+
+  if (error) {
+    console.error('관리자 상품 조회 오류:', error)
+    return { data: [], count: 0 }
+  }
+
+  return { data: data || [], count: count || 0 }
 }
 
 // 간단한 상품 목록 조회 (드롭다운용 - id, name, image만)

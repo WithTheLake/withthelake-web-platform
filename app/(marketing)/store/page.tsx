@@ -3,7 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { ShoppingBag } from 'lucide-react'
 import StoreClient from './StoreClient'
-import { getStoreProducts } from '@/actions/storeActions'
+import { getStoreProducts, getStoreCategories } from '@/actions/storeActions'
 
 export const metadata: Metadata = {
   title: '스토어 - WithTheLake',
@@ -11,8 +11,11 @@ export const metadata: Metadata = {
 }
 
 export default async function StorePage() {
-  // DB에서 상품 데이터 조회
-  const { data: products } = await getStoreProducts()
+  // DB에서 상품 데이터 및 카테고리 조회
+  const [{ data: products }, storeCategories] = await Promise.all([
+    getStoreProducts(),
+    getStoreCategories(),
+  ])
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -32,7 +35,7 @@ export default async function StorePage() {
       </section>
 
       {/* 클라이언트 컴포넌트: 카테고리 필터 + 상품 그리드 */}
-      <StoreClient products={products} />
+      <StoreClient products={products} categories={storeCategories} />
 
       {/* 준비 중 안내 */}
       <section className="py-16 md:py-24 bg-white">

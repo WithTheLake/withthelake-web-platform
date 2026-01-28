@@ -38,7 +38,7 @@ export interface CommunityPost {
   updated_at: string
 }
 
-interface Comment {
+export interface Comment {
   id: string
   post_id: string
   user_id: string | null
@@ -246,12 +246,21 @@ export async function createPost(formData: FormData) {
       }
     }
 
-    // 사용자 프로필 조회 (닉네임 + 관리자 여부)
+    // 사용자 프로필 조회 (닉네임 + 관리자 여부 + 차단 여부)
     const { data: profile } = await supabase
       .from('user_profiles')
-      .select('nickname, is_admin')
+      .select('nickname, is_admin, is_blocked')
       .eq('user_id', user.id)
       .single()
+
+    // 차단된 회원은 글쓰기 불가
+    if (profile?.is_blocked) {
+      return {
+        success: false,
+        error: 'BLOCKED_USER',
+        message: '차단된 회원은 글을 작성할 수 없습니다.'
+      }
+    }
 
     const boardType = formData.get('board_type') as BoardType
 
@@ -707,12 +716,21 @@ export async function createComment(postId: string, content: string) {
       }
     }
 
-    // 사용자 닉네임 조회
+    // 사용자 닉네임 + 차단 여부 조회
     const { data: profile } = await supabase
       .from('user_profiles')
-      .select('nickname')
+      .select('nickname, is_blocked')
       .eq('user_id', user.id)
       .single()
+
+    // 차단된 회원은 댓글 작성 불가
+    if (profile?.is_blocked) {
+      return {
+        success: false,
+        error: 'BLOCKED_USER',
+        message: '차단된 회원은 댓글을 작성할 수 없습니다.'
+      }
+    }
 
     // 입력값 검증
     if (!content || content.trim().length === 0) {
@@ -840,6 +858,162 @@ export async function deleteComment(commentId: string) {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to delete comment'
     }
+  }
+}
+
+/**
+ * 관리자용 - 게시글 활성화/비활성화 토글
+ */
+export async function togglePostActive(id: string, isActive: boolean): Promise<{ success: boolean; error?: string }> {
+  try {
+    const supabase = await createClient()
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { success: false, error: '로그인이 필요합니다.' }
+
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('is_admin')
+      .eq('user_id', user.id)
+      .single()
+
+    if (!profile?.is_admin) return { success: false, error: '관리자 권한이 필요합니다.' }
+
+    const { error } = await supabase
+      .from('community_posts')
+      .update({ is_active: isActive })
+      .eq('id', id)
+
+    if (error) throw error
+
+    revalidatePath('/community')
+    return { success: true }
+  } catch (error) {
+    console.error('게시글 상태 변경 오류:', error)
+    return { success: false, error: '상태 변경에 실패했습니다.' }
+  }
+}
+
+/**
+ * 관리자용 - 댓글 활성화/비활성화 토글
+ */
+export async function toggleCommentActive(id: string, isActive: boolean): Promise<{ success: boolean; error?: string }> {
+  try {
+    const supabase = await createClient()
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { success: false, error: '로그인이 필요합니다.' }
+
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('is_admin')
+      .eq('user_id', user.id)
+      .single()
+
+    if (!profile?.is_admin) return { success: false, error: '관리자 권한이 필요합니다.' }
+
+    const { error } = await supabase
+      .from('community_comments')
+      .update({ is_active: isActive })
+      .eq('id', id)
+
+    if (error) throw error
+
+    revalidatePath('/community')
+    return { success: true }
+  } catch (error) {
+    console.error('댓글 상태 변경 오류:', error)
+    return { success: false, error: '상태 변경에 실패했습니다.' }
+  }
+}
+
+/**
+ * 관리자용 - 모든 게시글 조회 (비활성 포함)
+ */
+export async function getAdminPosts(options: {
+  boardType?: BoardType
+  search?: string
+  page?: number
+  limit?: number
+}): Promise<{ data: CommunityPost[]; count: number }> {
+  const { boardType, search, page = 1, limit = 20 } = options
+
+  try {
+    const supabase = await createClient()
+    const offset = (page - 1) * limit
+
+    let query = supabase
+      .from('community_posts')
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false })
+
+    if (boardType) {
+      query = query.eq('board_type', boardType)
+    }
+
+    if (search) {
+      query = query.or(`title.ilike.%${search}%,author_nickname.ilike.%${search}%`)
+    }
+
+    const { data, error, count } = await query.range(offset, offset + limit - 1)
+
+    if (error) throw error
+
+    return { data: (data || []) as CommunityPost[], count: count || 0 }
+  } catch (error) {
+    console.error('Admin get posts error:', error)
+    return { data: [], count: 0 }
+  }
+}
+
+// 관리자용 댓글 타입
+export interface AdminComment extends Comment {
+  post_title?: string
+  post_board_type?: BoardType
+}
+
+/**
+ * 관리자용 - 모든 댓글 조회 (비활성 포함)
+ */
+export async function getAdminComments(options: {
+  search?: string
+  page?: number
+  limit?: number
+}): Promise<{ data: AdminComment[]; count: number }> {
+  const { search, page = 1, limit = 20 } = options
+
+  try {
+    const supabase = await createClient()
+    const offset = (page - 1) * limit
+
+    // 먼저 댓글 목록 조회
+    let query = supabase
+      .from('community_comments')
+      .select('*, post:community_posts(title, board_type)', { count: 'exact' })
+      .order('created_at', { ascending: false })
+
+    if (search) {
+      query = query.or(`content.ilike.%${search}%,author_nickname.ilike.%${search}%`)
+    }
+
+    const { data, error, count } = await query.range(offset, offset + limit - 1)
+
+    if (error) throw error
+
+    // post 정보를 flatten
+    const comments: AdminComment[] = (data || []).map((item) => {
+      const { post, ...rest } = item as Comment & { post: { title?: string; board_type?: BoardType } | null }
+      return {
+        ...rest,
+        post_title: post?.title,
+        post_board_type: post?.board_type
+      }
+    })
+
+    return { data: comments, count: count || 0 }
+  } catch (error) {
+    console.error('Admin get comments error:', error)
+    return { data: [], count: 0 }
   }
 }
 

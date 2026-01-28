@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { getPosts, type SearchType, type SortBy } from '@/actions/communityActions'
 import ReviewList from '../_components/ReviewList'
+import { ReviewListSkeleton } from '@/components/ui/Skeleton'
 
 interface PageProps {
   searchParams: Promise<{ page?: string; search?: string; searchType?: string; sortBy?: string }>
@@ -25,7 +26,19 @@ export default async function ReviewPage({ searchParams }: PageProps) {
   const postsResult = await getPosts('review', { page, limit: 12, search, searchType, sortBy })
 
   return (
-    <Suspense fallback={<div className="min-h-screen bg-gray-50" />}>
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50">
+        <section className="bg-gradient-to-r from-rose-600 to-pink-600 text-white px-5 py-8">
+          <div className="max-w-6xl mx-auto">
+            <div className="h-8 w-32 bg-white/20 rounded animate-pulse" />
+            <div className="h-4 w-48 bg-white/20 rounded animate-pulse mt-2" />
+          </div>
+        </section>
+        <div className="max-w-6xl mx-auto px-5 py-8">
+          <ReviewListSkeleton count={12} />
+        </div>
+      </div>
+    }>
       <ReviewList
         posts={postsResult.data || []}
         currentPage={page}

@@ -1,5 +1,5 @@
-// 오디오 카테고리 타입
-export type AudioCategory = 'walk_guide' | 'affirmation' | 'trail_guide'
+// 오디오 카테고리 타입 (동적 - DB audio_categories 테이블에서 관리)
+export type AudioCategory = string
 
 // 오디오 아이템 타입 (Supabase audio_tracks 테이블과 일치)
 export interface AudioItem {
@@ -8,7 +8,7 @@ export interface AudioItem {
   description: string | null
   filename: string
   emoji: string | null
-  category: AudioCategory
+  category: string
   subcategory?: string | null // 세분류 (예: '자기수용', '성장' 등)
   province?: string | null // 도 (trail_guide용, 예: 'gangwon')
   city?: string | null // 시군구 (trail_guide용, 예: 'chuncheon')
