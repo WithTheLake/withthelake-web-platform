@@ -15,6 +15,7 @@ import {
   ShoppingBag,
   Award,
   ExternalLink,
+  Facebook,
   Instagram,
   Youtube
 } from 'lucide-react'
@@ -187,17 +188,17 @@ export default function AboutPage() {
                 </div>
                 <h3 className="text-xl font-bold">[Bio-Tech] 데이터 기반 예방 헬스케어</h3>
               </div>
-              <ul className="space-y-3 text-gray-300 text-sm">
+              <ul className="space-y-4 text-gray-300 text-sm">
                 <li className="flex items-start gap-2">
-                  <span className="text-red-400 mt-1">•</span>
+                  <span className="text-red-400 leading-none mt-[2px]">•</span>
                   <span>소변 기반 7종 동시 진단 키트 및 AI RGB 판독 알고리즘</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-red-400 mt-1">•</span>
+                  <span className="text-red-400 leading-none mt-[2px]">•</span>
                   <span>반사율 광학 설계로 <strong className="text-white">95% 이상 정확도</strong> 확보</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-red-400 mt-1">•</span>
+                  <span className="text-red-400 leading-none mt-[2px]">•</span>
                   <span>2025 프리팁스(Pre-TIPS) 선정 및 중기부 R&D 디딤돌 과제 수행</span>
                 </li>
               </ul>
@@ -211,18 +212,18 @@ export default function AboutPage() {
                 </div>
                 <h3 className="text-xl font-bold">[Content] 힐링로드ON</h3>
               </div>
-              <ul className="space-y-3 text-gray-300 text-sm">
+              <ul className="space-y-4 text-gray-300 text-sm">
                 <li className="flex items-start gap-2">
-                  <span className="text-blue-400 mt-1">•</span>
+                  <span className="text-blue-400 leading-none mt-[2px]">•</span>
                   <span><strong className="text-white">응용언어학 기반</strong>의 워킹 스토리텔링 치유 플랫폼</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-blue-400 mt-1">•</span>
+                  <span className="text-blue-400 leading-none mt-[2px]">•</span>
                   <span>맨발걷기 오디오 가이드, 인문학 스토리텔링, 긍정확언 사운드</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-blue-400 mt-1">•</span>
-                  <span>앱 설치 없는 <strong className="text-white">No-App QR 시스템</strong> (시니어 친화적)</span>
+                  <span className="text-blue-400 leading-none mt-[2px]">•</span>
+                  <span>앱 설치 없는 <strong className="text-white">No-App QR 시스템</strong></span>
                 </li>
               </ul>
             </div>
@@ -235,17 +236,17 @@ export default function AboutPage() {
                 </div>
                 <h3 className="text-xl font-bold">[People] 전문 인력 양성</h3>
               </div>
-              <ul className="space-y-3 text-gray-300 text-sm">
+              <ul className="space-y-4 text-gray-300 text-sm">
                 <li className="flex items-start gap-2">
-                  <span className="text-green-400 mt-1">•</span>
+                  <span className="text-green-400 leading-none mt-[2px]">•</span>
                   <span>독자적 언어심리 기법(EMARA)을 숙지한 <strong className="text-white">전문가 양성</strong></span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-green-400 mt-1">•</span>
+                  <span className="text-green-400 leading-none mt-[2px]">•</span>
                   <span>늘봄학교(방과후 학교), 생활체육 지자체 프로그램 강사 파견</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-green-400 mt-1">•</span>
+                  <span className="text-green-400 leading-none mt-[2px]">•</span>
                   <span>경력단절여성과 시니어에게 <strong className="text-white">'루틴 코치'</strong> 직업 부여</span>
                 </li>
               </ul>
@@ -259,17 +260,17 @@ export default function AboutPage() {
                 </div>
                 <h3 className="text-xl font-bold">[Product] 위드웰미 (With Well-Me)</h3>
               </div>
-              <ul className="space-y-3 text-gray-300 text-sm">
+              <ul className="space-y-4 text-gray-300 text-sm">
                 <li className="flex items-start gap-2">
-                  <span className="text-amber-400 mt-1">•</span>
+                  <span className="text-amber-400 leading-none mt-[2px]">•</span>
                   <span><strong className="text-white">'건강한 나를 찾는 여정'</strong>을 돕는 모든 도구</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-amber-400 mt-1">•</span>
+                  <span className="text-amber-400 leading-none mt-[2px]">•</span>
                   <span>신체 케어: 파워 쿨링 미스트, 풋워시 등 풋케어 라인</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-amber-400 mt-1">•</span>
+                  <span className="text-amber-400 leading-none mt-[2px]">•</span>
                   <span>정신 케어: 감정기록 노트, 긍정확언 카드 등 온/오프라인 굿즈</span>
                 </li>
               </ul>
@@ -462,61 +463,67 @@ export default function AboutPage() {
               {/* SNS 링크 */}
               <div className="pt-6 border-t border-gray-700">
                 <h3 className="font-bold mb-4">공식 채널</h3>
-                <div className="flex flex-wrap gap-3">
-                  <a
-                    href="https://www.withthelake.com/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors text-sm"
-                  >
-                    <ExternalLink size={16} />
-                    공식 웹사이트
-                  </a>
-                  <a
-                    href="https://smartstore.naver.com/withlab201"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg transition-colors text-sm"
-                  >
-                    <ShoppingBag size={16} />
-                    네이버 스토어
-                  </a>
-                  <a
-                    href="https://www.instagram.com/withwellme/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-lg transition-colors text-sm"
-                  >
-                    <Instagram size={16} />
-                    Instagram
-                  </a>
-                  <a
-                    href="https://www.youtube.com/channel/UC8vmE6swgfF-PvsVIQUmsOQ/about"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors text-sm"
-                  >
-                    <Youtube size={16} />
-                    YouTube
-                  </a>
-                  <a
-                    href="https://blog.naver.com/with_thelake"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg transition-colors text-sm"
-                  >
-                    <ExternalLink size={16} />
-                    네이버 블로그
-                  </a>
-                  <a
-                    href="https://cafe.naver.com/healingroadon"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg transition-colors text-sm"
-                  >
-                    <Users size={16} />
-                    네이버 카페
-                  </a>
+                <div className="space-y-3">
+                  {/* 페이스북, 인스타그램, 유튜브 */}
+                  <div className="flex flex-wrap gap-3">
+                    <a
+                      href="https://www.facebook.com/people/%EC%9C%84%EB%93%9C%EB%8D%94%EB%A0%88%EC%9D%B4%ED%81%AC/61565595385880/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors text-sm"
+                    >
+                      <Facebook size={16} />
+                      Facebook
+                    </a>
+                    <a
+                      href="https://www.instagram.com/withwellme/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-lg transition-colors text-sm"
+                    >
+                      <Instagram size={16} />
+                      Instagram
+                    </a>
+                    <a
+                      href="https://www.youtube.com/channel/UC8vmE6swgfF-PvsVIQUmsOQ/about"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors text-sm"
+                    >
+                      <Youtube size={16} />
+                      YouTube
+                    </a>
+                  </div>
+                  {/* 네이버 블로그, 네이버 카페, 네이버 스토어 */}
+                  <div className="flex flex-wrap gap-3">
+                    <a
+                      href="https://blog.naver.com/with_thelake"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg transition-colors text-sm"
+                    >
+                      <ExternalLink size={16} />
+                      네이버 블로그
+                    </a>
+                    <a
+                      href="https://cafe.naver.com/healingroadon"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg transition-colors text-sm"
+                    >
+                      <Users size={16} />
+                      네이버 카페
+                    </a>
+                    <a
+                      href="https://smartstore.naver.com/withlab201"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg transition-colors text-sm"
+                    >
+                      <ShoppingBag size={16} />
+                      네이버 스토어
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>

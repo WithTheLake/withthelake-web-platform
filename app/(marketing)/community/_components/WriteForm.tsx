@@ -695,7 +695,7 @@ export default function WriteForm({
                 </AnimatePresence>
 
                 {/* 이미지 추가 버튼 */}
-                {images.length < 5 && (
+                {images.length < 10 && (
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
@@ -707,7 +707,7 @@ export default function WriteForm({
                     ) : (
                       <>
                         <ImagePlus size={24} />
-                        <span className="text-xs mt-1">추가</span>
+                        <span className="text-xs mt-1">{images.length}/10</span>
                       </>
                     )}
                   </button>

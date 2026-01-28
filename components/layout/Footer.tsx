@@ -1,26 +1,22 @@
 import Link from 'next/link'
-import Image from 'next/image'
-import { Facebook, Instagram, Youtube, MessageCircle } from 'lucide-react'
+import { Facebook, Instagram, Youtube } from 'lucide-react'
+
+function NaverIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 20 20" fill="currentColor" className={className} width={16} height={16}>
+      <path d="M13.56 10.74L6.15 0H0v20h6.44V9.26L13.85 20H20V0h-6.44v10.74z" />
+    </svg>
+  )
+}
 
 export default function Footer() {
   return (
     <footer className="bg-gray-900 text-gray-400">
       {/* 메인 푸터 */}
-      <div className="w-full px-4 sm:px-8 lg:px-12 py-12 md:py-10">
+      <div className="w-full px-6 sm:px-12 lg:px-20 xl:px-28 py-16 md:py-14">
         <div className="flex flex-col lg:flex-row lg:justify-between gap-10">
           {/* 좌측: 로고 및 회사 정보 */}
           <div className="lg:max-w-md">
-            {/* 로고 */}
-            <Link href="/" className="inline-block mb-6">
-              <Image
-                src="/images/withthelake_logo.png"
-                alt="WithTheLake"
-                width={120}
-                height={40}
-                className="h-10 w-auto brightness-0 invert opacity-80"
-              />
-            </Link>
-
             {/* 회사 정보 */}
             <div className="space-y-1 text-sm">
               <p>주식회사 위드더레이크 | 대표 정미경</p>
@@ -29,9 +25,9 @@ export default function Footer() {
             </div>
 
             {/* 소셜 미디어 */}
-            <div className="flex items-center gap-4 mt-6">
+            <div className="flex items-center gap-3 mt-6">
               <a
-                href="https://facebook.com"
+                href="https://www.facebook.com/people/%EC%9C%84%EB%93%9C%EB%8D%94%EB%A0%88%EC%9D%B4%ED%81%AC/61565595385880/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 transition-colors"
@@ -40,7 +36,7 @@ export default function Footer() {
                 <Facebook size={18} />
               </a>
               <a
-                href="https://instagram.com"
+                href="https://www.instagram.com/withwellme/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 transition-colors"
@@ -49,7 +45,7 @@ export default function Footer() {
                 <Instagram size={18} />
               </a>
               <a
-                href="https://youtube.com"
+                href="https://www.youtube.com/channel/UC8vmE6swgfF-PvsVIQUmsOQ/about"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 transition-colors"
@@ -58,15 +54,25 @@ export default function Footer() {
                 <Youtube size={18} />
               </a>
               <a
-                href="https://blog.naver.com"
+                href="https://blog.naver.com/with_thelake"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 transition-colors"
-                aria-label="Blog"
+                aria-label="네이버 블로그"
               >
-                <MessageCircle size={18} />
+                <NaverIcon />
+              </a>
+              <a
+                href="https://cafe.naver.com/healingroadon"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 transition-colors"
+                aria-label="네이버 카페"
+              >
+                <NaverIcon />
               </a>
             </div>
+            <p className="text-xs text-gray-500 mt-8">© 2024 WithTheLake Corp. All rights reserved.</p>
           </div>
 
           {/* 우측: 네비게이션 링크 */}
@@ -78,6 +84,11 @@ export default function Footer() {
                 <li>
                   <Link href="/healing" className="text-sm hover:text-white transition-colors">
                     힐링로드 ON
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/community" className="text-sm hover:text-white transition-colors">
+                    커뮤니티
                   </Link>
                 </li>
                 <li>
@@ -135,7 +146,7 @@ export default function Footer() {
                   </Link>
                 </li>
                 <li>
-                  <a href="mailto:contact@withthelake.com" className="text-sm hover:text-white transition-colors">
+                  <a href="mailto:ceo@withthelake.com" className="text-sm hover:text-white transition-colors">
                     문의하기
                   </a>
                 </li>
@@ -145,15 +156,6 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* 하단 저작권 */}
-      <div className="border-t border-gray-800">
-        <div className="w-full px-4 sm:px-8 lg:px-12 py-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-sm">
-            <p>© 2024 WithTheLake Corp. All rights reserved.</p>
-            <p className="text-gray-500">www.withthelake.com</p>
-          </div>
-        </div>
-      </div>
     </footer>
   )
 }

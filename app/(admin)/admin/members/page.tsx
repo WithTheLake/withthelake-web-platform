@@ -480,7 +480,7 @@ export default function AdminMembersPage() {
                           {selectedMember.nickname || '(닉네임 없음)'}
                         </h4>
                         {renderRoleBadge(selectedMember)}
-                        {renderBlockBadge(selectedMember)}
+                        {renderStatusBadge(selectedMember)}
                       </div>
                       <p className="text-sm text-gray-500 mt-0.5">
                         연령대: {selectedMember.age_group || '미설정'}

@@ -93,6 +93,60 @@ export async function getAdminStats() {
       .from('user_profiles')
       .select('*', { count: 'exact', head: true })
 
+    // 오디오 트랙 수
+    const { count: audioCount } = await supabase
+      .from('audio_tracks')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_active', true)
+
+    // 오늘 통계
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const todayISO = today.toISOString()
+
+    const { count: todayPosts } = await supabase
+      .from('community_posts')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_active', true)
+      .gte('created_at', todayISO)
+
+    const { count: todayComments } = await supabase
+      .from('community_comments')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_active', true)
+      .gte('created_at', todayISO)
+
+    const { count: todayUsers } = await supabase
+      .from('user_profiles')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', todayISO)
+
+    // 이번 주 통계 (월요일부터)
+    const now = new Date()
+    const dayOfWeek = now.getDay()
+    const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1
+    const monday = new Date(now)
+    monday.setDate(now.getDate() - diffToMonday)
+    monday.setHours(0, 0, 0, 0)
+    const mondayISO = monday.toISOString()
+
+    const { count: weekPosts } = await supabase
+      .from('community_posts')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_active', true)
+      .gte('created_at', mondayISO)
+
+    const { count: weekComments } = await supabase
+      .from('community_comments')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_active', true)
+      .gte('created_at', mondayISO)
+
+    const { count: weekUsers } = await supabase
+      .from('user_profiles')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', mondayISO)
+
     return {
       success: true,
       data: {
@@ -101,6 +155,13 @@ export async function getAdminStats() {
         postCount: postCount || 0,
         commentCount: commentCount || 0,
         userCount: userCount || 0,
+        audioCount: audioCount || 0,
+        todayPosts: todayPosts || 0,
+        todayComments: todayComments || 0,
+        todayUsers: todayUsers || 0,
+        weekPosts: weekPosts || 0,
+        weekComments: weekComments || 0,
+        weekUsers: weekUsers || 0,
       },
     }
   } catch (error) {
@@ -190,6 +251,46 @@ export async function getRecentNews(limit = 5) {
   } catch (error) {
     console.error('최근 뉴스 조회 실패:', error)
     return { success: false, error: '뉴스를 불러오는데 실패했습니다.', data: [] }
+  }
+}
+
+/**
+ * 최근 가입 회원 조회
+ */
+export async function getRecentMembers(limit = 5) {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return { success: false, error: '로그인이 필요합니다.', data: [] }
+  }
+
+  const { data: profile } = await supabase
+    .from('user_profiles')
+    .select('is_admin')
+    .eq('user_id', user.id)
+    .single()
+
+  if (!profile?.is_admin) {
+    return { success: false, error: '관리자 권한이 필요합니다.', data: [] }
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select('user_id, nickname, avatar_url, is_admin, is_blocked, created_at')
+      .order('created_at', { ascending: false })
+      .limit(limit)
+
+    if (error) throw error
+
+    return {
+      success: true,
+      data: data || [],
+    }
+  } catch (error) {
+    console.error('최근 회원 조회 실패:', error)
+    return { success: false, error: '회원을 불러오는데 실패했습니다.', data: [] }
   }
 }
 
@@ -362,8 +463,9 @@ export async function getMemberDetail(targetUserId: string): Promise<{ success: 
     try {
       const adminClient = createAdminClient()
       const { data: authUser } = await adminClient.auth.admin.getUserById(targetUserId)
-      if (authUser?.user?.banned_until) {
-        const bannedUntil = new Date(authUser.user.banned_until)
+      const userRecord = authUser?.user as unknown as Record<string, unknown> | undefined
+      if (userRecord?.banned_until) {
+        const bannedUntil = new Date(userRecord.banned_until as string)
         isBanned = bannedUntil.getTime() > Date.now()
       }
     } catch {

@@ -86,8 +86,6 @@ function CategorySection({
 }) {
   const colors = getNewsSectionStyle(category)
 
-  if (items.length === 0) return null
-
   // 4개 초과일 때만 전체보기 버튼 표시
   const showViewAll = items.length > 4
 
@@ -111,12 +109,16 @@ function CategorySection({
           )}
         </div>
 
-        {/* 뉴스 그리드 - 최대 4개 표시 */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {items.slice(0, 4).map((news) => (
-            <NewsCard key={news.id} news={news} />
-          ))}
-        </div>
+        {items.length > 0 ? (
+          /* 뉴스 그리드 - 최대 4개 표시 */
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {items.slice(0, 4).map((news) => (
+              <NewsCard key={news.id} news={news} />
+            ))}
+          </div>
+        ) : (
+          <p className="text-center text-gray-400 py-8">등록된 뉴스가 없습니다.</p>
+        )}
       </div>
     </section>
   )

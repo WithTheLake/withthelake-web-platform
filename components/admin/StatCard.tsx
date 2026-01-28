@@ -7,7 +7,7 @@ interface StatCardProps {
   value: number | string
   icon: LucideIcon
   href: string
-  color?: 'blue' | 'green' | 'purple' | 'orange' | 'pink'
+  color?: 'blue' | 'green' | 'purple' | 'orange' | 'pink' | 'cyan'
 }
 
 const colorStyles = {
@@ -16,6 +16,7 @@ const colorStyles = {
   purple: 'bg-purple-50 text-purple-600',
   orange: 'bg-orange-50 text-orange-600',
   pink: 'bg-pink-50 text-pink-600',
+  cyan: 'bg-cyan-50 text-cyan-600',
 }
 
 export function StatCard({

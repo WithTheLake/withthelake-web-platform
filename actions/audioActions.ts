@@ -676,7 +676,7 @@ export async function listAudioFiles(
   }
 
   // .emptyFolderPlaceholder 같은 시스템 파일 제외
-  const files = (data || []).filter(f => !f.name.startsWith('.')) as StorageFileItem[]
+  const files = (data || []).filter(f => !f.name.startsWith('.')) as unknown as StorageFileItem[]
   return { success: true, files }
 }
 
