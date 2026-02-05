@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Calendar } from 'lucide-react'
+import { MODAL_ANIMATION } from '@/lib/constants'
 
 interface AlreadyRecordedModalProps {
   isOpen: boolean
@@ -15,19 +16,15 @@ export default function AlreadyRecordedModal({ isOpen, onClose }: AlreadyRecorde
         <>
           {/* Backdrop */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            {...MODAL_ANIMATION.backdrop}
             className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50"
             onClick={onClose}
           />
 
           {/* Modal */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            {...MODAL_ANIMATION.content}
+            transition={MODAL_ANIMATION.spring}
             className="fixed inset-x-4 top-1/2 -translate-y-1/2 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-sm bg-white rounded-3xl z-50 overflow-hidden shadow-2xl"
           >
             {/* Header */}

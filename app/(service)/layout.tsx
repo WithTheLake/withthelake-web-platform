@@ -15,10 +15,8 @@ export default function ServiceLayout({
     <>
       <Header />
       <main className="pt-14 md:pt-20 font-pretendard">
-        {/* 모바일: 전체 너비, PC: 중앙 정렬 (적당히 넓게) */}
-        <div className="max-w-lg md:max-w-xl mx-auto">
-          {children}
-        </div>
+        {/* 반응형: 각 페이지에서 자체 관리 (max-width 제거) */}
+        {children}
       </main>
       <Footer />
     </>

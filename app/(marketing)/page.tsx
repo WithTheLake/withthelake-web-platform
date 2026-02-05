@@ -1,11 +1,37 @@
+'use client'
+
 import Image from 'next/image';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
+
+// 스크롤 애니메이션 설정
+const fadeInUp = {
+  initial: { opacity: 0, y: 40 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: "-100px" },
+  transition: { duration: 0.6, ease: [0.25, 0.1, 0.25, 1] as const }
+}
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-white -mt-18 md:-mt-24">
+    <div className="min-h-screen -mt-18 md:-mt-24 relative">
+      {/* 맨 뒤 고정 배경 레이어 (회색 40% → 흰색 60%) */}
+      <div
+        className="fixed inset-0 -z-10"
+        style={{ background: "linear-gradient(to bottom, #e8e8e8 0%, #e8e8e8 40%, #f9f9f9 40%, #f9f9f9 100%)" }}
+      />
+      {/* 노이즈 텍스처 오버레이 */}
+      <div
+        className="fixed inset-0 -z-10 opacity-40 pointer-events-none"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+          backgroundRepeat: 'repeat',
+          backgroundSize: '256px 256px'
+        }}
+      />
+
       {/* Hero Section - 유튜브 비디오 배경 */}
-      <section className="relative h-screen w-full overflow-hidden">
+      <section className="relative h-screen w-full overflow-hidden bg-black">
         {/* 유튜브 비디오 배경 */}
         <div className="absolute inset-0 pointer-events-none">
           <iframe
@@ -43,9 +69,9 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 액티브 시니어 섹션 */}
-      <section className="py-10 bg-white">
-        <div className="max-w-6xl mx-auto px-4 lg:px-16">
+      {/* 액티브 시니어 섹션 - 투명 배경 (고정된 페이지 배경이 보임) */}
+      <section className="py-10">
+        <motion.div {...fadeInUp} className="max-w-6xl mx-auto px-4 lg:px-16">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-4 items-center">
             {/* 텍스트 */}
             <div>
@@ -61,9 +87,10 @@ export default function HomePage() {
               </div>
               <Link
                 href="/about"
-                className="inline-flex items-center gap-2 mt-8 lg:mt-10 text-base lg:text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors"
+                className="group inline-flex items-center gap-2 mt-8 lg:mt-10 text-base lg:text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors"
               >
-                더 자세히 알아보기 →
+                더 자세히 알아보기
+                <span className="inline-block transition-transform duration-300 group-hover:translate-x-1">→</span>
               </Link>
             </div>
 
@@ -79,12 +106,12 @@ export default function HomePage() {
               />
             </div>
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* 5가지 프로젝트 섹션 */}
       <section className="py-20 lg:py-32 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 lg:px-16">
+        <motion.div {...fadeInUp} className="max-w-7xl mx-auto px-4 lg:px-16">
           {/* 3열 x 2행 그리드 */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-30 gap-y-16">
             {/* 1행 1열: 제목 */}
@@ -177,12 +204,12 @@ export default function HomePage() {
               </p>
             </div>
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* 3가지 방법 섹션 */}
-      <section className="py-16 lg:py-20 bg-white mt-4">
-        <div className="container mx-auto px-32">
+      <section className="py-16 lg:py-20 bg-white">
+        <motion.div {...fadeInUp} className="container mx-auto px-32">
           {/* 제목 영역 - 기존 사이트처럼 상단에 배치 */}
           <div className="mb-16 lg:mb-28">
             <p className="text-2xl lg:text-4xl text-gray-900 mb-3">우리는 <span className="text-blue-600 font-bold">3가지 방법</span>으로 맨발걷기 기반의</p>
@@ -271,12 +298,12 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* 앱 다운로드 섹션 */}
       <section className="py-10 bg-gray-100 text-white">
-        <div className="mx-10 py-25 px-30 bg-black rounded-2xl">
+        <motion.div {...fadeInUp} className="mx-10 py-25 px-30 bg-black rounded-2xl">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* 텍스트 & 다운로드 버튼 */}
             <div>
@@ -333,7 +360,7 @@ export default function HomePage() {
               />
             </div>
           </div>
-        </div>
+        </motion.div>
       </section>
     </div>
   );

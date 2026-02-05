@@ -36,15 +36,15 @@ export default async function AdminDashboardPage() {
   const recentMembers = membersResult.data || []
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* 페이지 제목 */}
-      <div>
+      <div className="pl-2">
         <h1 className="text-2xl font-bold text-gray-900">대시보드</h1>
         <p className="text-gray-500 mt-1">WithTheLake 관리자 페이지에 오신 것을 환영합니다.</p>
       </div>
 
       {/* 통계 카드 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         <StatCard
           title="뉴스"
           value={stats.newsCount}
@@ -272,18 +272,7 @@ export default async function AdminDashboardPage() {
               recentMembers.map((member: any) => (
                 <div key={member.user_id} className="px-6 py-3 hover:bg-gray-50">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0 overflow-hidden">
-                        {member.avatar_url ? (
-                          <img
-                            src={member.avatar_url}
-                            alt=""
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <UserPlus size={14} className="text-gray-400" />
-                        )}
-                      </div>
+                    <div className="min-w-0 ml-1">
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">
                           {member.nickname || '닉네임 없음'}

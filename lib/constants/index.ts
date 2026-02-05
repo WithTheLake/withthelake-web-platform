@@ -1,5 +1,5 @@
-export * from './animations'
-export * from './colors'
 export * from './store'
 export * from './news'
 export * from './community'
+export * from './animations'
+export * from './colors'

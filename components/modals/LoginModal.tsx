@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, Loader2, MessageCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/components/ui/Toast'
+import { MODAL_ANIMATION, BUTTON_STYLES } from '@/lib/constants'
 
 interface LoginModalProps {
   isOpen: boolean
@@ -66,9 +67,7 @@ export default function LoginModal({ isOpen, onClose, focusOnComment = false }: 
         <>
           {/* Backdrop */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            {...MODAL_ANIMATION.backdrop}
             className="fixed inset-0 bg-black bg-opacity-50 z-[60]"
             onClick={onClose}
           />
@@ -78,7 +77,7 @@ export default function LoginModal({ isOpen, onClose, focusOnComment = false }: 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            transition={MODAL_ANIMATION.spring}
             className="fixed inset-0 flex items-center justify-center z-[60] p-5"
           >
             <div
@@ -107,7 +106,7 @@ export default function LoginModal({ isOpen, onClose, focusOnComment = false }: 
                 <button
                   onClick={handleKakaoLogin}
                   disabled={isLoading}
-                  className="w-full py-4 bg-[#FEE500] text-[#191919] rounded-xl font-semibold text-base hover:bg-[#FDD800] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`w-full py-4 ${BUTTON_STYLES.kakaoLogin} rounded-xl font-semibold text-base transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   {isLoading ? (
                     <>

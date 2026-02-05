@@ -43,7 +43,7 @@ const menuItems = [
     icon: ShoppingBag,
     children: [
       { title: '제품 관리', href: '/admin/store' },
-      { title: '카테고리', href: '/admin/store/categories' },
+      { title: '카테고리 관리', href: '/admin/store/categories' },
     ],
   },
   {

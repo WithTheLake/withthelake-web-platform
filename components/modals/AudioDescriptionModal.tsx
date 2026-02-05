@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
+import { MODAL_ANIMATION } from '@/lib/constants'
 import type { AudioItem } from '@/types/audio'
 
 interface AudioDescriptionModalProps {
@@ -32,9 +33,7 @@ export default function AudioDescriptionModal({
     <AnimatePresence>
       {isOpen && audio && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+          {...MODAL_ANIMATION.backdrop}
           className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-5"
           onClick={onClose}
         >
@@ -42,7 +41,7 @@ export default function AudioDescriptionModal({
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            transition={MODAL_ANIMATION.spring}
             className="bg-white rounded-3xl w-full max-w-sm p-6 relative"
             onClick={(e) => e.stopPropagation()}
           >

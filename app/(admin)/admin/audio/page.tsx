@@ -164,7 +164,7 @@ export default function AdminAudioPage() {
   return (
     <div className="space-y-6">
       {/* 페이지 제목 */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between pl-2">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">오디오 관리</h1>
           <p className="text-gray-500 mt-1">총 {totalCount}개의 오디오 트랙</p>

@@ -221,7 +221,7 @@ export default function AudioStoragePage() {
   return (
     <div className="space-y-6">
       {/* 헤더 */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between pl-2">
         <div className="flex items-center gap-4">
           <Link
             href="/admin/audio"

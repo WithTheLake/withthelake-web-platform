@@ -246,7 +246,7 @@ export default function AdminMembersPage() {
   return (
     <div className="space-y-6">
       {/* 페이지 제목 */}
-      <div>
+      <div className="pl-2">
         <h1 className="text-2xl font-bold text-gray-900">회원 관리</h1>
         <p className="text-gray-500 mt-1">
           총 {totalCount}명의 회원
@@ -306,7 +306,7 @@ export default function AdminMembersPage() {
         <table className="w-full">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
-              <th className="pl-6 pr-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-52">
+              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-52">
                 회원
               </th>
               <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
@@ -349,23 +349,10 @@ export default function AdminMembersPage() {
                   className="hover:bg-gray-50 cursor-pointer"
                   onClick={() => handleOpenDetail(member)}
                 >
-                  <td className="pl-6 pr-2 py-4">
-                    <div className="flex items-center gap-3">
-                      {member.avatar_url ? (
-                        <img
-                          src={member.avatar_url}
-                          alt=""
-                          className="w-9 h-9 rounded-full object-cover flex-shrink-0"
-                        />
-                      ) : (
-                        <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
-                          <User size={16} className="text-gray-400" />
-                        </div>
-                      )}
-                      <span className={`text-sm font-medium truncate flex-1 text-center ${member.is_blocked ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
-                        {member.nickname || '(닉네임 없음)'}
-                      </span>
-                    </div>
+                  <td className="px-4 py-4 text-center">
+                    <span className={`text-sm font-medium ${member.is_blocked ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
+                      {member.nickname || '(닉네임 없음)'}
+                    </span>
                   </td>
                   <td className="px-4 py-4 text-sm text-gray-600 text-center">
                     {member.age_group || '-'}
@@ -462,30 +449,17 @@ export default function AdminMembersPage() {
                 {/* 모달 본문 */}
                 <div className="p-5 space-y-5">
                   {/* 프로필 정보 */}
-                  <div className="flex items-center gap-4">
-                    {selectedMember.avatar_url ? (
-                      <img
-                        src={selectedMember.avatar_url}
-                        alt=""
-                        className="w-16 h-16 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
-                        <User size={28} className="text-gray-400" />
-                      </div>
-                    )}
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h4 className={`text-lg font-bold ${selectedMember.is_blocked ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
-                          {selectedMember.nickname || '(닉네임 없음)'}
-                        </h4>
-                        {renderRoleBadge(selectedMember)}
-                        {renderStatusBadge(selectedMember)}
-                      </div>
-                      <p className="text-sm text-gray-500 mt-0.5">
-                        연령대: {selectedMember.age_group || '미설정'}
-                      </p>
+                  <div className="pl-1">
+                    <div className="flex items-center gap-2">
+                      <h4 className={`text-lg font-bold ${selectedMember.is_blocked ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
+                        {selectedMember.nickname || '(닉네임 없음)'}
+                      </h4>
+                      {renderRoleBadge(selectedMember)}
+                      {renderStatusBadge(selectedMember)}
                     </div>
+                    <p className="text-sm text-gray-500 mt-0.5">
+                      연령대: {selectedMember.age_group || '미설정'}
+                    </p>
                   </div>
 
                   {/* 활동 통계 */}

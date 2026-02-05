@@ -19,7 +19,7 @@ export default async function StorePage() {
     <div className="min-h-screen bg-gray-50 pb-16">
       {/* 히어로 섹션 - 이미지 배너 (중앙 정렬) */}
       <section className="bg-white py-4 md:py-6">
-        <div className="max-w-lg mx-auto px-4">
+        <div className="max-w-xl mx-auto px-4">
           <div className="relative w-full aspect-[3/1] rounded-xl overflow-hidden ">
             <Image
               src="/images/withwellme-market_logo.jpg"

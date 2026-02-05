@@ -11,6 +11,7 @@ import {
   EXPERIENCE_LOCATIONS,
 } from '@/types/emotion'
 import { useToast } from '@/components/ui/Toast'
+import { MODAL_ANIMATION, GRADIENT_CLASSES, EMOTION_STEP_COLORS } from '@/lib/constants'
 
 interface EmotionRecordModalProps {
   isOpen: boolean
@@ -159,7 +160,7 @@ export default function EmotionRecordModal({ isOpen, onClose }: EmotionRecordMod
         return (
           <div className="space-y-4">
             <div className="text-center mb-6">
-              <span className="inline-block px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium mb-2">
+              <span className={`inline-block px-3 py-1 ${EMOTION_STEP_COLORS.emotion.badge} rounded-full text-sm font-medium mb-2`}>
                 E. 감정 | Emotion
               </span>
               <h3 className="text-xl font-bold text-gray-900">
@@ -173,7 +174,7 @@ export default function EmotionRecordModal({ isOpen, onClose }: EmotionRecordMod
                   onClick={() => setFormData(prev => ({ ...prev, preEmotion: emotion.type }))}
                   className={`flex flex-col items-center p-4 rounded-2xl transition-all ${
                     formData.preEmotion === emotion.type
-                      ? 'bg-purple-100 border-2 border-purple-500 shadow-md'
+                      ? `${EMOTION_STEP_COLORS.emotion.selected} border-2 shadow-md`
                       : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100'
                   }`}
                 >
@@ -189,7 +190,7 @@ export default function EmotionRecordModal({ isOpen, onClose }: EmotionRecordMod
         return (
           <div className="space-y-4">
             <div className="text-center mb-6">
-              <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium mb-2">
+              <span className={`inline-block px-3 py-1 ${EMOTION_STEP_COLORS.meaning.badge} rounded-full text-sm font-medium mb-2`}>
                 M. 의미 | Meaning
               </span>
               <h3 className="text-xl font-bold text-gray-900">
@@ -209,7 +210,7 @@ export default function EmotionRecordModal({ isOpen, onClose }: EmotionRecordMod
         return (
           <div className="space-y-4">
             <div className="text-center mb-6">
-              <span className="inline-block px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium mb-2">
+              <span className={`inline-block px-3 py-1 ${EMOTION_STEP_COLORS.action.badge} rounded-full text-sm font-medium mb-2`}>
                 A. 행동 | Action
               </span>
               <h3 className="text-xl font-bold text-gray-900">
@@ -223,13 +224,13 @@ export default function EmotionRecordModal({ isOpen, onClose }: EmotionRecordMod
                   onClick={() => toggleArrayItem('helpfulActions', action.type)}
                   className={`p-4 rounded-2xl transition-all text-center ${
                     formData.helpfulActions.includes(action.type)
-                      ? 'bg-green-100 border-2 border-green-500 shadow-md'
+                      ? `${EMOTION_STEP_COLORS.action.selected} border-2 shadow-md`
                       : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100'
                   }`}
                 >
                   <span className="text-sm font-medium">{action.label}</span>
                   {formData.helpfulActions.includes(action.type) && (
-                    <Check size={16} className="inline-block ml-1 text-green-600" />
+                    <Check size={16} className={`inline-block ml-1 ${EMOTION_STEP_COLORS.action.check}`} />
                   )}
                 </button>
               ))}
@@ -241,7 +242,7 @@ export default function EmotionRecordModal({ isOpen, onClose }: EmotionRecordMod
         return (
           <div className="space-y-4">
             <div className="text-center mb-6">
-              <span className="inline-block px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm font-medium mb-2">
+              <span className={`inline-block px-3 py-1 ${EMOTION_STEP_COLORS.reflect.badge} rounded-full text-sm font-medium mb-2`}>
                 R. 성찰 | Reflect
               </span>
               <h3 className="text-xl font-bold text-gray-900">
@@ -255,14 +256,14 @@ export default function EmotionRecordModal({ isOpen, onClose }: EmotionRecordMod
                   onClick={() => toggleArrayItem('positiveChanges', change.type)}
                   className={`flex items-center gap-3 p-4 rounded-2xl transition-all ${
                     formData.positiveChanges.includes(change.type)
-                      ? 'bg-amber-100 border-2 border-amber-500 shadow-md'
+                      ? `${EMOTION_STEP_COLORS.reflect.selected} border-2 shadow-md`
                       : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100'
                   }`}
                 >
                   <span className="text-2xl">{change.emoji}</span>
                   <span className="text-sm font-medium">{change.label}</span>
                   {formData.positiveChanges.includes(change.type) && (
-                    <Check size={16} className="ml-auto text-amber-600" />
+                    <Check size={16} className={`ml-auto ${EMOTION_STEP_COLORS.reflect.check}`} />
                   )}
                 </button>
               ))}
@@ -274,7 +275,7 @@ export default function EmotionRecordModal({ isOpen, onClose }: EmotionRecordMod
         return (
           <div className="space-y-4">
             <div className="text-center mb-6">
-              <span className="inline-block px-3 py-1 bg-rose-100 text-rose-700 rounded-full text-sm font-medium mb-2">
+              <span className={`inline-block px-3 py-1 ${EMOTION_STEP_COLORS.anchor.badge} rounded-full text-sm font-medium mb-2`}>
                 A. 고정 | Anchor
               </span>
               <h3 className="text-xl font-bold text-gray-900">
@@ -333,23 +334,19 @@ export default function EmotionRecordModal({ isOpen, onClose }: EmotionRecordMod
           <>
             {/* Backdrop - 살짝 투명하게 뒤 페이지가 보이도록 */}
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              {...MODAL_ANIMATION.backdrop}
               className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50"
               onClick={onClose}
             />
 
             {/* Center Modal */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              {...MODAL_ANIMATION.content}
+              transition={MODAL_ANIMATION.spring}
               className="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg md:max-h-[90vh] bg-white rounded-3xl z-50 flex flex-col overflow-hidden shadow-2xl"
             >
               {/* Header */}
-              <div className="flex items-center justify-between px-6 py-4 border-b bg-gradient-to-r from-purple-600 to-blue-600">
+              <div className={`flex items-center justify-between px-6 py-4 border-b ${GRADIENT_CLASSES.purpleBlue}`}>
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">🌿</span>
                   <div>
@@ -460,7 +457,7 @@ export default function EmotionRecordModal({ isOpen, onClose }: EmotionRecordMod
                       <button
                         onClick={handleNext}
                         disabled={!isStepValid()}
-                        className="flex-1 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:from-purple-700 hover:to-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        className={`flex-1 py-4 ${GRADIENT_CLASSES.purpleBlue} text-white rounded-xl font-semibold flex items-center justify-center gap-2 ${GRADIENT_CLASSES.purpleBlueHover} transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
                       >
                         다음
                         <ChevronRight size={20} />
@@ -469,7 +466,7 @@ export default function EmotionRecordModal({ isOpen, onClose }: EmotionRecordMod
                       <button
                         onClick={handleSubmit}
                         disabled={!isStepValid() || isSubmitting}
-                        className="flex-1 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:from-purple-700 hover:to-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        className={`flex-1 py-4 ${GRADIENT_CLASSES.purpleBlue} text-white rounded-xl font-semibold flex items-center justify-center gap-2 ${GRADIENT_CLASSES.purpleBlueHover} transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
                       >
                         {isSubmitting ? (
                           <>

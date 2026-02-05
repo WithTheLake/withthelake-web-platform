@@ -1,5 +1,9 @@
+'use client'
+
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { motion } from 'framer-motion'
 import {
   MapPin,
   Building2,
@@ -20,68 +24,144 @@ import {
   Youtube
 } from 'lucide-react'
 
-export const metadata = {
-  title: '기업 소개 - WithTheLake',
-  description: '위드더레이크는 데이터로 몸을 읽고, 인문학으로 마음을 위로하며, 사람으로 세상을 따뜻하게 만드는 디지털 헬스케어 융복합 기업입니다.',
+// 스크롤 애니메이션 설정
+const fadeInUp = {
+  initial: { opacity: 0, y: 40 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: "-100px" },
+  transition: { duration: 0.6, ease: [0.25, 0.1, 0.25, 1] as const }
 }
 
+// 섹션 네비게이션 데이터
+const sectionNav = [
+  { id: 'brand', label: '브랜드' },
+  { id: 'mission', label: '미션' },
+  { id: 'values', label: '핵심 가치' },
+  { id: 'problems', label: '4대 단절' },
+  { id: 'business', label: '사업 영역' },
+  { id: 'team', label: '팀' },
+  { id: 'history', label: '연혁' },
+  { id: 'company', label: '회사 정보' },
+]
+
 export default function AboutPage() {
+  const [activeSection, setActiveSection] = useState('brand')
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id)
+          }
+        })
+      },
+      { rootMargin: '-20% 0px -70% 0px' }
+    )
+
+    sectionNav.forEach(({ id }) => {
+      const el = document.getElementById(id)
+      if (el) observer.observe(el)
+    })
+
+    return () => observer.disconnect()
+  }, [])
+
+  const scrollTo = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
   return (
     <div className="min-h-screen bg-white">
-      {/* 히어로 섹션 - 이미지 전체 표시 */}
-      <section className="relative w-full bg-gray-100">
-        <div className="relative w-full max-w-6xl mx-auto">
-          <Image
-            src="/images/withthelake_about.png"
-            alt="위드더레이크 기업 소개"
-            width={1200}
-            height={800}
-            sizes="100vw"
-            className="w-full h-auto"
-            priority
-          />
-        </div>
-      </section>
-
-      {/* 슬로건 */}
-      <section className="py-12 md:py-16 bg-gradient-to-r from-green-600 to-teal-600 text-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-lg md:text-xl lg:text-2xl font-medium leading-relaxed">
-            "우리는 <strong>데이터</strong>로 몸을 읽고, <strong>인문학</strong>으로 마음을 위로하며,
-            <br className="hidden md:block" />
-            <strong>사람</strong>으로 세상을 따뜻하게 만듭니다."
+      {/* 히어로 섹션 - 밝은 배경 */}
+      <section className="relative py-20 md:py-28 bg-gradient-to-b from-green-100/70 to-white overflow-hidden">
+        <div className="absolute inset-0 bg-[url('/images/pattern-dots.png')] opacity-5" />
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+          <p className="text-green-600 text-sm font-medium tracking-widest uppercase mb-4">
+            About WithTheLake
+          </p>
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight mb-6">
+            데이터로 몸을 읽고,<br />
+            인문학으로 마음을 위로합니다
+          </h1>
+          <p className="text-gray-600 text-lg max-w-2xl mx-auto leading-relaxed">
+            위드더레이크는 병원 밖 일상에서의 예방과 치유를<br className="hidden md:block" />
+            과학적 데이터와 로컬 콘텐츠로 해결합니다.
           </p>
         </div>
       </section>
 
+      {/* 섹션 앵커 네비게이션 */}
+      <nav className="hidden lg:block sticky top-20 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-center gap-2 h-14">
+            {sectionNav.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => scrollTo(item.id)}
+                className={`px-5 py-2 text-base font-medium rounded-full transition-all duration-200 ${
+                  activeSection === item.id
+                    ? 'bg-green-600 text-white'
+                    : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </nav>
+
+      {/* 브랜드 소개 - LAKE 의미 */}
+      <section id="brand" className="py-16 md:py-24 scroll-mt-36">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div {...fadeInUp} className="text-center mb-12">
+            <p className="text-green-600 text-sm font-medium tracking-widest uppercase mb-4">Brand Story</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900">위드더레이크가 그리는 가치</h2>
+          </motion.div>
+          <motion.div {...fadeInUp} className="flex justify-center">
+            <Image
+              src="/images/withthelake_about.png"
+              alt="LAKE - Lively, Authentic, Kind, Empowered"
+              width={1200}
+              height={600}
+              className="w-full max-w-4xl h-auto"
+            />
+          </motion.div>
+        </div>
+      </section>
+
       {/* 미션 */}
-      <section className="py-16 md:py-24">
+      <motion.section {...fadeInUp} id="mission" className="py-16 md:py-24 bg-gray-50 scroll-mt-36">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center">
             <div className="w-16 h-16 bg-green-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
               <Target size={32} className="text-white" />
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-6 text-gray-900">Mission: 웰니스 생태계의 완성</h2>
-            <p className="text-gray-700 text-lg leading-relaxed">
-              주식회사 위드더레이크는 파편화된 건강관리와 관광 산업을 하나로 묶는
-              <strong className="text-green-700"> '디지털 헬스케어 융복합 모델'</strong>을 지향합니다.
-              <br /><br />
-              병원에서만 이루어지는 건강관리가 아닌, <strong>'병원 밖 일상'</strong>에서의 예방과 치유를
-              과학적 데이터와 로컬 콘텐츠로 해결하는 것이 우리의 소명입니다.
-            </p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-8 text-gray-900">Mission: 웰니스 생태계의 완성</h2>
+            <div className="max-w-4xl mx-auto space-y-5">
+              <p className="text-gray-700 text-lg leading-relaxed">
+                주식회사 위드더레이크는 파편화된 건강관리와 관광 산업을 하나로 묶는
+                <strong className="text-green-700"> &apos;디지털 헬스케어 융복합 모델&apos;</strong>을 지향합니다.
+              </p>
+              <p className="text-gray-700 text-lg leading-relaxed">
+                병원에서만 이루어지는 건강관리가 아닌, <strong>&apos;병원 밖 일상&apos;</strong>에서의
+                예방과 치유를 과학적 데이터와 로컬 콘텐츠로 해결하는 것이 우리의 소명입니다.
+              </p>
+            </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* 핵심 가치 - Data, Nature, Local */}
-      <section className="py-16 md:py-24 bg-gray-50">
+      <motion.section {...fadeInUp} id="values" className="py-16 md:py-24 scroll-mt-36">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">Core: Data, Nature, and Local</h2>
           <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
             세 가지 핵심 가치로 웰니스 생태계를 구축합니다
           </p>
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-white rounded-2xl p-8 text-center shadow-sm hover:shadow-lg transition-shadow">
+            <div className="bg-white rounded-2xl p-8 text-center shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-gray-100">
               <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <Database size={32} className="text-blue-600" />
               </div>
@@ -90,7 +170,7 @@ export default function AboutPage() {
                 주관적인 느낌이 아닌, <strong>객관적인 지표(AI 진단)</strong>로 건강을 확인합니다.
               </p>
             </div>
-            <div className="bg-white rounded-2xl p-8 text-center shadow-sm hover:shadow-lg transition-shadow">
+            <div className="bg-white rounded-2xl p-8 text-center shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-gray-100">
               <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <Leaf size={32} className="text-green-600" />
               </div>
@@ -99,7 +179,7 @@ export default function AboutPage() {
                 자연이라는 <strong>가장 강력한 치유 공간</strong>에서 회복을 경험합니다.
               </p>
             </div>
-            <div className="bg-white rounded-2xl p-8 text-center shadow-sm hover:shadow-lg transition-shadow">
+            <div className="bg-white rounded-2xl p-8 text-center shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-gray-100">
               <div className="w-16 h-16 bg-amber-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <MapPinned size={32} className="text-amber-600" />
               </div>
@@ -110,17 +190,17 @@ export default function AboutPage() {
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* 4대 단절 해결 */}
-      <section className="py-16 md:py-24">
+      <motion.section {...fadeInUp} id="problems" className="py-16 md:py-24 bg-gray-50 scroll-mt-36">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">우리가 해결하는 '4대 단절'</h2>
           <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
             위드더레이크가 수행하는 모든 업무는 이 네 가지 문제를 해결합니다
           </p>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl p-6 border border-red-100">
+          <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-6">
+            <div className="bg-white rounded-2xl p-6 border border-red-200 hover:shadow-lg transition-shadow">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 bg-red-500 rounded-xl flex items-center justify-center flex-shrink-0">
                   <Stethoscope size={24} className="text-white" />
@@ -132,7 +212,7 @@ export default function AboutPage() {
                 </div>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-6 border border-blue-100">
+            <div className="bg-white rounded-2xl p-6 border border-blue-200 hover:shadow-lg transition-shadow">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0">
                   <MapPinned size={24} className="text-white" />
@@ -144,7 +224,7 @@ export default function AboutPage() {
                 </div>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-100">
+            <div className="bg-white rounded-2xl p-6 border border-purple-200 hover:shadow-lg transition-shadow">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center flex-shrink-0">
                   <Heart size={24} className="text-white" />
@@ -156,7 +236,7 @@ export default function AboutPage() {
                 </div>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-100">
+            <div className="bg-white rounded-2xl p-6 border border-green-200 hover:shadow-lg transition-shadow">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center flex-shrink-0">
                   <Users size={24} className="text-white" />
@@ -170,16 +250,16 @@ export default function AboutPage() {
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* 4대 사업 영역 (The 4 Pillars) */}
-      <section className="py-16 md:py-24 bg-gray-900 text-white">
+      <motion.section {...fadeInUp} id="business" className="py-16 md:py-24 bg-gray-900 text-white scroll-mt-36">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">사업 영역 (The 4 Pillars)</h2>
           <p className="text-center text-gray-400 mb-12 max-w-2xl mx-auto">
             네 가지 핵심 사업으로 웰니스 생태계를 완성합니다
           </p>
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-8">
             {/* Bio-Tech */}
             <div className="bg-gray-800 rounded-2xl p-6 md:p-8">
               <div className="flex items-center gap-3 mb-4">
@@ -228,30 +308,6 @@ export default function AboutPage() {
               </ul>
             </div>
 
-            {/* People */}
-            <div className="bg-gray-800 rounded-2xl p-6 md:p-8">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
-                  <GraduationCap size={20} className="text-white" />
-                </div>
-                <h3 className="text-xl font-bold">[People] 전문 인력 양성</h3>
-              </div>
-              <ul className="space-y-4 text-gray-300 text-sm">
-                <li className="flex items-start gap-2">
-                  <span className="text-green-400 leading-none mt-[2px]">•</span>
-                  <span>독자적 언어심리 기법(EMARA)을 숙지한 <strong className="text-white">전문가 양성</strong></span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-green-400 leading-none mt-[2px]">•</span>
-                  <span>늘봄학교(방과후 학교), 생활체육 지자체 프로그램 강사 파견</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-green-400 leading-none mt-[2px]">•</span>
-                  <span>경력단절여성과 시니어에게 <strong className="text-white">'루틴 코치'</strong> 직업 부여</span>
-                </li>
-              </ul>
-            </div>
-
             {/* Product */}
             <div className="bg-gray-800 rounded-2xl p-6 md:p-8">
               <div className="flex items-center gap-3 mb-4">
@@ -275,16 +331,40 @@ export default function AboutPage() {
                 </li>
               </ul>
             </div>
+
+            {/* People */}
+            <div className="bg-gray-800 rounded-2xl p-6 md:p-8">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+                  <GraduationCap size={20} className="text-white" />
+                </div>
+                <h3 className="text-xl font-bold">[People] 전문 인력 양성</h3>
+              </div>
+              <ul className="space-y-4 text-gray-300 text-sm">
+                <li className="flex items-start gap-2">
+                  <span className="text-green-400 leading-none mt-[2px]">•</span>
+                  <span>독자적 언어심리 기법(EMARA)을 숙지한 <strong className="text-white">전문가 양성</strong></span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-400 leading-none mt-[2px]">•</span>
+                  <span>늘봄학교(방과후 학교), 생활체육 지자체 프로그램 강사 파견</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-400 leading-none mt-[2px]">•</span>
+                  <span>경력단절여성과 시니어에게 <strong className="text-white">'루틴 코치'</strong> 직업 부여</span>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* 팀 & 파트너십 */}
-      <section className="py-16 md:py-24">
+      <motion.section {...fadeInUp} id="team" className="py-16 md:py-24 scroll-mt-36">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">전문 역량과 파트너십</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-2xl p-6 text-center">
+            <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-2xl p-6 text-center hover:shadow-lg transition-shadow">
               <div className="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl">👩‍💼</span>
               </div>
@@ -295,7 +375,7 @@ export default function AboutPage() {
                 콘텐츠의 과학적 증명 주도
               </p>
             </div>
-            <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-6 text-center">
+            <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-6 text-center hover:shadow-lg transition-shadow">
               <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl">👨‍💻</span>
               </div>
@@ -306,7 +386,7 @@ export default function AboutPage() {
                 기술적 진입장벽 구축
               </p>
             </div>
-            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 text-center">
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 text-center hover:shadow-lg transition-shadow">
               <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl">🎓</span>
               </div>
@@ -317,7 +397,7 @@ export default function AboutPage() {
                 AI 큐레이션 알고리즘 고도화
               </p>
             </div>
-            <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 text-center">
+            <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 text-center hover:shadow-lg transition-shadow">
               <div className="w-16 h-16 bg-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl">🔬</span>
               </div>
@@ -330,14 +410,14 @@ export default function AboutPage() {
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* 회사 연혁 */}
-      <section className="py-16 md:py-24 bg-gray-50">
+      <motion.section {...fadeInUp} id="history" className="py-16 md:py-24 bg-gray-50 scroll-mt-36">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">주요 인증 및 연혁</h2>
-          <p className="text-center text-gray-600 mb-12">위드더레이크의 성장 여정</p>
-          <div className="max-w-3xl mx-auto">
+          <p className="text-center text-gray-600 mb-14">위드더레이크의 성장 여정</p>
+          <div className="max-w-3xl mx-auto md:ml-[calc(50%-260px)]">
             <div className="space-y-6">
               {/* 2025 */}
               <div className="flex gap-6">
@@ -419,10 +499,10 @@ export default function AboutPage() {
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* 회사 정보 */}
-      <section className="py-16 md:py-24 bg-gray-900 text-white">
+      <motion.section {...fadeInUp} id="company" className="py-16 md:py-24 bg-gray-900 text-white scroll-mt-36">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">회사 정보</h2>
           <div className="grid md:grid-cols-2 gap-12">
@@ -545,10 +625,10 @@ export default function AboutPage() {
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* CTA */}
-      <section className="py-16 md:py-24 bg-gradient-to-r from-green-500 to-teal-500 text-white">
+      <motion.section {...fadeInUp} className="py-16 md:py-24 bg-gradient-to-r from-green-500 to-teal-500 text-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">
             함께 건강한 미래를 만들어가요
@@ -563,7 +643,7 @@ export default function AboutPage() {
             힐링로드 ON 시작하기
           </Link>
         </div>
-      </section>
+      </motion.section>
     </div>
   )
 }

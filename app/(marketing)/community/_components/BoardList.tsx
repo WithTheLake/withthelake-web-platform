@@ -225,12 +225,12 @@ export default function BoardList({
         ) : (
           <div className="bg-white rounded-xl shadow-sm overflow-hidden">
             {/* 테이블 헤더 */}
-            <div className="hidden md:grid md:grid-cols-[70px_1fr_110px_100px_70px] bg-gray-50 border-b text-sm font-semibold text-gray-600">
-              <div className="px-3 py-3 text-center">번호</div>
-              <div className="px-3 py-3">제목</div>
-              <div className="px-3 py-3 text-center">작성자</div>
-              <div className="px-3 py-3 text-center">작성일</div>
-              <div className="px-3 py-3 text-center">조회</div>
+            <div className="hidden md:grid md:grid-cols-[70px_1fr_130px_110px_75px] px-4 bg-gray-50 border-b text-sm font-semibold text-gray-600">
+              <div className="py-3 text-center">번호</div>
+              <div className="px-4 py-3 text-center">제목</div>
+              <div className="py-3 text-center">작성자</div>
+              <div className="py-3 text-center">작성일</div>
+              <div className="py-3 text-center">조회</div>
             </div>
 
             {/* 고정 게시글 */}
@@ -246,22 +246,22 @@ export default function BoardList({
                   className="block hover:bg-emerald-50 transition-colors border-b border-gray-100"
                 >
                   {/* 데스크톱 */}
-                  <div className="hidden md:grid md:grid-cols-[70px_1fr_110px_100px_70px] text-sm">
-                    <div className="px-3 py-3.5 text-center">
+                  <div className="hidden md:grid md:grid-cols-[70px_1fr_130px_110px_75px] px-4 text-sm">
+                    <div className="py-3.5 text-center">
                       <span className="inline-block px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs font-bold rounded">
                         공지
                       </span>
                     </div>
-                    <div className="px-3 py-3.5 font-medium text-gray-900 truncate">
+                    <div className="px-4 py-3.5 font-medium text-gray-900 truncate">
                       {post.title}
                     </div>
-                    <div className="px-3 py-3.5 text-center text-gray-600 truncate">
+                    <div className="py-3.5 text-center text-gray-600 truncate">
                       {post.author_nickname || '관리자'}
                     </div>
-                    <div className="px-3 py-3.5 text-center text-gray-500 whitespace-nowrap">
+                    <div className="py-3.5 text-center text-gray-500 whitespace-nowrap">
                       {formatSmartDate(post.created_at)}
                     </div>
-                    <div className="px-3 py-3.5 text-center text-gray-500">
+                    <div className="py-3.5 text-center text-gray-500">
                       {post.view_count}
                     </div>
                   </div>
@@ -299,20 +299,20 @@ export default function BoardList({
                   className="block hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
                 >
                   {/* 데스크톱 */}
-                  <div className="hidden md:grid md:grid-cols-[70px_1fr_110px_100px_70px] text-sm">
-                    <div className="px-3 py-3.5 text-center text-gray-500">
+                  <div className="hidden md:grid md:grid-cols-[70px_1fr_130px_110px_75px] px-4 text-sm">
+                    <div className="py-3.5 text-center text-gray-500">
                       {getPostNumber(index)}
                     </div>
-                    <div className="px-3 py-3.5 font-medium text-gray-900 truncate">
+                    <div className="px-4 py-3.5 font-medium text-gray-900 truncate">
                       {post.title}
                     </div>
-                    <div className="px-3 py-3.5 text-center text-gray-600 truncate">
+                    <div className="py-3.5 text-center text-gray-600 truncate">
                       {post.author_nickname || '익명'}
                     </div>
-                    <div className="px-3 py-3.5 text-center text-gray-500 whitespace-nowrap">
+                    <div className="py-3.5 text-center text-gray-500 whitespace-nowrap">
                       {formatSmartDate(post.created_at)}
                     </div>
-                    <div className="px-3 py-3.5 text-center text-gray-500">
+                    <div className="py-3.5 text-center text-gray-500">
                       {post.view_count}
                     </div>
                   </div>

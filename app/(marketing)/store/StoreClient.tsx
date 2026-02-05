@@ -67,7 +67,7 @@ export default function StoreClient({ products, categories = ['전체'] }: Store
                     href={productUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all group hover:-translate-y-1"
+                    className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group"
                   >
                     <article>
                       {/* 상품 이미지 */}
