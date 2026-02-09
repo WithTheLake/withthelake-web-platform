@@ -3,6 +3,7 @@ import { getPosts, type SearchType } from '@/actions/communityActions'
 import { checkIsAdmin } from '@/actions/profileActions'
 import BoardList from '../_components/BoardList'
 import { BoardListSkeleton } from '@/components/ui/Skeleton'
+import { getSiteUrl, getImageUrl } from '@/lib/utils/url'
 
 interface PageProps {
   searchParams: Promise<{ page?: string; search?: string; searchType?: string }>
@@ -14,6 +15,21 @@ export const metadata = {
   openGraph: {
     title: '공지사항 | WithTheLake 커뮤니티',
     description: '힐링로드 ON의 새로운 소식과 공지사항을 확인하세요.',
+    url: `${getSiteUrl()}/community/notice`,
+    images: [
+      {
+        url: getImageUrl('/images/withthelake_logo.png'),
+        width: 1200,
+        height: 630,
+        alt: 'WithTheLake 커뮤니티 공지사항',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: '공지사항 | WithTheLake 커뮤니티',
+    description: '힐링로드 ON의 새로운 소식과 공지사항을 확인하세요.',
+    images: [getImageUrl('/images/withthelake_logo.png')],
   },
 }
 

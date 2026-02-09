@@ -2,10 +2,30 @@ import type { Metadata } from 'next'
 import Image from 'next/image'
 import StoreClient from './StoreClient'
 import { getStoreProducts, getStoreCategories } from '@/actions/storeActions'
+import { getSiteUrl, getImageUrl } from '@/lib/utils/url'
 
 export const metadata: Metadata = {
   title: '스토어 - WithTheLake',
   description: '맨발걷기를 위한 프리미엄 제품을 만나보세요.',
+  openGraph: {
+    title: '스토어 - WithTheLake',
+    description: '맨발걷기를 위한 프리미엄 제품을 만나보세요.',
+    url: `${getSiteUrl()}/store`,
+    images: [
+      {
+        url: getImageUrl('/images/withwellme-market_logo.jpg'),
+        width: 1200,
+        height: 630,
+        alt: 'WithWellMe 마켓 - 맨발걷기 프리미엄 제품',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: '스토어 - WithTheLake',
+    description: '맨발걷기를 위한 프리미엄 제품을 만나보세요.',
+    images: [getImageUrl('/images/withwellme-market_logo.jpg')],
+  },
 }
 
 export default async function StorePage() {

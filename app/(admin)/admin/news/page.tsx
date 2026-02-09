@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Plus, Search, Edit2, Trash2, ExternalLink, Eye, EyeOff } from 'lucide-react'
 import { getAdminNewsArticles, deleteNewsArticle, toggleNewsActive, type NewsArticle } from '@/actions/newsActions'
@@ -186,12 +187,14 @@ export default function AdminNewsPage() {
                 <tr key={item.id} className="hover:bg-gray-50">
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-16 h-10 flex-shrink-0 rounded overflow-hidden bg-gray-100">
+                      <div className="w-16 h-10 flex-shrink-0 rounded overflow-hidden bg-gray-100 relative">
                         {item.thumbnail_url ? (
-                          <img
+                          <Image
                             src={item.thumbnail_url}
                             alt=""
-                            className="w-full h-full object-cover"
+                            fill
+                            className="object-cover"
+                            sizes="64px"
                           />
                         ) : (
                           <div className="w-full h-full" />

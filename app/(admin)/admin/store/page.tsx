@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Plus, Search, Edit2, Trash2, ExternalLink, Eye, EyeOff, Star } from 'lucide-react'
 import { getAdminStoreProducts, deleteStoreProduct, toggleProductActive, getStoreCategories, type StoreProduct } from '@/actions/storeActions'
 import { formatDate } from '@/lib/utils/format'
@@ -192,11 +193,15 @@ export default function AdminStorePage() {
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-4">
                       {product.image_url ? (
-                        <img
-                          src={product.image_url}
-                          alt=""
-                          className="w-14 h-14 object-cover rounded-lg"
-                        />
+                        <div className="w-14 h-14 relative rounded-lg overflow-hidden">
+                          <Image
+                            src={product.image_url}
+                            alt=""
+                            fill
+                            className="object-cover"
+                            sizes="56px"
+                          />
+                        </div>
                       ) : (
                         <div className="w-14 h-14 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 text-xs">
                           No Image

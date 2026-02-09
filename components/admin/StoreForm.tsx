@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { ArrowLeft, Save, Loader2, Image as ImageIcon } from 'lucide-react'
 import Link from 'next/link'
 import { createStoreProduct, updateStoreProduct, type StoreProduct } from '@/actions/storeActions'
@@ -253,14 +254,15 @@ export function StoreForm({ product, mode }: StoreFormProps) {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
               />
               {imageUrl ? (
-                <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                  <img
+                <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden relative">
+                  <Image
                     src={imageUrl}
                     alt="상품 미리보기"
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.src = ''
-                      e.currentTarget.style.display = 'none'
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 400px"
+                    onError={() => {
+                      setImageUrl('')
                     }}
                   />
                 </div>

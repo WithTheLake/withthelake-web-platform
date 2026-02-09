@@ -55,16 +55,21 @@ export async function compressImage(
   options: CompressionOptions = {}
 ): Promise<File> {
   const mergedOptions = { ...DEFAULT_OPTIONS, ...options }
+  const isDev = process.env.NODE_ENV === 'development'
 
   // 이미 충분히 작은 파일은 압축하지 않음
   const maxBytes = (mergedOptions.maxSizeMB || 1) * 1024 * 1024
   if (file.size <= maxBytes) {
-    console.log(`[이미지 압축] 스킵 - 파일이 이미 ${(file.size / 1024).toFixed(0)}KB로 충분히 작음`)
+    if (isDev) {
+      console.log(`[이미지 압축] 스킵 - 파일이 이미 ${(file.size / 1024).toFixed(0)}KB로 충분히 작음`)
+    }
     return file
   }
 
   try {
-    console.log(`[이미지 압축] 시작 - 원본: ${(file.size / 1024).toFixed(0)}KB`)
+    if (isDev) {
+      console.log(`[이미지 압축] 시작 - 원본: ${(file.size / 1024).toFixed(0)}KB`)
+    }
 
     const compressedFile = await imageCompression(file, {
       maxSizeMB: mergedOptions.maxSizeMB,
@@ -74,7 +79,9 @@ export async function compressImage(
       useWebWorker: mergedOptions.useWebWorker,
     })
 
-    console.log(`[이미지 압축] 완료 - 압축: ${(compressedFile.size / 1024).toFixed(0)}KB (${((1 - compressedFile.size / file.size) * 100).toFixed(0)}% 감소)`)
+    if (isDev) {
+      console.log(`[이미지 압축] 완료 - 압축: ${(compressedFile.size / 1024).toFixed(0)}KB (${((1 - compressedFile.size / file.size) * 100).toFixed(0)}% 감소)`)
+    }
 
     return compressedFile
   } catch (error) {

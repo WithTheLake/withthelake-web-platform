@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import { getPosts, type SearchType, type FreeBoardTopic } from '@/actions/communityActions'
 import FreeBoardList from '../_components/FreeBoardList'
 import { BoardListSkeleton } from '@/components/ui/Skeleton'
+import { getSiteUrl, getImageUrl } from '@/lib/utils/url'
 
 interface PageProps {
   searchParams: Promise<{ page?: string; search?: string; searchType?: string; topic?: string }>
@@ -13,6 +14,21 @@ export const metadata = {
   openGraph: {
     title: '자유게시판 | WithTheLake 커뮤니티',
     description: '힐링로드 ON 사용자들과 자유롭게 이야기를 나눠보세요.',
+    url: `${getSiteUrl()}/community/free`,
+    images: [
+      {
+        url: getImageUrl('/images/withthelake_logo.png'),
+        width: 1200,
+        height: 630,
+        alt: 'WithTheLake 커뮤니티 자유게시판',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: '자유게시판 | WithTheLake 커뮤니티',
+    description: '힐링로드 ON 사용자들과 자유롭게 이야기를 나눠보세요.',
+    images: [getImageUrl('/images/withthelake_logo.png')],
   },
 }
 

@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import { getPosts, type SearchType, type SortBy } from '@/actions/communityActions'
 import ReviewList from '../_components/ReviewList'
 import { ReviewListSkeleton } from '@/components/ui/Skeleton'
+import { getSiteUrl, getImageUrl } from '@/lib/utils/url'
 
 interface PageProps {
   searchParams: Promise<{ page?: string; search?: string; searchType?: string; sortBy?: string }>
@@ -13,6 +14,21 @@ export const metadata = {
   openGraph: {
     title: '힐링 후기 | WithTheLake 커뮤니티',
     description: '힐링로드 ON 이용 후기를 공유하고 다른 분들의 경험을 확인해보세요.',
+    url: `${getSiteUrl()}/community/review`,
+    images: [
+      {
+        url: getImageUrl('/images/withthelake_logo.png'),
+        width: 1200,
+        height: 630,
+        alt: 'WithTheLake 커뮤니티 힐링 후기',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: '힐링 후기 | WithTheLake 커뮤니티',
+    description: '힐링로드 ON 이용 후기를 공유하고 다른 분들의 경험을 확인해보세요.',
+    images: [getImageUrl('/images/withthelake_logo.png')],
   },
 }
 

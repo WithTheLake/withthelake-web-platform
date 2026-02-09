@@ -1,12 +1,13 @@
 {
   "name": "withthelake-web-platform",
-  "version": "0.1.0",
+  "version": "1.2.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "analyze": "next experimental-analyze"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -16,7 +17,7 @@
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.26",
     "lucide-react": "^0.562.0",
-    "next": "16.1.1",
+    "next": "^16.1.6",
     "openai": "^6.15.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
@@ -24,12 +25,15 @@
     "zustand": "^5.0.9"
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "^16.1.6",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
+    "lighthouse": "^12.8.2",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

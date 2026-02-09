@@ -1,9 +1,29 @@
 import type { Metadata } from 'next'
 import { Header, Footer } from '@/components/layout'
+import { getSiteUrl, getImageUrl } from '@/lib/utils/url'
 
 export const metadata: Metadata = {
   title: '힐링로드ON - 맨발걷기 워킹 테라피',
   description: '몸과 마음을 위한 워킹 테라피, 걷고 듣고 기록하는 웰니스 루틴',
+  openGraph: {
+    title: '힐링로드ON - 맨발걷기 워킹 테라피',
+    description: '몸과 마음을 위한 워킹 테라피, 걷고 듣고 기록하는 웰니스 루틴',
+    url: `${getSiteUrl()}/healing`,
+    images: [
+      {
+        url: getImageUrl('/images/healingroadon_banner_2x.jpg'),
+        width: 1200,
+        height: 630,
+        alt: '힐링로드ON - 맨발걷기 워킹 테라피',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: '힐링로드ON - 맨발걷기 워킹 테라피',
+    description: '몸과 마음을 위한 워킹 테라피, 걷고 듣고 기록하는 웰니스 루틴',
+    images: [getImageUrl('/images/healingroadon_banner_2x.jpg')],
+  },
 }
 
 export default function ServiceLayout({

@@ -40,13 +40,16 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# lighthouse 측정 결과
+lighthouse-*.json
+lighthouse-*.html
+
+# claude
 CLAUDE.md
 .claude
 .claudeignore
 
+# 개인 작업 문서
 PLAN.md
 ADMIN_PLAN.md
-
 DEVLOG.md
-
-FEATURES.md

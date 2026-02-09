@@ -1,9 +1,30 @@
+import type { Metadata } from 'next'
 import NewsClient from './NewsClient'
 import { getNewsArticles } from '@/actions/newsActions'
+import { getSiteUrl, getImageUrl } from '@/lib/utils/url'
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'NEWS - WithTheLake',
   description: '위드더레이크의 언론 보도, 블로그 포스트, 미디어 소식을 확인하세요.',
+  openGraph: {
+    title: 'NEWS - WithTheLake',
+    description: '위드더레이크의 언론 보도, 블로그 포스트, 미디어 소식을 확인하세요.',
+    url: `${getSiteUrl()}/news`,
+    images: [
+      {
+        url: getImageUrl('/images/withthelake_logo.png'),
+        width: 1200,
+        height: 630,
+        alt: 'WithTheLake NEWS',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'NEWS - WithTheLake',
+    description: '위드더레이크의 언론 보도, 블로그 포스트, 미디어 소식을 확인하세요.',
+    images: [getImageUrl('/images/withthelake_logo.png')],
+  },
 }
 
 export default async function NewsPage() {

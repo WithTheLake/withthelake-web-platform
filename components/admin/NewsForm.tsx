@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { ArrowLeft, Save, Loader2, Image as ImageIcon } from 'lucide-react'
 import Link from 'next/link'
 import { createNewsArticle, updateNewsArticle, type NewsArticle } from '@/actions/newsActions'
@@ -173,13 +174,15 @@ export function NewsForm({ news, mode }: NewsFormProps) {
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
               {thumbnailUrl && (
-                <div className="w-20 h-14 bg-gray-100 rounded overflow-hidden flex items-center justify-center">
-                  <img
+                <div className="w-20 h-14 bg-gray-100 rounded overflow-hidden flex items-center justify-center relative">
+                  <Image
                     src={thumbnailUrl}
                     alt="미리보기"
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none'
+                    fill
+                    className="object-cover"
+                    sizes="80px"
+                    onError={() => {
+                      setThumbnailUrl('')
                     }}
                   />
                 </div>

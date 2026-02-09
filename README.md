@@ -54,6 +54,14 @@ WithTheLake Web Platform은 **기업 홈페이지**와 **힐링로드ON 서비�
 - Storage 파일/폴더 관리
 - 역할 기반 권한 (대표 / 관리자 / 일반)
 
+### SEO & Performance
+- sitemap.xml 자동 생성 (17개 페이지)
+- robots.txt 최적화 (크롤링 규칙)
+- JSON-LD 구조화 데이터 (Organization, WebSite)
+- Open Graph 이미지 (페이지별 맞춤 설정)
+- Twitter 카드 지원
+- 환경별 URL 자동 적용 (localhost/Vercel/커스텀 도메인)
+
 ## 프로젝트 구조
 
 ```
@@ -91,6 +99,7 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 NEXT_PUBLIC_SUPABASE_STORAGE_URL=your_storage_url
 SUPER_ADMIN_USER_ID=your_super_admin_user_id
 GEMINI_API_KEY=your_gemini_api_key
+NEXT_PUBLIC_SITE_URL=https://your-domain.com
 ```
 
 ### 설치 및 실행
