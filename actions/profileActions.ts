@@ -73,6 +73,7 @@ export async function getMyProfile() {
  */
 export async function upsertProfile(formData: {
   nickname?: string
+  gender?: string
   age_group?: string
 }) {
   try {
@@ -86,10 +87,11 @@ export async function upsertProfile(formData: {
       return { success: false, error: 'login_required' }
     }
 
-    const profileData = {
+    const profileData: Record<string, string | null> = {
       user_id: user.id,
-      nickname: formData.nickname,
-      age_group: formData.age_group,
+      nickname: formData.nickname || null,
+      gender: formData.gender || null,
+      age_group: formData.age_group || null,
     }
 
     const { data, error } = await supabase
@@ -108,54 +110,6 @@ export async function upsertProfile(formData: {
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to update profile'
-    }
-  }
-}
-
-/**
- * 걷기 통계 업데이트 (걷기 세션 완료 시 호출)
- */
-export async function updateWalkStats(duration: number) {
-  try {
-    const supabase = await createClient()
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (!user) {
-      return { success: false, error: 'login_required' }
-    }
-
-    // 현재 프로필 조회
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('total_walks, total_duration')
-      .eq('user_id', user.id)
-      .single()
-
-    const updatedData = {
-      user_id: user.id,
-      total_walks: (profile?.total_walks || 0) + 1,
-      total_duration: (profile?.total_duration || 0) + duration,
-    }
-
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .upsert(updatedData, { onConflict: 'user_id' })
-      .select()
-      .single()
-
-    if (error) throw error
-
-    revalidatePath('/mypage')
-
-    return { success: true, data }
-  } catch (error) {
-    console.error('Update walk stats error:', error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to update walk stats'
     }
   }
 }

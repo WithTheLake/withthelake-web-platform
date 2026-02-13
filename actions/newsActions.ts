@@ -125,6 +125,7 @@ export async function createNewsArticle(formData: FormData): Promise<{ success: 
   }
 
   revalidatePath('/news')
+  revalidatePath('/admin')
   return { success: true, id: data.id }
 }
 
@@ -174,6 +175,7 @@ export async function updateNewsArticle(id: string, formData: FormData): Promise
   }
 
   revalidatePath('/news')
+  revalidatePath('/admin')
   return { success: true }
 }
 
@@ -208,6 +210,7 @@ export async function deleteNewsArticle(id: string): Promise<{ success: boolean;
   }
 
   revalidatePath('/news')
+  revalidatePath('/admin')
   return { success: true }
 }
 
@@ -237,6 +240,7 @@ export async function toggleNewsActive(id: string, isActive: boolean): Promise<{
   }
 
   revalidatePath('/news')
+  revalidatePath('/admin')
   return { success: true }
 }
 

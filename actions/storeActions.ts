@@ -107,8 +107,14 @@ export async function createStoreProduct(formData: FormData): Promise<{ success:
   const description = formData.get('description') as string || null
 
   // 유효성 검사
-  if (!name || !price || !category) {
+  if (!name || !category) {
     return { success: false, message: '필수 항목을 모두 입력해주세요.' }
+  }
+  if (isNaN(price) || price < 0) {
+    return { success: false, message: '올바른 가격을 입력해주세요.' }
+  }
+  if (original_price !== null && isNaN(original_price)) {
+    return { success: false, message: '올바른 원래 가격을 입력해주세요.' }
   }
 
   const { data, error } = await supabase
@@ -132,6 +138,7 @@ export async function createStoreProduct(formData: FormData): Promise<{ success:
   }
 
   revalidatePath('/store')
+  revalidatePath('/admin')
   return { success: true, id: data.id }
 }
 
@@ -165,6 +172,14 @@ export async function updateStoreProduct(id: string, formData: FormData): Promis
   const naver_product_url = formData.get('naver_product_url') as string || null
   const description = formData.get('description') as string || null
 
+  // 유효성 검사
+  if (isNaN(price) || price < 0) {
+    return { success: false, message: '올바른 가격을 입력해주세요.' }
+  }
+  if (original_price !== null && isNaN(original_price)) {
+    return { success: false, message: '올바른 원래 가격을 입력해주세요.' }
+  }
+
   const { error } = await supabase
     .from('store_products')
     .update({
@@ -185,6 +200,7 @@ export async function updateStoreProduct(id: string, formData: FormData): Promis
   }
 
   revalidatePath('/store')
+  revalidatePath('/admin')
   return { success: true }
 }
 
@@ -219,6 +235,7 @@ export async function deleteStoreProduct(id: string): Promise<{ success: boolean
   }
 
   revalidatePath('/store')
+  revalidatePath('/admin')
   return { success: true }
 }
 
@@ -248,6 +265,7 @@ export async function toggleProductActive(id: string, isActive: boolean): Promis
   }
 
   revalidatePath('/store')
+  revalidatePath('/admin')
   return { success: true }
 }
 
@@ -412,12 +430,11 @@ export async function deleteStoreCategory(id: string): Promise<{ success: boolea
 
   if (!cat) return { success: false, message: '카테고리를 찾을 수 없습니다.' }
 
-  // 해당 카테고리를 사용하는 상품이 있는지 확인
+  // 해당 카테고리를 사용하는 상품이 있는지 확인 (비활성 포함)
   const { count } = await supabase
     .from('store_products')
     .select('id', { count: 'exact', head: true })
     .eq('category', cat.name)
-    .eq('is_active', true)
 
   if (count && count > 0) {
     return { success: false, message: `해당 카테고리를 사용하는 상품이 ${count}개 있습니다. 먼저 상품의 카테고리를 변경해주세요.` }

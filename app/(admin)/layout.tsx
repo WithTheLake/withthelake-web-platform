@@ -33,12 +33,15 @@ export default async function AdminLayout({
     redirect('/')
   }
 
+  // 대표(SUPER_ADMIN) 여부 확인
+  const isSuperAdmin = user.id === process.env.SUPER_ADMIN_USER_ID
+
   return (
     <div className="min-h-screen bg-gray-100">
-      <AdminHeader userName={profile.nickname || '관리자'} />
+      <AdminHeader userName={profile.nickname || '관리자'} isSuperAdmin={isSuperAdmin} />
       <div className="flex">
         <AdminSidebar />
-        <main className="flex-1 p-6 ml-64 mt-16">
+        <main className="flex-1 p-6 ml-64 mt-[72px]">
           {children}
         </main>
       </div>

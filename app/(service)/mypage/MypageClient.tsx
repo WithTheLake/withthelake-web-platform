@@ -26,9 +26,8 @@ interface EmotionRecord {
 
 interface UserProfile {
   nickname: string | null
+  gender: string | null
   age_group: string | null
-  total_walks: number
-  total_duration: number
 }
 
 interface MypageClientProps {
@@ -37,6 +36,7 @@ interface MypageClientProps {
   emotionRecords: EmotionRecord[]
   userProfile: UserProfile | null
   isAdmin?: boolean
+  hasGeminiKey?: boolean
 }
 
 export default function MypageClient({
@@ -45,6 +45,7 @@ export default function MypageClient({
   emotionRecords,
   userProfile,
   isAdmin = false,
+  hasGeminiKey = false,
 }: MypageClientProps) {
   const { showToast } = useToast()
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
@@ -52,6 +53,8 @@ export default function MypageClient({
   const [isReportOpen, setIsReportOpen] = useState(false)
 
   const handleLogout = async () => {
+    if (!confirm('로그아웃 하시겠습니까?')) return
+
     setIsLoggingOut(true)
     try {
       const supabase = createClient()
@@ -62,6 +65,14 @@ export default function MypageClient({
       showToast('로그아웃에 실패했습니다.', 'error')
       setIsLoggingOut(false)
     }
+  }
+
+  const handleOpenReport = () => {
+    if (!hasGeminiKey) {
+      showToast('현재 AI 서비스를 이용할 수 없습니다.', 'warning')
+      return
+    }
+    setIsReportOpen(true)
   }
 
   // 감정 통계 계산
@@ -202,24 +213,24 @@ export default function MypageClient({
 
   // 로그인 상태 - 반응형 레이아웃
   return (
-    <div className="bg-[#faf8f3]">
+    <div>
       {/* ==================== 모바일 레이아웃 (lg 미만) ==================== */}
-      <div className="lg:hidden pb-20 min-h-screen">
-        {/* 헤더 - 네이처 구조 + 그라데이션 */}
-        <section className="bg-gradient-to-br from-green-600 via-green-700 to-emerald-800 text-white px-5 py-8">
+      <div className="lg:hidden pb-20 min-h-screen bg-gray-100">
+        {/* 헤더 - 프로필 정보 */}
+        <section className="bg-[#5eb3e4] text-white px-5 py-8 pb-12">
           <div className="flex items-center gap-4 pl-2">
             <div className="flex-1">
               <h1 className="text-xl font-bold">{userProfile?.nickname || '힐링로드 사용자'}</h1>
-              <p className="text-green-200 text-sm mt-1">{user?.email}</p>
+              <p className="text-white/70 text-sm mt-1">{user?.email}</p>
             </div>
             <div className="flex items-center gap-2">
-              <Link href="/mypage/settings" className="p-2 bg-white/15 rounded-full hover:bg-white/25">
+              <Link href="/mypage/settings" className="p-2 bg-white/20 text-white rounded-full hover:bg-white/30">
                 <Settings size={18} />
               </Link>
               <button
                 onClick={handleLogout}
                 disabled={isLoggingOut}
-                className="p-2 bg-white/15 rounded-full hover:bg-white/25 cursor-pointer"
+                className="p-2 bg-white/20 text-white rounded-full hover:bg-white/30 cursor-pointer"
               >
                 <LogOut size={18} />
               </button>
@@ -227,25 +238,25 @@ export default function MypageClient({
           </div>
         </section>
 
-        {/* 통계 카드 - 네이처 구조 */}
-        <section className="px-5 -mt-3">
-          <div className="bg-white rounded-2xl p-5 shadow-xl grid grid-cols-2 gap-4">
-            <div className="text-center p-4 bg-green-50 rounded-xl">
-              <p className="text-3xl font-bold text-green-800">{emotionRecords.length}</p>
-              <p className="text-green-600 text-sm mt-1">총 기록</p>
+        {/* 통계 카드 */}
+        <section className="px-5 -mt-6">
+          <div className="bg-white rounded-2xl p-5 shadow-sm grid grid-cols-2 gap-4">
+            <div className="text-center p-4 bg-gray-50 rounded-xl">
+              <p className="text-3xl font-bold text-gray-800">{emotionRecords.length}</p>
+              <p className="text-gray-500 text-sm mt-1">총 기록</p>
             </div>
-            <div className="text-center p-4 bg-amber-50 rounded-xl">
-              <p className="text-3xl font-bold text-amber-700">{thisWeekCount}</p>
-              <p className="text-amber-600 text-sm mt-1">이번 주</p>
+            <div className="text-center p-4 bg-gray-50 rounded-xl">
+              <p className="text-3xl font-bold text-gray-800">{thisWeekCount}</p>
+              <p className="text-gray-500 text-sm mt-1">이번 주</p>
             </div>
           </div>
         </section>
 
-        {/* 자주 느끼는 감정 - 모던 구조 + 네이처 색상 */}
+        {/* 자주 느끼는 감정 */}
         {topEmotions.length > 0 && (
           <section className="px-5 mt-6">
             <h2 className="text-lg font-bold text-gray-900 mb-3">자주 느끼는 감정</h2>
-            <div className="bg-white rounded-2xl p-5 shadow-lg">
+            <div className="bg-white rounded-2xl p-5 shadow-sm">
               <div className="flex justify-around">
                 {topEmotions.map(([type, count], index) => {
                   const emotion = EMOTION_LABELS[type] || { emoji: '😊', label: type }
@@ -260,7 +271,7 @@ export default function MypageClient({
                     >
                       <div className={`${sizes[index]} mb-2`}>{emotion.emoji}</div>
                       <p className="font-medium text-gray-900">{emotion.label}</p>
-                      <p className="text-sm text-green-600">{count}회</p>
+                      <p className="text-sm text-gray-500">{count}회</p>
                     </motion.div>
                   )
                 })}
@@ -269,11 +280,11 @@ export default function MypageClient({
           </section>
         )}
 
-        {/* 주간 보고서 CTA - 모던 구조 + 네이처 색상 */}
+        {/* 주간 보고서 CTA */}
         <section className="px-5 mt-6">
           <button
-            onClick={() => setIsReportOpen(true)}
-            className="w-full p-5 bg-gradient-to-r from-green-600 to-emerald-500 rounded-2xl text-white flex items-center justify-between shadow-lg"
+            onClick={handleOpenReport}
+            className="w-full p-5 bg-gradient-to-r from-[#6ec4f0] to-[#4a9fd4] rounded-2xl text-white flex items-center justify-between shadow-sm cursor-pointer"
           >
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
@@ -281,29 +292,29 @@ export default function MypageClient({
               </div>
               <div className="text-left">
                 <p className="font-bold text-lg">주간 감정 보고서</p>
-                <p className="text-green-100 text-sm">AI가 분석한 나의 감정 변화</p>
+                <p className="text-white/70 text-sm">AI가 분석한 나의 감정 변화</p>
               </div>
             </div>
             <ChevronRight size={24} />
           </button>
         </section>
 
-        {/* 최근 기록 - 모던 구조 + 네이처 색상 */}
+        {/* 최근 기록 */}
         <section className="px-5 mt-6">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg font-bold text-gray-900">최근 감정 기록</h2>
-            <Link href="/mypage/records" className="text-green-600 text-sm font-medium">
+            <Link href="/mypage/records" className="text-[#5eb3e4] text-sm font-medium">
               전체보기 →
             </Link>
           </div>
 
           {emotionRecords.length === 0 ? (
-            <div className="bg-white rounded-2xl p-8 text-center shadow-lg">
+            <div className="bg-white rounded-2xl p-8 text-center shadow-sm">
               <div className="text-5xl mb-4">📝</div>
               <p className="text-gray-500">아직 기록된 감정이 없어요</p>
               <Link
                 href="/healing"
-                className="inline-block mt-4 px-6 py-3 bg-green-600 text-white rounded-xl font-medium"
+                className="inline-block mt-4 px-6 py-3 bg-[#5eb3e4] text-white rounded-xl font-medium"
               >
                 기록 시작하기
               </Link>
@@ -319,7 +330,7 @@ export default function MypageClient({
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      className="bg-white rounded-2xl p-4 shadow-md"
+                      className="bg-white rounded-2xl p-4 shadow-sm"
                     >
                       <div className="flex items-start gap-4">
                         <div className="text-3xl">{emotion.emoji}</div>
@@ -330,11 +341,10 @@ export default function MypageClient({
                               {formatRelativeTime(record.created_at)}
                             </span>
                           </div>
-                          {/* A. 도움이 된 행동 */}
                           {record.helpful_actions && record.helpful_actions.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-2">
                               {record.helpful_actions.slice(0, 3).map((action) => (
-                                <span key={action} className="px-2 py-0.5 bg-green-50 text-green-700 text-xs rounded-full">
+                                <span key={action} className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">
                                   {ACTION_LABELS[action] || action}
                                 </span>
                               ))}
@@ -345,13 +355,12 @@ export default function MypageClient({
                               )}
                             </div>
                           )}
-                          {/* R. 긍정적 변화 */}
                           {record.positive_changes && record.positive_changes.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-1">
                               {record.positive_changes.slice(0, 3).map((change) => {
                                 const changeData = CHANGE_LABELS[change] || { emoji: '✨', label: change }
                                 return (
-                                  <span key={change} className="px-2 py-0.5 bg-blue-50 text-blue-700 text-xs rounded-full">
+                                  <span key={change} className="px-2 py-0.5 bg-blue-50 text-blue-600 text-xs rounded-full">
                                     {changeData.emoji} {changeData.label}
                                   </span>
                                 )
@@ -428,7 +437,7 @@ export default function MypageClient({
                 <span className="font-medium">전체 기록</span>
               </Link>
               <button
-                onClick={() => setIsReportOpen(true)}
+                onClick={handleOpenReport}
                 className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-green-50 hover:text-green-700 rounded-xl transition-colors"
               >
                 <BarChart3 size={20} />
@@ -515,14 +524,14 @@ export default function MypageClient({
 
               {/* 주간 보고서 CTA */}
               <button
-                onClick={() => setIsReportOpen(true)}
-                className="col-span-2 bg-gradient-to-br from-green-600 to-emerald-500 rounded-2xl p-6 text-white shadow-sm hover:shadow-md transition-shadow text-left"
+                onClick={handleOpenReport}
+                className="col-span-2 bg-gradient-to-br from-[#6ec4f0] to-[#4a9fd4] rounded-2xl p-6 text-white shadow-sm hover:shadow-md transition-shadow text-left cursor-pointer"
               >
                 <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-4">
                   <BarChart3 size={24} />
                 </div>
                 <p className="font-bold text-lg">주간 감정 보고서</p>
-                <p className="text-green-100 text-sm mt-1">AI가 분석한 나의 감정 변화</p>
+                <p className="text-white/70 text-sm mt-1">AI가 분석한 나의 감정 변화</p>
                 <div className="flex items-center gap-1 mt-4 text-sm">
                   <span>확인하기</span>
                   <ChevronRight size={16} />

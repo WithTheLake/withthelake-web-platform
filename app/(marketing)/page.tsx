@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -13,6 +14,15 @@ const fadeInUp = {
 }
 
 export default function HomePage() {
+  const [videoLoaded, setVideoLoaded] = useState(false);
+
+  // 비디오가 실제로 재생될 때까지 기다린 후 전환
+  const handleVideoLoad = () => {
+    setTimeout(() => {
+      setVideoLoaded(true);
+    }, 200); // 0.2초 후에 전환 (비디오 재생 시작 시간 확보)
+  };
+
   return (
     <div className="min-h-screen -mt-18 md:-mt-24 relative">
       {/* 맨 뒤 고정 배경 레이어 (회색 40% → 흰색 60%) */}
@@ -31,38 +41,65 @@ export default function HomePage() {
       />
 
       {/* Hero Section - 유튜브 비디오 배경 */}
-      <section className="relative h-screen w-full overflow-hidden bg-black">
-        {/* 유튜브 비디오 배경 */}
-        <div className="absolute inset-0 pointer-events-none">
+      {/* 모바일/태블릿/PC: 16:9 비율 (최소 높이 575px) */}
+      <section className="relative aspect-video min-h-[575px] w-full overflow-hidden bg-black">
+        {/* 모바일/태블릿: 정적 이미지 */}
+        <div className="absolute inset-0 lg:hidden">
+          <Image
+            src="/images/main_image.png"
+            alt="맨발걷기 배경"
+            fill
+            priority
+            className="object-cover"
+          />
+        </div>
+
+        {/* PC: 유튜브 비디오 */}
+        <div className="absolute inset-0 pointer-events-none hidden lg:block overflow-hidden">
+          {/* 플레이스홀더 이미지 (즉시 로드) */}
+          <Image
+            src="/images/main_video_placeholder.jpg"
+            alt="맨발걷기 배경"
+            fill
+            priority
+            className={`object-cover transition-opacity duration-700 ${
+              videoLoaded ? 'opacity-0' : 'opacity-100'
+            }`}
+          />
+
+          {/* 유튜브 비디오 (로딩 후 페이드인) */}
           <iframe
-            className="absolute w-full h-full scale-110"
+            onLoad={handleVideoLoad}
+            className={`absolute inset-0 w-full h-full transition-opacity duration-700 ${
+              videoLoaded ? 'opacity-100' : 'opacity-0'
+            }`}
             src="https://www.youtube.com/embed/GI4SKsaESc0?autoplay=1&mute=1&loop=1&playlist=GI4SKsaESc0&controls=0&showinfo=0&modestbranding=1&playsinline=1"
             title="Barefoot walking background video"
             allow="autoplay; encrypted-media"
             allowFullScreen
             style={{
               border: 'none',
-              pointerEvents: 'none'
+              pointerEvents: 'none',
             }}
           />
         </div>
 
-        {/* 오버레이 */}
-        <div className="absolute inset-0 bg-black/19" />
+        {/* 오버레이 - 모바일/태블릿은 더 어둡게 */}
+        <div className="absolute inset-0 bg-black/45 lg:bg-black/20" />
 
         {/* 텍스트 콘텐츠 */}
         <div className="relative z-10 h-full flex items-center">
-          <div className="container mx-auto px-4">
-            <h1 className="text-6xl lg:text-7xl font-bold text-white mb-3">
+          <div className="px-4 md:px-8 lg:px-16" style={{ textShadow: '0 2px 10px rgba(0, 0, 0, 0.7)' }}>
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-3">
               맨발걷기,
             </h1>
-            <p className="text-3xl text-white mb-4">
+            <p className="text-xl md:text-2xl lg:text-3xl text-white mb-4">
               액티브 시니어의 웰니스 라이프의 첫걸음입니다.
             </p>
-            <p className="text-xl text-white">
+            <p className="text-base md:text-lg lg:text-xl text-white">
               (주)위드더레이크는 맨발걷기를 기반으로
             </p>
-            <p className="text-xl text-white">
+            <p className="text-base md:text-lg lg:text-xl text-white">
               액티브 시니어의 건강한 웰니스 라이프를 꿈꿉니다.
             </p>
           </div>
@@ -71,14 +108,14 @@ export default function HomePage() {
 
       {/* 액티브 시니어 섹션 - 투명 배경 (고정된 페이지 배경이 보임) */}
       <section className="py-10">
-        <motion.div {...fadeInUp} className="max-w-6xl mx-auto px-4 lg:px-16">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-4 items-center">
+        <motion.div {...fadeInUp} className="max-w-6xl mx-auto pl-12 pr-4 md:px-12 lg:px-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-6 items-center">
             {/* 텍스트 */}
             <div>
-              <h2 className="text-4xl lg:text-6xl font-bold text-gray-900 mb-8 lg:mb-10">
+              <h2 className="text-4xl md:text-[2.75rem] lg:text-6xl font-bold text-gray-900 mb-8 md:mb-8">
                 액티브 시니어
               </h2>
-              <div className="text-gray-600 text-base lg:text-lg">
+              <div className="text-gray-600 text-base md:text-[1.0625rem] lg:text-lg">
                 <p>액티브 시니어는 단순히 은퇴 연령에 이른 세대가 아닌,</p>
                 <p>건강하고 활기찬 삶을 추구하는 새로운 세대입니다.</p>
                 <p>그들은 자신들의 삶을 주도적으로 설계하고,</p>
@@ -87,7 +124,7 @@ export default function HomePage() {
               </div>
               <Link
                 href="/about"
-                className="group inline-flex items-center gap-2 mt-8 lg:mt-10 text-base lg:text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors"
+                className="group inline-flex items-center gap-2 mt-8 md:mt-8 text-base md:text-[1.0625rem] lg:text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors"
               >
                 더 자세히 알아보기
                 <span className="inline-block transition-transform duration-300 group-hover:translate-x-1">→</span>
@@ -95,13 +132,13 @@ export default function HomePage() {
             </div>
 
             {/* 이미지 */}
-            <div className="flex justify-center lg:justify-end mt-10">
+            <div className="flex justify-center md:justify-end mt-10 md:mt-0">
               <Image
                 src="/images/active-senior.png"
                 alt="액티브 시니어"
                 width={500}
                 height={600}
-                className="h-auto w-[320px] lg:w-[500px]"
+                className="h-auto w-[320px] md:w-[380px] lg:w-[500px]"
                 priority
               />
             </div>
@@ -111,11 +148,11 @@ export default function HomePage() {
 
       {/* 5가지 프로젝트 섹션 */}
       <section className="py-20 lg:py-32 bg-gray-50">
-        <motion.div {...fadeInUp} className="max-w-7xl mx-auto px-4 lg:px-16">
+        <motion.div {...fadeInUp} className="max-w-7xl mx-auto px-4 md:pl-32 lg:pl-28 lg:pr-16">
           {/* 3열 x 2행 그리드 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-30 gap-y-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 lg:gap-x-24 gap-y-12 lg:gap-y-16">
             {/* 1행 1열: 제목 */}
-            <div className="flex flex-col justify-center">
+            <div className="flex flex-col justify-center text-center md:text-left">
               <h2 className="text-3xl lg:text-4xl font-normal text-gray-900 mb-2">
                 액티브 시니어를 위한
               </h2>
@@ -125,8 +162,8 @@ export default function HomePage() {
             </div>
 
             {/* 1행 2열: 맞춤형 건강관리 */}
-            <div className="text-left">
-              <div className="mb-4">
+            <div className="text-center md:text-left lg:ml-6">
+              <div className="mb-4 flex justify-center md:justify-start">
                 <svg className="w-15 h-15 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
@@ -141,8 +178,8 @@ export default function HomePage() {
             </div>
 
             {/* 1행 3열: 온라인 헬스케어 */}
-            <div className="text-left">
-              <div className="mb-4">
+            <div className="text-center md:text-left">
+              <div className="mb-4 flex justify-center md:justify-start">
                 <svg className="w-15 h-15 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -157,8 +194,8 @@ export default function HomePage() {
             </div>
 
             {/* 2행 1열: 홈케어 기반 헬스케어 */}
-            <div className="text-left">
-              <div className="mb-4">
+            <div className="text-center md:text-left">
+              <div className="mb-4 flex justify-center md:justify-start">
                 <svg className="w-15 h-15 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                 </svg>
@@ -173,8 +210,8 @@ export default function HomePage() {
             </div>
 
             {/* 2행 2열: 커뮤니티 기반 헬스케어 */}
-            <div className="text-left">
-              <div className="mb-4">
+            <div className="text-center md:text-left lg:ml-6">
+              <div className="mb-4 flex justify-center md:justify-start">
                 <svg className="w-15 h-15 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
@@ -189,8 +226,8 @@ export default function HomePage() {
             </div>
 
             {/* 2행 3열: 맨발걷기 프로그램 */}
-            <div className="text-left">
-              <div className="mb-4">
+            <div className="text-center md:text-left">
+              <div className="mb-4 flex justify-center md:justify-start">
                 <svg className="w-15 h-15 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
                 </svg>
@@ -209,9 +246,9 @@ export default function HomePage() {
 
       {/* 3가지 방법 섹션 */}
       <section className="py-16 lg:py-20 bg-white">
-        <motion.div {...fadeInUp} className="container mx-auto px-32">
+        <motion.div {...fadeInUp} className="container mx-auto px-4 md:px-8 lg:px-32">
           {/* 제목 영역 - 기존 사이트처럼 상단에 배치 */}
-          <div className="mb-16 lg:mb-28">
+          <div className="mb-10 md:mb-16 lg:mb-28 text-center md:text-left">
             <p className="text-2xl lg:text-4xl text-gray-900 mb-3">우리는 <span className="text-blue-600 font-bold">3가지 방법</span>으로 맨발걷기 기반의</p>
             <p className="text-2xl lg:text-4xl text-gray-900">액티브 시니어 웰니스 라이프를 그립니다.</p>
           </div>
@@ -234,7 +271,7 @@ export default function HomePage() {
               <h4 className="text-2xl font-bold text-gray-900 mb-5">
                 액티브 시니어 웰니스 플랫폼
               </h4>
-              <div className="text-gray-600  mb-12">
+              <div className="text-gray-600 mb-12">
                 <p>맨발걷기 트래킹 및 커뮤니티 플랫폼</p>
                 <p>맨발걷기 AI 맞춤형 코스 추천</p>
                 <p>웰니스 제품 쇼핑몰운영</p>
@@ -303,22 +340,22 @@ export default function HomePage() {
 
       {/* 앱 다운로드 섹션 */}
       <section className="py-10 bg-gray-100 text-white">
-        <motion.div {...fadeInUp} className="mx-10 py-25 px-30 bg-black rounded-2xl">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <motion.div {...fadeInUp} className="mx-4 md:mx-10 py-10 md:py-16 lg:py-25 px-6 md:px-12 lg:px-30 bg-black rounded-2xl">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             {/* 텍스트 & 다운로드 버튼 */}
             <div>
-              <div className="inline-block px-4 py-1 bg-blue-600 text-white rounded-full mb-4">
+              <div className="inline-block px-3 md:px-4 py-1 bg-blue-600 text-white text-sm md:text-base rounded-full mb-4">
                 맨발루 앱 다운로드
               </div>
-              <h2 className="text-6xl font-bold mb-4 leading-tight">
+              <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
                 맨발걷기 커뮤니티<br />
                 맨발루를 만나보세요
               </h2>
-              <p className="text-base text-gray-200 mb-10">
+              <p className="text-sm md:text-base text-gray-200 mb-6 md:mb-10">
                 아래 버튼을 클릭하시면 해당 사이트로 이동합니다.
               </p>
 
-              <div className="flex gap-4">
+              <div className="flex flex-row gap-3 md:gap-4">
                 <a
                   href="https://apps.apple.com/kr/app/맨발루/id6651824430"
                   target="_blank"
@@ -329,7 +366,7 @@ export default function HomePage() {
                     alt="Download on the App Store"
                     width={170}
                     height={50}
-                    className="hover:opacity-80 transition-opacity"
+                    className="w-[140px] md:w-[170px] hover:opacity-80 transition-opacity"
                   />
                 </a>
 
@@ -343,20 +380,20 @@ export default function HomePage() {
                     alt="Get it on Google Play"
                     width={170}
                     height={50}
-                    className="hover:opacity-80 transition-opacity"
+                    className="w-[140px] md:w-[170px] hover:opacity-80 transition-opacity"
                   />
                 </a>
               </div>
             </div>
 
             {/* 앱 스크린샷 */}
-            <div className="relative flex justify-end">
+            <div className="relative flex justify-center lg:justify-end">
               <Image
                 src="/images/menbaloo.png"
                 alt="맨발루 앱"
                 width={450}
                 height={450}
-                className="object-contain"
+                className="object-contain w-[280px] md:w-[350px] lg:w-[450px]"
               />
             </div>
           </div>

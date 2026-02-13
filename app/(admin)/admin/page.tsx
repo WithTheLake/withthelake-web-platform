@@ -145,14 +145,14 @@ export default async function AdminDashboardPage() {
         <h2 className="font-semibold text-gray-900 mb-4">빠른 작업</h2>
         <div className="flex flex-wrap gap-3">
           <Link
-            href="/admin/news/new"
+            href="/admin/news/add"
             className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium"
           >
             <Plus size={16} />
             뉴스 추가
           </Link>
           <Link
-            href="/admin/store/new"
+            href="/admin/store/add"
             className="inline-flex items-center gap-2 px-4 py-2.5 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors text-sm font-medium"
           >
             <Plus size={16} />

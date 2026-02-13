@@ -4,9 +4,16 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Save, Loader2, Upload, X, Music, FileAudio } from 'lucide-react'
 import Link from 'next/link'
-import { createAudioTrack, updateAudioTrack, getAdminAudioCategories, type AudioCategoryItem } from '@/actions/audioActions'
+import {
+  createAudioTrack,
+  updateAudioTrack,
+  getAdminAudioCategories,
+  listAudioFiles,
+  checkFilesInDb,
+  type AudioCategoryItem,
+} from '@/actions/audioActions'
 import type { AudioItem } from '@/types/audio'
-import { PROVINCE_NAMES, CITY_NAMES } from '@/types/audio'
+import { PROVINCE_NAMES, CITY_NAMES, PROVINCE_CITY_MAP } from '@/types/audio'
 
 interface AudioFormProps {
   audio?: AudioItem
@@ -18,49 +25,6 @@ const DIFFICULTIES: { value: string; label: string }[] = [
   { value: 'moderate', label: '보통' },
   { value: 'hard', label: '어려움' },
 ]
-
-// province별 city 매핑을 위한 간단한 범위 정의
-const PROVINCE_CITIES: Record<string, { value: string; label: string }[]> = {
-  gangwon: [
-    { value: 'chuncheon', label: '춘천시' },
-    { value: 'wonju', label: '원주시' },
-    { value: 'gangneung', label: '강릉시' },
-    { value: 'sokcho', label: '속초시' },
-    { value: 'donghae', label: '동해시' },
-    { value: 'samcheok', label: '삼척시' },
-    { value: 'taebaek', label: '태백시' },
-    { value: 'hongcheon', label: '홍천군' },
-    { value: 'hoengseong', label: '횡성군' },
-    { value: 'yeongwol', label: '영월군' },
-    { value: 'pyeongchang', label: '평창군' },
-    { value: 'jeongseon', label: '정선군' },
-    { value: 'cheorwon', label: '철원군' },
-    { value: 'hwacheon', label: '화천군' },
-    { value: 'yanggu', label: '양구군' },
-    { value: 'inje', label: '인제군' },
-    { value: 'goseong', label: '고성군' },
-    { value: 'yangyang', label: '양양군' },
-  ],
-  gyeonggi: [
-    { value: 'suwon', label: '수원시' },
-    { value: 'seongnam', label: '성남시' },
-    { value: 'goyang', label: '고양시' },
-    { value: 'yongin', label: '용인시' },
-    { value: 'bucheon', label: '부천시' },
-    { value: 'ansan', label: '안산시' },
-    { value: 'namyangju', label: '남양주시' },
-    { value: 'hwaseong', label: '화성시' },
-    { value: 'paju', label: '파주시' },
-    { value: 'gimpo', label: '김포시' },
-    { value: 'icheon', label: '이천시' },
-    { value: 'yangpyeong', label: '양평군' },
-    { value: 'gapyeong', label: '가평군' },
-    { value: 'pocheon', label: '포천시' },
-  ],
-  seoul: [{ value: 'jongno', label: '종로구' }, { value: 'jung', label: '중구' }, { value: 'mapo', label: '마포구' }, { value: 'gangnam', label: '강남구' }, { value: 'songpa', label: '송파구' }],
-  busan: [{ value: 'haeundae', label: '해운대구' }, { value: 'jung_bs', label: '중구' }, { value: 'nam_bs', label: '남구' }, { value: 'gijang', label: '기장군' }],
-  jeju: [{ value: 'jeju_city', label: '제주시' }, { value: 'seogwipo', label: '서귀포시' }],
-}
 
 // province 리스트 (드롭다운용)
 const PROVINCES = Object.entries(PROVINCE_NAMES).map(([value, label]) => ({ value, label }))
@@ -98,6 +62,12 @@ export function AudioForm({ audio, mode }: AudioFormProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [audioPreviewUrl, setAudioPreviewUrl] = useState<string | null>(null)
 
+  // Storage 파일 목록 관리 (드롭다운용)
+  const [storageFiles, setStorageFiles] = useState<string[]>([])
+  const [loadingFiles, setLoadingFiles] = useState(false)
+  const [usedFiles, setUsedFiles] = useState<Set<string>>(new Set())
+  const [fileLoadError, setFileLoadError] = useState<string | null>(null)
+
   // trail_guide 전용 필드
   const [province, setProvince] = useState(audio?.province || '')
   const [city, setCity] = useState(audio?.city || '')
@@ -115,7 +85,57 @@ export function AudioForm({ audio, mode }: AudioFormProps) {
   }
 
   // 현재 선택된 province의 city 목록
-  const availableCities = province ? (PROVINCE_CITIES[province] || []) : []
+  const availableCities = province ? (PROVINCE_CITY_MAP[province] || []) : []
+
+  // 카테고리 변경 시 Storage 파일 목록 로드 + 중복 체크
+  useEffect(() => {
+    if (!category) {
+      setStorageFiles([])
+      setUsedFiles(new Set())
+      setFileLoadError(null)
+      return
+    }
+
+    const loadStorageFiles = async () => {
+      setLoadingFiles(true)
+      setFileLoadError(null)
+      try {
+        // 1. Storage 파일 목록 조회
+        const fileResult = await listAudioFiles(category)
+        if (!fileResult.success || !fileResult.files) {
+          setStorageFiles([])
+          setUsedFiles(new Set())
+          return
+        }
+
+        const filenames = fileResult.files.map((f) => f.name)
+        setStorageFiles(filenames)
+
+        // 2. DB에 이미 등록된 파일 확인
+        const dbResult = await checkFilesInDb(filenames)
+        if (dbResult.success && dbResult.linkedFiles) {
+          const usedSet = new Set<string>()
+          Object.keys(dbResult.linkedFiles).forEach((fname) => {
+            // 수정 모드에서 현재 편집 중인 파일은 제외
+            if (mode === 'edit' && audio?.filename === fname) {
+              return
+            }
+            usedSet.add(fname)
+          })
+          setUsedFiles(usedSet)
+        }
+      } catch (err) {
+        console.error('Storage 파일 로드 실패:', err)
+        setFileLoadError('파일 목록을 불러오는데 실패했습니다. 잠시 후 다시 시도해주세요.')
+        setStorageFiles([])
+        setUsedFiles(new Set())
+      } finally {
+        setLoadingFiles(false)
+      }
+    }
+
+    loadStorageFiles()
+  }, [category, mode, audio?.filename])
 
   // 파일 선택 핸들러
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -172,6 +192,30 @@ export function AudioForm({ audio, mode }: AudioFormProps) {
     e.preventDefault()
     setIsSubmitting(true)
     setError(null)
+
+    // trail_guide 필수 필드 검증
+    if (isTrailGuide) {
+      if (!province) {
+        setError('도/시를 선택해주세요.')
+        setIsSubmitting(false)
+        return
+      }
+      if (!city) {
+        setError('시/군/구를 선택해주세요.')
+        setIsSubmitting(false)
+        return
+      }
+      if (!trailName.trim()) {
+        setError('길 이름을 입력해주세요.')
+        setIsSubmitting(false)
+        return
+      }
+      if (!difficulty) {
+        setError('난이도를 선택해주세요.')
+        setIsSubmitting(false)
+        return
+      }
+    }
 
     const formData = new FormData()
     formData.append('title', title)
@@ -386,24 +430,62 @@ export function AudioForm({ audio, mode }: AudioFormProps) {
               </span>
             </div>
 
-            {/* 직접 파일명 입력 (고급 옵션) */}
+            {/* Storage 파일 선택 드롭다운 */}
             {!selectedFile && (
               <div className="mt-3">
-                <details className="text-xs text-gray-500">
-                  <summary className="cursor-pointer hover:text-gray-700">
-                    이미 Storage에 업로드된 파일명 직접 입력
-                  </summary>
-                  <input
-                    type="text"
-                    value={filename}
-                    onChange={(e) => setFilename(e.target.value)}
-                    placeholder="예: guide_01.mp3"
-                    className="mt-2 w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                  <p className="mt-1 text-xs text-gray-400">
-                    audio/{category}/ 폴더 내 파일명
-                  </p>
-                </details>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Storage에서 파일 선택
+                </label>
+                {loadingFiles ? (
+                  <div className="flex items-center gap-2 text-sm text-gray-500 py-2">
+                    <Loader2 size={16} className="animate-spin" />
+                    파일 목록 불러오는 중...
+                  </div>
+                ) : fileLoadError ? (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-sm text-red-700">{fileLoadError}</p>
+                  </div>
+                ) : storageFiles.length === 0 ? (
+                  <div className="text-sm text-gray-400 py-2">
+                    audio/{category}/ 폴더에 파일이 없습니다.
+                    <br />
+                    <span className="text-xs">
+                      먼저 Storage 관리 페이지에서 파일을 업로드하세요.
+                    </span>
+                  </div>
+                ) : (
+                  <>
+                    <select
+                      value={filename}
+                      onChange={(e) => setFilename(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">파일을 선택하세요</option>
+                      {storageFiles.map((fname) => {
+                        const isUsed = usedFiles.has(fname)
+                        return (
+                          <option key={fname} value={fname} disabled={isUsed}>
+                            {fname} {isUsed ? '(이미 사용 중)' : ''}
+                          </option>
+                        )
+                      })}
+                    </select>
+                    <p className="mt-1 text-xs text-gray-500">
+                      audio/{category}/ 폴더 내 사용 가능한 파일 ({storageFiles.length - usedFiles.size}/{storageFiles.length})
+                    </p>
+
+                    {/* 선택한 파일 미리듣기 */}
+                    {filename && (
+                      <audio controls className="w-full mt-2 h-8">
+                        <source
+                          src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/audio/${category}/${filename}`}
+                          type="audio/mpeg"
+                        />
+                        <track kind="captions" />
+                      </audio>
+                    )}
+                  </>
+                )}
               </div>
             )}
           </div>

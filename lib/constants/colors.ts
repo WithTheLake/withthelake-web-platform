@@ -3,6 +3,12 @@
  * 컴포넌트에서 직접 사용하는 색상 값들
  */
 
+// 위드더레이크 브랜드 색상
+export const BRAND_COLORS = {
+  purple: '#410099',
+  sky: '#5eb3e4',
+}
+
 // 카카오 브랜드 색상
 export const KAKAO_COLORS = {
   yellow: '#FEE500',

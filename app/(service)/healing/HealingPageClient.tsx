@@ -35,7 +35,6 @@ export default function HealingPageClient({ walkGuides, affirmations, trailGuide
   const [isTrailMapSelectOpen, setIsTrailMapSelectOpen] = useState(false)
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
   const [isAlreadyRecordedOpen, setIsAlreadyRecordedOpen] = useState(false)
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
   const audioRef = useRef<HTMLAudioElement>(null)
 
   const {
@@ -182,25 +181,6 @@ export default function HealingPageClient({ walkGuides, affirmations, trailGuide
     audio.load()
   }, [currentAudio, setLoading])
 
-  // GPS 위치 추적
-  useEffect(() => {
-    if (navigator.geolocation) {
-      const watchId = navigator.geolocation.watchPosition(
-        (position) => {
-          setUserLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          })
-        },
-        (error) => {
-          console.warn('위치 정보를 가져오지 못했습니다:', error.message)
-        },
-        { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
-      )
-      return () => navigator.geolocation.clearWatch(watchId)
-    }
-  }, [])
-
   const handleAudioSelect = (item: AudioItem) => {
     setCurrentAudio(item)
   }
@@ -222,6 +202,19 @@ export default function HealingPageClient({ walkGuides, affirmations, trailGuide
 
     setIsEmotionSheetOpen(true)
   }
+
+  // 로그인 후 리다이렉트 시 action 파라미터 감지 → 감정 기록 모달 자동 오픈
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('action') === 'emotion') {
+      // URL에서 action 파라미터 제거 (깔끔한 URL 유지)
+      const url = new URL(window.location.href)
+      url.searchParams.delete('action')
+      window.history.replaceState({}, '', url.toString())
+      // 감정 기록 흐름 실행 (로그인 상태 + 오늘 기록 여부 체크)
+      handleEmotionButtonClick()
+    }
+  }, [])
 
   // ==================== 공통 미디어 제어 박스 (모바일용) ====================
   const renderMediaControlBox = () => {
@@ -362,14 +355,14 @@ export default function HealingPageClient({ walkGuides, affirmations, trailGuide
             <div className="flex gap-2">
               <button
                 onClick={() => setIsWalkGuideOpen(true)}
-                className="flex-1 h-12 bg-white border border-gray-200 rounded-xl flex items-center justify-center gap-2 hover:border-emerald-300 hover:bg-emerald-50/50 transition-all shadow-sm"
+                className="flex-1 h-12 bg-white border border-gray-200 rounded-xl flex items-center justify-center gap-2 hover:border-emerald-300 hover:bg-emerald-50/50 transition-all shadow-sm cursor-pointer"
               >
                 <span className="text-xl">🚶</span>
                 <span className="text-sm font-medium text-gray-700">걷기 안내</span>
               </button>
               <button
                 onClick={() => setIsAffirmationOpen(true)}
-                className="flex-1 h-12 bg-white border border-gray-200 rounded-xl flex items-center justify-center gap-2 hover:border-emerald-300 hover:bg-emerald-50/50 transition-all shadow-sm"
+                className="flex-1 h-12 bg-white border border-gray-200 rounded-xl flex items-center justify-center gap-2 hover:border-emerald-300 hover:bg-emerald-50/50 transition-all shadow-sm cursor-pointer"
               >
                 <span className="text-xl">💭</span>
                 <span className="text-sm font-medium text-gray-700">긍정확언</span>
@@ -379,14 +372,14 @@ export default function HealingPageClient({ walkGuides, affirmations, trailGuide
             <div className="flex gap-2 mt-2">
               <button
                 onClick={() => setIsTrailTextSelectOpen(true)}
-                className="flex-1 h-12 bg-white border border-gray-200 rounded-xl flex items-center justify-center gap-2 hover:border-emerald-300 hover:bg-emerald-50/50 transition-all shadow-sm"
+                className="flex-1 h-12 bg-white border border-gray-200 rounded-xl flex items-center justify-center gap-2 hover:border-emerald-300 hover:bg-emerald-50/50 transition-all shadow-sm cursor-pointer"
               >
                 <span className="text-xl">🗺️</span>
                 <span className="text-sm font-medium text-gray-700">길 안내</span>
               </button>
               <button
                 onClick={() => setIsTrailMapSelectOpen(true)}
-                className="flex-1 h-12 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl flex items-center justify-center gap-2 hover:from-blue-600 hover:to-blue-700 transition-all shadow-md"
+                className="flex-1 h-12 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl flex items-center justify-center gap-2 hover:from-blue-600 hover:to-blue-700 transition-all shadow-md cursor-pointer"
               >
                 <MapPin size={18} />
                 <span className="text-sm font-medium">지도로 선택</span>
@@ -406,7 +399,7 @@ export default function HealingPageClient({ walkGuides, affirmations, trailGuide
             <div className="flex gap-2">
               <button
                 onClick={handleEmotionButtonClick}
-                className="flex-1 h-12 bg-gradient-to-br from-rose-50 to-rose-100 border border-rose-200 rounded-xl flex items-center justify-center gap-2 hover:shadow-md transition-all"
+                className="flex-1 h-12 bg-gradient-to-br from-rose-50 to-rose-100 border border-rose-200 rounded-xl flex items-center justify-center gap-2 hover:shadow-md transition-all cursor-pointer"
               >
                 <span className="text-xl">😊</span>
                 <span className="text-sm font-medium text-rose-700">오늘 감정</span>
@@ -415,7 +408,7 @@ export default function HealingPageClient({ walkGuides, affirmations, trailGuide
                 href="https://forms.gle/At8WaVZLsXLCoxCLA"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 h-12 bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl flex items-center justify-center gap-2 hover:shadow-md transition-all"
+                className="flex-1 h-12 bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl flex items-center justify-center gap-2 hover:shadow-md transition-all cursor-pointer"
               >
                 <span className="text-xl">📋</span>
                 <span className="text-sm font-medium text-blue-700">설문조사</span>
@@ -432,7 +425,7 @@ export default function HealingPageClient({ walkGuides, affirmations, trailGuide
               href="https://smartstore.naver.com/withlab201"
               target="_blank"
               rel="noopener noreferrer"
-              className="block relative w-full rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow"
+              className="block relative w-full rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow cursor-pointer"
             >
               <Image
                 src="/images/healingroadon_store.jpg"
@@ -592,7 +585,7 @@ export default function HealingPageClient({ walkGuides, affirmations, trailGuide
               {/* 걷기 안내 */}
               <button
                 onClick={() => setIsWalkGuideOpen(true)}
-                className="bg-white rounded-2xl p-6 text-left border border-gray-200 hover:border-emerald-300 hover:shadow-lg transition-all group"
+                className="bg-white rounded-2xl p-6 text-left border border-gray-200 hover:border-emerald-300 hover:shadow-lg transition-all group cursor-pointer"
               >
                 <div className="flex items-center gap-4 mb-3">
                   <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
@@ -609,7 +602,7 @@ export default function HealingPageClient({ walkGuides, affirmations, trailGuide
               {/* 긍정확언 */}
               <button
                 onClick={() => setIsAffirmationOpen(true)}
-                className="bg-white rounded-2xl p-6 text-left border border-gray-200 hover:border-amber-300 hover:shadow-lg transition-all group"
+                className="bg-white rounded-2xl p-6 text-left border border-gray-200 hover:border-amber-300 hover:shadow-lg transition-all group cursor-pointer"
               >
                 <div className="flex items-center gap-4 mb-3">
                   <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
@@ -638,13 +631,13 @@ export default function HealingPageClient({ walkGuides, affirmations, trailGuide
                 <div className="flex gap-2">
                   <button
                     onClick={() => setIsTrailTextSelectOpen(true)}
-                    className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium transition-colors"
+                    className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium transition-colors cursor-pointer"
                   >
                     📋 목록
                   </button>
                   <button
                     onClick={() => setIsTrailMapSelectOpen(true)}
-                    className="flex-1 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-sm font-medium transition-colors"
+                    className="flex-1 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-sm font-medium transition-colors cursor-pointer"
                   >
                     🗺️ 지도
                   </button>
@@ -668,7 +661,7 @@ export default function HealingPageClient({ walkGuides, affirmations, trailGuide
               {/* 오늘 감정 */}
               <button
                 onClick={handleEmotionButtonClick}
-                className="bg-gradient-to-br from-rose-50 to-rose-100 border border-rose-200 rounded-2xl p-6 text-left hover:shadow-lg transition-all flex items-center gap-5"
+                className="bg-gradient-to-br from-rose-50 to-rose-100 border border-rose-200 rounded-2xl p-6 text-left hover:shadow-lg transition-all flex items-center gap-5 cursor-pointer"
               >
                 <div className="w-14 h-14 bg-white rounded-xl flex items-center justify-center shadow-sm">
                   <span className="text-3xl">😊</span>
@@ -765,6 +758,7 @@ export default function HealingPageClient({ walkGuides, affirmations, trailGuide
       <LoginModal
         isOpen={isLoginModalOpen}
         onClose={() => setIsLoginModalOpen(false)}
+        returnAction="emotion"
       />
       <AlreadyRecordedModal
         isOpen={isAlreadyRecordedOpen}

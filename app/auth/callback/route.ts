@@ -20,15 +20,16 @@ export async function GET(request: Request) {
         || user.user_metadata?.user_name
         || null
       const kakaoAvatarUrl = user.user_metadata?.avatar_url || null
+      const userEmail = user.email || null
 
       // 기존 프로필이 있는지 확인
       const { data: existingProfile } = await supabase
         .from('user_profiles')
-        .select('id, nickname')
+        .select('id, nickname, email')
         .eq('user_id', user.id)
         .single()
 
-      // 프로필이 없으면 카카오 닉네임으로 자동 생성
+      // 프로필이 없으면 카카오 닉네임 + 이메일로 자동 생성
       if (!existingProfile) {
         await supabase
           .from('user_profiles')
@@ -36,6 +37,7 @@ export async function GET(request: Request) {
             user_id: user.id,
             nickname: kakaoNickname,
             avatar_url: kakaoAvatarUrl,
+            email: userEmail,
           })
       }
       // 프로필은 있지만 닉네임이 없으면 카카오 닉네임으로 업데이트
@@ -45,7 +47,15 @@ export async function GET(request: Request) {
           .update({
             nickname: kakaoNickname,
             avatar_url: kakaoAvatarUrl,
+            ...(!existingProfile.email && userEmail ? { email: userEmail } : {}),
           })
+          .eq('user_id', user.id)
+      }
+      // 이메일이 없으면 이메일만 업데이트
+      else if (!existingProfile.email && userEmail) {
+        await supabase
+          .from('user_profiles')
+          .update({ email: userEmail })
           .eq('user_id', user.id)
       }
 

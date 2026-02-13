@@ -11,6 +11,11 @@
 }
 
 @theme {
+  /* 브랜드 색상 */
+  --color-brand-purple: #410099;
+  --color-brand-sky: #5eb3e4;
+
+  /* Earth 색상 */
   --color-earth-beige: #F5F1E8;
   --color-earth-green: #2D5016;
   --color-earth-brown: #8B7355;
@@ -32,4 +37,126 @@
   .font-pretendard {
     font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
   }
+
+  /* Leaflet divIcon wrapper - Leaflet 기본 스타일 제거 */
+  .leaflet-custom-marker-wrapper {
+    background: transparent !important;
+    border: none !important;
+  }
+
+  /* Leaflet 지도 마커 - 컨테이너 (터치 영역 48px, 투명) */
+  .leaflet-custom-marker {
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    min-height: 48px;
+    min-width: 48px;
+    padding: 4px;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+  }
+
+  /* 마커 위치 점 */
+  .marker-dot {
+    border-radius: 50%;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+    border: 2px solid white;
+    transition: transform 0.15s ease;
+  }
+
+  /* 마커 텍스트 라벨 */
+  .marker-label {
+    font-weight: 700;
+    white-space: nowrap;
+    line-height: 1;
+    font-family: "Pretendard Variable", Pretendard, sans-serif;
+    text-shadow:
+      1px 1px 2px white,
+      -1px -1px 2px white,
+      1px -1px 2px white,
+      -1px 1px 2px white,
+      0 0 4px white;
+  }
+
+  /* hover 시 점 확대 */
+  .leaflet-custom-marker:hover .marker-dot {
+    transform: scale(1.4);
+  }
+
+  /* --- 시도 마커 --- */
+  .province-marker .marker-dot {
+    width: 14px;
+    height: 14px;
+  }
+
+  .province-marker .marker-label {
+    font-size: 13px;
+  }
+
+  /* 시도 - 오디오 있음 (파란색) */
+  .province-marker.available .marker-dot {
+    background: #3b82f6;
+  }
+
+  .province-marker.available .marker-label {
+    color: #1e40af;
+  }
+
+  /* 시도 - 오디오 없음 (회색) */
+  .province-marker.disabled {
+    cursor: default;
+  }
+
+  .province-marker.disabled .marker-dot {
+    background: #9ca3af;
+  }
+
+  .province-marker.disabled .marker-label {
+    color: #6b7280;
+  }
+
+  .province-marker.disabled:hover .marker-dot {
+    transform: none;
+  }
+
+  /* --- 시군구 마커 --- */
+  .city-marker .marker-dot {
+    width: 12px;
+    height: 12px;
+  }
+
+  .city-marker .marker-label {
+    font-size: 12px;
+  }
+
+  /* 시군구 - 오디오 있음 */
+  .city-marker.available .marker-dot {
+    background: #3b82f6;
+  }
+
+  .city-marker.available .marker-label {
+    color: #1e40af;
+  }
+
+  /* 시군구 - 오디오 없음 */
+  .city-marker.disabled {
+    cursor: default;
+  }
+
+  .city-marker.disabled .marker-dot {
+    background: #d1d5db;
+  }
+
+  .city-marker.disabled .marker-label {
+    color: #9ca3af;
+  }
+
+  .city-marker.disabled:hover .marker-dot {
+    transform: none;
+  }
+
 }

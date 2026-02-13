@@ -27,9 +27,8 @@ export default async function MypagePage() {
   }> = []
   let userProfile: {
     nickname: string | null
+    gender: string | null
     age_group: string | null
-    total_walks: number
-    total_duration: number
   } | null = null
 
   if (authStatus.isAuthenticated) {
@@ -46,6 +45,8 @@ export default async function MypagePage() {
     }
   }
 
+  const hasGeminiKey = !!process.env.GEMINI_API_KEY
+
   return (
     <MypageClient
       isAuthenticated={authStatus.isAuthenticated}
@@ -53,6 +54,7 @@ export default async function MypagePage() {
       emotionRecords={emotionRecords}
       userProfile={userProfile}
       isAdmin={adminStatus.isAdmin}
+      hasGeminiKey={hasGeminiKey}
     />
   )
 }

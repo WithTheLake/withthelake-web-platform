@@ -246,8 +246,8 @@ export default function AdminAudioPage() {
       </div>
 
       {/* 오디오 목록 테이블 */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <table className="w-full table-fixed">
+      <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto">
+        <table className="w-full table-fixed min-w-[800px]">
           <colgroup>
             <col className="w-[70px]" />
             <col className="w-[44%]" />

@@ -320,24 +320,21 @@ export default function RecordsClient({
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f1e8]">
+    <div className="min-h-screen bg-gray-100">
       {/* ==================== 모바일 레이아웃 (lg 미만) ==================== */}
       <div className="lg:hidden pb-20">
         {/* 헤더 */}
-        <section className="bg-gradient-to-br from-green-700 via-green-800 to-emerald-900 text-white px-5 py-6">
+        <section className="bg-[#5eb3e4] text-white px-5 py-6">
           <div className="flex items-center gap-3">
             <Link
               href="/mypage"
-              className="p-2 hover:bg-white/10 rounded-full transition-colors"
+              className="p-2 hover:bg-white/15 rounded-full transition-colors"
             >
               <ArrowLeft size={24} />
             </Link>
             <div>
-              <div className="flex items-center gap-2">
-                <FileText size={24} />
-                <h1 className="text-xl font-bold">감정 기록</h1>
-              </div>
-              <p className="text-green-200 text-sm mt-0.5">
+              <h1 className="text-xl font-bold">감정 기록</h1>
+              <p className="text-white/70 text-sm mt-0.5">
                 총 {totalCount}개의 기록
               </p>
             </div>
@@ -350,7 +347,7 @@ export default function RecordsClient({
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="bg-white rounded-2xl p-8 text-center shadow-lg"
+              className="bg-white rounded-2xl p-8 text-center shadow-sm"
             >
               <div className="text-5xl mb-4">📝</div>
               <p className="text-gray-600 text-lg font-medium">아직 기록된 감정이 없어요</p>
@@ -359,7 +356,7 @@ export default function RecordsClient({
               </p>
               <Link
                 href="/healing"
-                className="inline-block mt-6 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-500 text-white rounded-xl font-semibold hover:from-green-700 hover:to-emerald-600 transition-colors"
+                className="inline-block mt-6 px-6 py-3 bg-[#5eb3e4] text-white rounded-xl font-semibold hover:bg-[#4ba0d0] transition-colors"
               >
                 힐링로드 ON 시작하기
               </Link>
@@ -375,15 +372,13 @@ export default function RecordsClient({
                 >
                   {/* 날짜 헤더 */}
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="p-1.5 bg-green-100 rounded-lg">
-                      <Calendar size={14} className="text-green-700" />
+                    <div className="p-1.5 bg-[#5eb3e4]/10 rounded-lg">
+                      <Calendar size={14} className="text-[#5eb3e4]" />
                     </div>
                     <span className="text-sm font-semibold text-gray-700">
                       {formatDate(dayRecords[0].created_at)}
                     </span>
-                    <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
-                      {dayRecords.length}건
-                    </span>
+
                   </div>
 
                   {/* 해당 날짜 기록들 */}
@@ -404,16 +399,6 @@ export default function RecordsClient({
             <Pagination />
           </section>
         )}
-
-        {/* 마이페이지로 돌아가기 */}
-        <section className="px-5 mt-4">
-          <Link
-            href="/mypage"
-            className="block w-full py-4 bg-white text-green-700 border border-green-200 rounded-2xl font-bold text-center shadow-md hover:bg-green-50 transition-colors"
-          >
-            마이페이지로 돌아가기
-          </Link>
-        </section>
       </div>
 
       {/* ==================== PC 레이아웃 (lg 이상) ==================== */}
@@ -447,7 +432,7 @@ export default function RecordsClient({
               </p>
               <Link
                 href="/healing"
-                className="inline-block mt-6 px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-500 text-white rounded-xl font-semibold hover:from-green-700 hover:to-emerald-600 transition-colors"
+                className="inline-block mt-6 px-8 py-3 bg-[#5eb3e4] text-white rounded-xl font-semibold hover:bg-[#4ba0d0] transition-colors"
               >
                 힐링로드 ON 시작하기
               </Link>
@@ -463,15 +448,13 @@ export default function RecordsClient({
                 >
                   {/* 날짜 헤더 */}
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="p-2 bg-green-100 rounded-xl">
-                      <Calendar size={18} className="text-green-700" />
+                    <div className="p-2 bg-[#5eb3e4]/10 rounded-xl">
+                      <Calendar size={18} className="text-[#5eb3e4]" />
                     </div>
                     <span className="text-lg font-bold text-gray-800">
                       {formatDate(dayRecords[0].created_at)}
                     </span>
-                    <span className="text-sm text-gray-400 bg-gray-100 px-3 py-1 rounded-full">
-                      {dayRecords.length}건
-                    </span>
+
                   </div>
 
                   {/* 해당 날짜 기록들 */}

@@ -11,6 +11,7 @@ import {
   getMemberDetail,
   checkIsSuperAdmin,
   getSuperAdminUserId,
+  syncMemberEmails,
   type AdminMember,
   type MemberDetail,
 } from '@/actions/adminActions'
@@ -144,12 +145,22 @@ export default function AdminMembersPage() {
     setIsDetailLoading(false)
   }
 
-  const formatDuration = (seconds: number) => {
-    if (seconds === 0) return '-'
-    const hours = Math.floor(seconds / 3600)
-    const minutes = Math.floor((seconds % 3600) / 60)
-    if (hours > 0) return `${hours}시간 ${minutes}분`
-    return `${minutes}분`
+  // 이메일 동기화
+  const [isSyncing, setIsSyncing] = useState(false)
+  const handleSyncEmails = async () => {
+    setIsSyncing(true)
+    const result = await syncMemberEmails()
+    if (result.success) {
+      if (result.synced > 0) {
+        alert(`${result.synced}명의 이메일을 동기화했습니다.`)
+        fetchMembers()
+      } else {
+        alert('동기화할 이메일이 없습니다. (모두 최신 상태)')
+      }
+    } else {
+      alert(result.error || '이메일 동기화에 실패했습니다.')
+    }
+    setIsSyncing(false)
   }
 
   // 해당 회원이 대표인지 확인
@@ -246,14 +257,23 @@ export default function AdminMembersPage() {
   return (
     <div className="space-y-6">
       {/* 페이지 제목 */}
-      <div className="pl-2">
-        <h1 className="text-2xl font-bold text-gray-900">회원 관리</h1>
-        <p className="text-gray-500 mt-1">
-          총 {totalCount}명의 회원
-          {!isSuperAdmin && (
-            <span className="ml-2 text-xs text-amber-600">(관리자 임명/해제는 대표만 가능)</span>
-          )}
-        </p>
+      <div className="pl-2 flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">회원 관리</h1>
+          <p className="text-gray-500 mt-1">
+            총 {totalCount}명의 회원
+            {!isSuperAdmin && (
+              <span className="ml-2 text-xs text-amber-600">(관리자 임명/해제는 대표만 가능)</span>
+            )}
+          </p>
+        </div>
+        <button
+          onClick={handleSyncEmails}
+          disabled={isSyncing}
+          className="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 text-gray-600 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isSyncing ? '동기화 중...' : '이메일 동기화'}
+        </button>
       </div>
 
       {/* 필터 및 검색 */}
@@ -287,7 +307,7 @@ export default function AdminMembersPage() {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="닉네임 검색..."
+                placeholder="닉네임 또는 이메일 검색..."
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
@@ -302,26 +322,26 @@ export default function AdminMembersPage() {
       </div>
 
       {/* 회원 목록 테이블 */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <table className="w-full">
+      <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto">
+        <table className="w-full min-w-[900px]">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
-              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-52">
-                회원
+              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-48">
+                닉네임
+              </th>
+              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-60">
+                이메일
+              </th>
+              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
+                성별
               </th>
               <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
                 연령대
               </th>
               <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
-                걷기 횟수
-              </th>
-              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
-                총 걷기 시간
-              </th>
-              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                 가입일
               </th>
-              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
+              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
                 상태
               </th>
               <th className="pl-4 pr-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
@@ -354,14 +374,16 @@ export default function AdminMembersPage() {
                       {member.nickname || '(닉네임 없음)'}
                     </span>
                   </td>
+                  <td className="px-4 py-4 text-center">
+                    <span className="text-sm text-gray-500 truncate block max-w-[200px] mx-auto">
+                      {member.email || '-'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-4 text-sm text-gray-600 text-center">
+                    {member.gender || '-'}
+                  </td>
                   <td className="px-4 py-4 text-sm text-gray-600 text-center">
                     {member.age_group || '-'}
-                  </td>
-                  <td className="px-4 py-4 text-sm text-gray-600 text-center">
-                    {member.total_walks > 0 ? `${member.total_walks}회` : '-'}
-                  </td>
-                  <td className="px-4 py-4 text-sm text-gray-600 text-center">
-                    {formatDuration(member.total_duration)}
                   </td>
                   <td className="px-4 py-4 text-sm text-gray-600 text-center">
                     {formatDate(member.created_at)}
@@ -458,7 +480,10 @@ export default function AdminMembersPage() {
                       {renderStatusBadge(selectedMember)}
                     </div>
                     <p className="text-sm text-gray-500 mt-0.5">
-                      연령대: {selectedMember.age_group || '미설정'}
+                      {selectedMember.email || '이메일 없음'}
+                    </p>
+                    <p className="text-sm text-gray-500 mt-0.5">
+                      {selectedMember.gender || '성별 미설정'} · 연령대: {selectedMember.age_group || '미설정'}
                     </p>
                   </div>
 
@@ -482,18 +507,6 @@ export default function AdminMembersPage() {
 
                   {/* 상세 정보 */}
                   <div className="bg-gray-50 rounded-lg p-4 space-y-2.5">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">걷기 횟수</span>
-                      <span className="font-medium text-gray-900">
-                        {selectedMember.total_walks > 0 ? `${selectedMember.total_walks}회` : '-'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">총 걷기 시간</span>
-                      <span className="font-medium text-gray-900">
-                        {formatDuration(selectedMember.total_duration)}
-                      </span>
-                    </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-500">가입일</span>
                       <span className="font-medium text-gray-900">

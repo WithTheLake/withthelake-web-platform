@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient, createAdminClient } from '@/lib/supabase/server'
+import { revalidatePath } from 'next/cache'
 
 /**
  * 현재 로그인한 사용자가 대표(SUPER_ADMIN)인지 확인
@@ -23,11 +24,10 @@ export type AdminMember = {
   user_id: string
   nickname: string | null
   avatar_url: string | null
+  gender: string | null
   age_group: string | null
   is_admin: boolean
   is_blocked: boolean
-  total_walks: number
-  total_duration: number
   created_at: string
   updated_at: string
   email?: string
@@ -64,64 +64,11 @@ export async function getAdminStats() {
   }
 
   try {
-    // 뉴스 수
-    const { count: newsCount } = await supabase
-      .from('news_articles')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_active', true)
-
-    // 제품 수
-    const { count: productCount } = await supabase
-      .from('store_products')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_active', true)
-
-    // 게시글 수
-    const { count: postCount } = await supabase
-      .from('community_posts')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_active', true)
-
-    // 댓글 수
-    const { count: commentCount } = await supabase
-      .from('community_comments')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_active', true)
-
-    // 회원 수
-    const { count: userCount } = await supabase
-      .from('user_profiles')
-      .select('*', { count: 'exact', head: true })
-
-    // 오디오 트랙 수
-    const { count: audioCount } = await supabase
-      .from('audio_tracks')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_active', true)
-
-    // 오늘 통계
+    // 날짜 경계 미리 계산
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     const todayISO = today.toISOString()
 
-    const { count: todayPosts } = await supabase
-      .from('community_posts')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_active', true)
-      .gte('created_at', todayISO)
-
-    const { count: todayComments } = await supabase
-      .from('community_comments')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_active', true)
-      .gte('created_at', todayISO)
-
-    const { count: todayUsers } = await supabase
-      .from('user_profiles')
-      .select('*', { count: 'exact', head: true })
-      .gte('created_at', todayISO)
-
-    // 이번 주 통계 (월요일부터)
     const now = new Date()
     const dayOfWeek = now.getDay()
     const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1
@@ -130,22 +77,34 @@ export async function getAdminStats() {
     monday.setHours(0, 0, 0, 0)
     const mondayISO = monday.toISOString()
 
-    const { count: weekPosts } = await supabase
-      .from('community_posts')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_active', true)
-      .gte('created_at', mondayISO)
-
-    const { count: weekComments } = await supabase
-      .from('community_comments')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_active', true)
-      .gte('created_at', mondayISO)
-
-    const { count: weekUsers } = await supabase
-      .from('user_profiles')
-      .select('*', { count: 'exact', head: true })
-      .gte('created_at', mondayISO)
+    // 12개 쿼리 병렬 실행
+    const [
+      { count: newsCount },
+      { count: productCount },
+      { count: postCount },
+      { count: commentCount },
+      { count: userCount },
+      { count: audioCount },
+      { count: todayPosts },
+      { count: todayComments },
+      { count: todayUsers },
+      { count: weekPosts },
+      { count: weekComments },
+      { count: weekUsers },
+    ] = await Promise.all([
+      supabase.from('news_articles').select('*', { count: 'exact', head: true }).eq('is_active', true),
+      supabase.from('store_products').select('*', { count: 'exact', head: true }).eq('is_active', true),
+      supabase.from('community_posts').select('*', { count: 'exact', head: true }).eq('is_active', true),
+      supabase.from('community_comments').select('*', { count: 'exact', head: true }).eq('is_active', true),
+      supabase.from('user_profiles').select('*', { count: 'exact', head: true }),
+      supabase.from('audio_tracks').select('*', { count: 'exact', head: true }).eq('is_active', true),
+      supabase.from('community_posts').select('*', { count: 'exact', head: true }).eq('is_active', true).gte('created_at', todayISO),
+      supabase.from('community_comments').select('*', { count: 'exact', head: true }).eq('is_active', true).gte('created_at', todayISO),
+      supabase.from('user_profiles').select('*', { count: 'exact', head: true }).gte('created_at', todayISO),
+      supabase.from('community_posts').select('*', { count: 'exact', head: true }).eq('is_active', true).gte('created_at', mondayISO),
+      supabase.from('community_comments').select('*', { count: 'exact', head: true }).eq('is_active', true).gte('created_at', mondayISO),
+      supabase.from('user_profiles').select('*', { count: 'exact', head: true }).gte('created_at', mondayISO),
+    ])
 
     return {
       success: true,
@@ -334,9 +293,9 @@ export async function getAdminMembers({
       query = query.eq('is_admin', false)
     }
 
-    // 검색 (닉네임)
+    // 검색 (닉네임 또는 이메일)
     if (search) {
-      query = query.ilike('nickname', `%${search}%`)
+      query = query.or(`nickname.ilike.%${search}%,email.ilike.%${search}%`)
     }
 
     // 정렬 및 페이지네이션
@@ -387,6 +346,8 @@ export async function toggleMemberAdmin(targetUserId: string, isAdmin: boolean) 
 
     if (error) throw error
 
+    revalidatePath('/admin/members')
+    revalidatePath('/admin')
     return { success: true }
   } catch (error) {
     console.error('관리자 권한 변경 실패:', error)
@@ -448,14 +409,14 @@ export async function getMemberDetail(targetUserId: string): Promise<{ success: 
     const { count: postCount } = await supabase
       .from('community_posts')
       .select('*', { count: 'exact', head: true })
-      .eq('author_id', targetUserId)
+      .eq('user_id', targetUserId)
       .eq('is_active', true)
 
     // 댓글 수
     const { count: commentCount } = await supabase
       .from('community_comments')
       .select('*', { count: 'exact', head: true })
-      .eq('author_id', targetUserId)
+      .eq('user_id', targetUserId)
       .eq('is_active', true)
 
     // Auth 사용자 ban 상태 확인
@@ -533,6 +494,7 @@ export async function toggleMemberBlock(targetUserId: string, isBlocked: boolean
 
     if (error) throw error
 
+    revalidatePath('/admin/members')
     return { success: true }
   } catch (error) {
     console.error('회원 차단 상태 변경 실패:', error)
@@ -590,15 +552,79 @@ export async function banMember(targetUserId: string) {
     if (banError) throw banError
 
     // user_profiles에도 차단 표시
-    await supabase
+    const { error: dbError } = await supabase
       .from('user_profiles')
       .update({ is_blocked: true })
       .eq('user_id', targetUserId)
 
+    if (dbError) {
+      console.error('Auth ban 성공했으나 DB 업데이트 실패:', dbError)
+      // Auth ban은 이미 성공했으므로 부분 성공으로 처리
+    }
+
+    revalidatePath('/admin/members')
     return { success: true }
   } catch (error) {
     console.error('회원 강퇴 실패:', error)
     return { success: false, error: '강퇴 처리에 실패했습니다.' }
+  }
+}
+
+/**
+ * 회원 이메일 동기화 (관리자 전용)
+ * Supabase Auth에서 이메일을 가져와 user_profiles에 채움
+ * 기존에 로그인했지만 email이 비어있는 회원들의 이메일을 backfill
+ */
+export async function syncMemberEmails(): Promise<{ success: boolean; synced: number; error?: string }> {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { success: false, synced: 0, error: '로그인이 필요합니다.' }
+
+  const { data: profile } = await supabase
+    .from('user_profiles')
+    .select('is_admin')
+    .eq('user_id', user.id)
+    .single()
+
+  if (!profile?.is_admin) return { success: false, synced: 0, error: '관리자 권한이 필요합니다.' }
+
+  try {
+    const adminClient = createAdminClient()
+
+    // 이메일이 비어있는 프로필 조회
+    const { data: profilesWithoutEmail } = await supabase
+      .from('user_profiles')
+      .select('user_id')
+      .is('email', null)
+
+    if (!profilesWithoutEmail || profilesWithoutEmail.length === 0) {
+      return { success: true, synced: 0 }
+    }
+
+    let syncedCount = 0
+
+    // 각 프로필의 Auth 정보에서 이메일 가져와서 업데이트
+    for (const p of profilesWithoutEmail) {
+      try {
+        const { data: authUser } = await adminClient.auth.admin.getUserById(p.user_id)
+        const email = authUser?.user?.email
+        if (email) {
+          await supabase
+            .from('user_profiles')
+            .update({ email })
+            .eq('user_id', p.user_id)
+          syncedCount++
+        }
+      } catch {
+        // 개별 사용자 오류는 무시하고 계속 진행
+      }
+    }
+
+    return { success: true, synced: syncedCount }
+  } catch (error) {
+    console.error('이메일 동기화 실패:', error)
+    return { success: false, synced: 0, error: '이메일 동기화에 실패했습니다.' }
   }
 }
 
@@ -634,11 +660,16 @@ export async function unbanMember(targetUserId: string) {
     if (unbanError) throw unbanError
 
     // user_profiles 차단도 해제
-    await supabase
+    const { error: dbError } = await supabase
       .from('user_profiles')
       .update({ is_blocked: false })
       .eq('user_id', targetUserId)
 
+    if (dbError) {
+      console.error('Auth unban 성공했으나 DB 업데이트 실패:', dbError)
+    }
+
+    revalidatePath('/admin/members')
     return { success: true }
   } catch (error) {
     console.error('강퇴 해제 실패:', error)

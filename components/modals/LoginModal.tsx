@@ -11,9 +11,10 @@ interface LoginModalProps {
   isOpen: boolean
   onClose: () => void
   focusOnComment?: boolean // 로그인 후 댓글 입력창에 포커스할지 여부
+  returnAction?: string // 로그인 후 수행할 액션 (예: 'emotion')
 }
 
-export default function LoginModal({ isOpen, onClose, focusOnComment = false }: LoginModalProps) {
+export default function LoginModal({ isOpen, onClose, focusOnComment = false, returnAction }: LoginModalProps) {
   const { showToast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
 
@@ -35,10 +36,13 @@ export default function LoginModal({ isOpen, onClose, focusOnComment = false }: 
     try {
       const supabase = createClient()
 
-      // 현재 페이지 경로를 next 파라미터로 전달 (댓글 포커스 플래그 포함)
+      // 현재 페이지 경로를 next 파라미터로 전달 (댓글 포커스, 로그인 후 액션 플래그 포함)
       let currentPath = window.location.pathname + window.location.search
       if (focusOnComment) {
         currentPath += (currentPath.includes('?') ? '&' : '?') + 'focusComment=1'
+      }
+      if (returnAction) {
+        currentPath += (currentPath.includes('?') ? '&' : '?') + `action=${returnAction}`
       }
 
       const { error } = await supabase.auth.signInWithOAuth({

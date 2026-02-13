@@ -19,9 +19,10 @@ export default async function SettingsPage() {
   // 프로필 조회
   let userProfile: {
     nickname: string | null
+    email: string | null
+    gender: string | null
     age_group: string | null
-    total_walks: number
-    total_duration: number
+    created_at: string | null
   } | null = null
 
   const profileResult = await getMyProfile()

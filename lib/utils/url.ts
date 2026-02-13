@@ -16,8 +16,8 @@
  * @returns {string} 사이트의 전체 URL (프로토콜 포함)
  *
  * @example
- * // 프로덕션 환경
- * getSiteUrl() // → "https://withthelake.vercel.app"
+ * // 프로덕션 환경 (커스텀 도메인)
+ * getSiteUrl() // → "https://withthelake.com"
  *
  * // Vercel 미리보기 배포
  * getSiteUrl() // → "https://withthelake-git-feature-xxx.vercel.app"
@@ -46,14 +46,14 @@ export function getSiteUrl(): string {
  * Open Graph, JSON-LD 등에서 이미지를 절대 URL로 제공해야 할 때 사용합니다.
  *
  * @param path - 이미지 경로 (예: '/images/logo.png' 또는 'images/logo.png')
- * @returns {string} 전체 URL (예: 'https://withthelake.vercel.app/images/logo.png')
+ * @returns {string} 전체 URL (예: 'https://withthelake.com/images/logo.png')
  *
  * @example
  * getImageUrl('/images/logo.png')
- * // → "https://withthelake.vercel.app/images/logo.png"
+ * // → "https://withthelake.com/images/logo.png"
  *
  * getImageUrl('images/logo.png')
- * // → "https://withthelake.vercel.app/images/logo.png"
+ * // → "https://withthelake.com/images/logo.png"
  */
 export function getImageUrl(path: string): string {
   const siteUrl = getSiteUrl();
@@ -68,14 +68,14 @@ export function getImageUrl(path: string): string {
  * Open Graph, Canonical URL 등에서 사용합니다.
  *
  * @param path - 페이지 경로 (예: '/about' 또는 'about')
- * @returns {string} 전체 URL (예: 'https://withthelake.vercel.app/about')
+ * @returns {string} 전체 URL (예: 'https://withthelake.com/about')
  *
  * @example
  * getPageUrl('/about')
- * // → "https://withthelake.vercel.app/about"
+ * // → "https://withthelake.com/about"
  *
  * getPageUrl('community/notice')
- * // → "https://withthelake.vercel.app/community/notice"
+ * // → "https://withthelake.com/community/notice"
  */
 export function getPageUrl(path: string): string {
   const siteUrl = getSiteUrl();

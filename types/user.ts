@@ -8,9 +8,17 @@ export interface UserProfile {
   id: string
   user_id: string
   nickname: string | null
+  email: string | null
+  gender: string | null
   age_group: string | null
-  total_walks: number
-  total_duration: number
   created_at: string
   updated_at: string
 }
+
+// 성별 선택 옵션
+export const GENDER_OPTIONS = ['남성', '여성'] as const
+export type Gender = (typeof GENDER_OPTIONS)[number]
+
+// 연령대 선택 옵션
+export const AGE_GROUP_OPTIONS = ['20대', '30대', '40대', '50대', '60대', '70대 이상'] as const
+export type AgeGroup = (typeof AGE_GROUP_OPTIONS)[number]

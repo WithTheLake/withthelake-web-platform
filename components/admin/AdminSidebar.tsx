@@ -6,7 +6,6 @@ import {
   LayoutDashboard,
   Newspaper,
   ShoppingBag,
-  Tag,
   MessageSquare,
   MessageCircle,
   Music,
@@ -57,7 +56,7 @@ export function AdminSidebar() {
   const pathname = usePathname()
 
   return (
-    <aside className="fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-white border-r border-gray-200 overflow-y-auto">
+    <aside className="fixed left-0 top-[72px] h-[calc(100vh-72px)] w-64 bg-white border-r border-gray-200 overflow-y-auto">
       <nav className="p-4">
         <ul className="space-y-1">
           {menuItems.map((item) => (

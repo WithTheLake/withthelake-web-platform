@@ -38,7 +38,7 @@ WithTheLake Web Platform은 **기업 홈페이지**와 **힐링로드ON 서비�
 
 ### 힐링로드ON
 - Supabase Storage 기반 오디오 스트리밍 가이드
-- 전국 17개 시도 SVG 지도 기반 길 안내
+- Leaflet + OpenStreetMap 기반 지도 길 안내 (줌/팬/GPS 지원)
 - 감정 기록 시스템 (5단계 멀티스텝 폼)
 - GPS 위치 추적 (2단계 폴백)
 - 긍정확언 모달
@@ -61,6 +61,7 @@ WithTheLake Web Platform은 **기업 홈페이지**와 **힐링로드ON 서비�
 - Open Graph 이미지 (페이지별 맞춤 설정)
 - Twitter 카드 지원
 - 환경별 URL 자동 적용 (localhost/Vercel/커스텀 도메인)
+- YouTube 비디오 로딩 최적화 (플레이스홀더 이미지 페이드 전환, 200ms 딜레이)
 
 ## 프로젝트 구조
 
@@ -128,7 +129,8 @@ http://localhost:3000 에서 확인할 수 있습니다.
 
 Vercel에 배포되어 있으며, `main` 브랜치 push 시 자동 배포됩니다.
 
-- **프로덕션**: https://withthelake.vercel.app
+- **프로덕션**: https://withthelake.com (커스텀 도메인)
+- **도메인 관리**: 호스팅KR (DNS) + Vercel (호스팅/SSL)
 - **브랜치 전략**: `develop` (개발) -> `main` (배포)
 
 ## 인증
