@@ -92,12 +92,12 @@ export default function RecordsClient({
           <div className="text-3xl">{emotion.emoji}</div>
           <div className="flex-1 min-w-0 text-left">
             <div className="flex items-center justify-between">
-              <span className="font-bold text-gray-900">
+              <span className="text-lg font-bold text-gray-900">
                 {emotion.label}
               </span>
               <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1 text-xs text-gray-400">
-                  <Clock size={12} />
+                <div className="flex items-center gap-1 text-sm text-gray-400">
+                  <Clock size={14} />
                   {formatTime(record.created_at)}
                 </div>
                 <motion.div
@@ -143,12 +143,12 @@ export default function RecordsClient({
               <div className="px-4 pb-4 space-y-4 border-t border-gray-100">
                 {/* E. Emotion - 걷기 전 감정 */}
                 <div className="pt-4">
-                  <p className="text-xs font-semibold text-green-700 mb-1">
+                  <p className="text-sm font-semibold text-green-700 mb-1">
                     E. 걷기 전 감정
                   </p>
                   <div className="flex items-center gap-2">
                     <span className="text-2xl">{emotion.emoji}</span>
-                    <span className="text-sm font-medium text-gray-800">
+                    <span className="text-base font-medium text-gray-800">
                       {emotion.label}
                     </span>
                   </div>
@@ -156,21 +156,21 @@ export default function RecordsClient({
 
                 {/* M. Meaning - 감정의 이유 */}
                 <div>
-                  <p className="text-xs font-semibold text-green-700 mb-1">
+                  <p className="text-sm font-semibold text-green-700 mb-1">
                     M. 그렇게 느낀 이유
                   </p>
                   {record.emotion_reason ? (
-                    <p className="text-sm text-gray-700 bg-green-50 rounded-xl p-3">
+                    <p className="text-base text-gray-700 bg-green-50 rounded-xl p-3">
                       {record.emotion_reason}
                     </p>
                   ) : (
-                    <p className="text-sm text-gray-400 italic">기록 없음</p>
+                    <p className="text-base text-gray-400 italic">기록 없음</p>
                   )}
                 </div>
 
                 {/* A. Action - 도움이 된 행동 */}
                 <div>
-                  <p className="text-xs font-semibold text-green-700 mb-1">
+                  <p className="text-sm font-semibold text-green-700 mb-1">
                     A. 도움이 된 행동
                   </p>
                   {record.helpful_actions && record.helpful_actions.length > 0 ? (
@@ -178,20 +178,20 @@ export default function RecordsClient({
                       {record.helpful_actions.map((action) => (
                         <span
                           key={action}
-                          className="px-3 py-1.5 bg-green-100 text-green-700 text-xs rounded-full font-medium"
+                          className="px-3 py-1.5 bg-green-100 text-green-700 text-sm rounded-full font-medium"
                         >
                           {ACTION_LABELS[action] || action}
                         </span>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-400 italic">기록 없음</p>
+                    <p className="text-base text-gray-400 italic">기록 없음</p>
                   )}
                 </div>
 
                 {/* R. Reflect - 긍정적 변화 */}
                 <div>
-                  <p className="text-xs font-semibold text-green-700 mb-1">
+                  <p className="text-sm font-semibold text-green-700 mb-1">
                     R. 긍정적 변화
                   </p>
                   {record.positive_changes && record.positive_changes.length > 0 ? (
@@ -201,7 +201,7 @@ export default function RecordsClient({
                         return (
                           <span
                             key={change}
-                            className="px-3 py-1.5 bg-blue-100 text-blue-700 text-xs rounded-full font-medium"
+                            className="px-3 py-1.5 bg-blue-100 text-blue-700 text-sm rounded-full font-medium"
                           >
                             {changeData.emoji} {changeData.label}
                           </span>
@@ -209,32 +209,32 @@ export default function RecordsClient({
                       })}
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-400 italic">기록 없음</p>
+                    <p className="text-base text-gray-400 italic">기록 없음</p>
                   )}
                 </div>
 
                 {/* A. Anchor - 나를 위한 한마디 */}
                 <div>
-                  <p className="text-xs font-semibold text-green-700 mb-1">
+                  <p className="text-sm font-semibold text-green-700 mb-1">
                     A. 나를 위한 한마디
                   </p>
                   {record.self_message ? (
-                    <p className="text-sm text-gray-700 bg-amber-50 rounded-xl p-3 italic">
+                    <p className="text-base text-gray-700 bg-amber-50 rounded-xl p-3 italic">
                       &quot;{record.self_message}&quot;
                     </p>
                   ) : (
-                    <p className="text-sm text-gray-400 italic">기록 없음</p>
+                    <p className="text-base text-gray-400 italic">기록 없음</p>
                   )}
                 </div>
 
                 {/* 체험 장소 (선택) */}
                 {record.experience_location && (
                   <div>
-                    <p className="text-xs font-semibold text-green-700 mb-1">
-                      <MapPin size={12} className="inline mr-1" />
+                    <p className="text-sm font-semibold text-green-700 mb-1">
+                      <MapPin size={14} className="inline mr-1" />
                       체험 장소
                     </p>
-                    <p className="text-sm text-gray-700">
+                    <p className="text-base text-gray-700">
                       {LOCATION_LABELS[record.experience_location] || record.experience_location}
                     </p>
                   </div>
@@ -243,10 +243,10 @@ export default function RecordsClient({
                 {/* 기존 note 필드 (하위 호환성) */}
                 {record.note && !record.emotion_reason && !record.self_message && (
                   <div>
-                    <p className="text-xs font-semibold text-gray-500 mb-1">
+                    <p className="text-sm font-semibold text-gray-500 mb-1">
                       메모 (이전 형식)
                     </p>
-                    <p className="text-sm text-gray-600 bg-gray-50 rounded-xl p-3">
+                    <p className="text-base text-gray-600 bg-gray-50 rounded-xl p-3">
                       {record.note}
                     </p>
                   </div>
@@ -324,7 +324,7 @@ export default function RecordsClient({
       {/* ==================== 모바일 레이아웃 (lg 미만) ==================== */}
       <div className="lg:hidden pb-20">
         {/* 헤더 */}
-        <section className="bg-[#5eb3e4] text-white px-5 py-6">
+        <section className="bg-gradient-to-r from-[#6ec4f0] to-[#4a9fd4] text-white px-5 py-6">
           <div className="flex items-center gap-3">
             <Link
               href="/mypage"
@@ -333,8 +333,8 @@ export default function RecordsClient({
               <ArrowLeft size={24} />
             </Link>
             <div>
-              <h1 className="text-xl font-bold">감정 기록</h1>
-              <p className="text-white/70 text-sm mt-0.5">
+              <h1 className="text-2xl font-bold">감정 기록</h1>
+              <p className="text-white/70 text-base mt-0.5">
                 총 {totalCount}개의 기록
               </p>
             </div>
@@ -375,7 +375,7 @@ export default function RecordsClient({
                     <div className="p-1.5 bg-[#5eb3e4]/10 rounded-lg">
                       <Calendar size={14} className="text-[#5eb3e4]" />
                     </div>
-                    <span className="text-sm font-semibold text-gray-700">
+                    <span className="text-base font-semibold text-gray-700">
                       {formatDate(dayRecords[0].created_at)}
                     </span>
 

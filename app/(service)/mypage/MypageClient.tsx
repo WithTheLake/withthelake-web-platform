@@ -217,22 +217,22 @@ export default function MypageClient({
       {/* ==================== 모바일 레이아웃 (lg 미만) ==================== */}
       <div className="lg:hidden pb-20 min-h-screen bg-gray-100">
         {/* 헤더 - 프로필 정보 */}
-        <section className="bg-[#5eb3e4] text-white px-5 py-8 pb-12">
+        <section className="bg-gradient-to-r from-[#6ec4f0] to-[#4a9fd4] text-white px-5 py-8 pb-12">
           <div className="flex items-center gap-4 pl-2">
             <div className="flex-1">
-              <h1 className="text-xl font-bold">{userProfile?.nickname || '힐링로드 사용자'}</h1>
-              <p className="text-white/70 text-sm mt-1">{user?.email}</p>
+              <h1 className="text-2xl font-bold">{userProfile?.nickname || '힐링로드 사용자'}</h1>
+              <p className="text-white/70 text-base mt-1">{user?.email}</p>
             </div>
-            <div className="flex items-center gap-2">
-              <Link href="/mypage/settings" className="p-2 bg-white/20 text-white rounded-full hover:bg-white/30">
-                <Settings size={18} />
+            <div className="flex items-center gap-3">
+              <Link href="/mypage/settings" className="p-2.5 bg-white/20 text-white rounded-full hover:bg-white/30">
+                <Settings size={22} />
               </Link>
               <button
                 onClick={handleLogout}
                 disabled={isLoggingOut}
-                className="p-2 bg-white/20 text-white rounded-full hover:bg-white/30 cursor-pointer"
+                className="p-2.5 bg-white/20 text-white rounded-full hover:bg-white/30 cursor-pointer"
               >
-                <LogOut size={18} />
+                <LogOut size={22} />
               </button>
             </div>
           </div>
@@ -255,7 +255,7 @@ export default function MypageClient({
         {/* 자주 느끼는 감정 */}
         {topEmotions.length > 0 && (
           <section className="px-5 mt-6">
-            <h2 className="text-lg font-bold text-gray-900 mb-3">자주 느끼는 감정</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-3">자주 느끼는 감정</h2>
             <div className="bg-white rounded-2xl p-5 shadow-sm">
               <div className="flex justify-around">
                 {topEmotions.map(([type, count], index) => {
@@ -270,7 +270,7 @@ export default function MypageClient({
                       className="text-center"
                     >
                       <div className={`${sizes[index]} mb-2`}>{emotion.emoji}</div>
-                      <p className="font-medium text-gray-900">{emotion.label}</p>
+                      <p className="text-lg font-medium text-gray-900">{emotion.label}</p>
                       <p className="text-sm text-gray-500">{count}회</p>
                     </motion.div>
                   )
@@ -302,7 +302,7 @@ export default function MypageClient({
         {/* 최근 기록 */}
         <section className="px-5 mt-6">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-bold text-gray-900">최근 감정 기록</h2>
+            <h2 className="text-xl font-bold text-gray-900">최근 감정 기록</h2>
             <Link href="/mypage/records" className="text-[#5eb3e4] text-sm font-medium">
               전체보기 →
             </Link>
@@ -336,8 +336,8 @@ export default function MypageClient({
                         <div className="text-3xl">{emotion.emoji}</div>
                         <div className="flex-1">
                           <div className="flex items-center justify-between">
-                            <span className="font-bold text-gray-900">{emotion.label}</span>
-                            <span className="text-xs text-gray-400">
+                            <span className="text-lg font-bold text-gray-900">{emotion.label}</span>
+                            <span className="text-sm text-gray-400">
                               {formatRelativeTime(record.created_at)}
                             </span>
                           </div>

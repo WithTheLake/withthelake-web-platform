@@ -310,7 +310,7 @@ export default function AboutPage() {
                 </div>
                 <h3 className="text-xl md:text-2xl font-bold text-[#410099]">[Bio-Tech] 데이터 기반 예방 헬스케어</h3>
               </div>
-              <ul className="space-y-2 text-gray-600 text-base md:text-lg">
+              <ul className="space-y-2 text-gray-600 text-sm md:text-lg">
                 <li className="flex items-start gap-2">
                   <span className="text-[#410099] mt-1">•</span>
                   <span>소변 기반 7종 동시 진단 키트 및 AI RGB 판독 알고리즘</span>
@@ -334,7 +334,7 @@ export default function AboutPage() {
                 </div>
                 <h3 className="text-xl md:text-2xl font-bold text-[#410099]">[Content] 힐링로드ON</h3>
               </div>
-              <ul className="space-y-2 text-gray-600 text-base md:text-lg">
+              <ul className="space-y-2 text-gray-600 text-sm md:text-lg">
                 <li className="flex items-start gap-2">
                   <span className="text-[#410099] mt-1">•</span>
                   <span><strong>응용언어학 기반</strong>의 워킹 스토리텔링 치유 플랫폼</span>
@@ -358,7 +358,7 @@ export default function AboutPage() {
                 </div>
                 <h3 className="text-xl md:text-2xl font-bold text-[#410099]">[Product] 위드웰미 (With Well-Me)</h3>
               </div>
-              <ul className="space-y-2 text-gray-600 text-base md:text-lg">
+              <ul className="space-y-2 text-gray-600 text-sm md:text-lg">
                 <li className="flex items-start gap-2">
                   <span className="text-[#410099] mt-1">•</span>
                   <span><strong>'건강한 나를 찾는 여정'</strong>을 돕는 모든 도구</span>
@@ -382,7 +382,7 @@ export default function AboutPage() {
                 </div>
                 <h3 className="text-xl md:text-2xl font-bold text-[#410099]">[People] 전문 인력 양성</h3>
               </div>
-              <ul className="space-y-2 text-gray-600 text-base md:text-lg">
+              <ul className="space-y-2 text-gray-600 text-sm md:text-lg">
                 <li className="flex items-start gap-2">
                   <span className="text-[#410099] mt-1">•</span>
                   <span>독자적 언어심리 기법(EMARA)을 숙지한 <strong>전문가 양성</strong></span>
@@ -413,96 +413,96 @@ export default function AboutPage() {
 
           <motion.div {...fadeInUp}>
             {/* 타임라인 - 선이 원 중심에서 시작 */}
-            <div className="max-w-2xl mx-auto">
+            <div className="max-w-xl md:max-w-2xl mx-auto">
               <div className="space-y-0">
                 {/* 2025.12 - 첫 항목 (강조 원) */}
-                <div className="flex gap-10">
+                <div className="flex gap-5 md:gap-10">
                   <div className="w-20 flex-shrink-0 text-left">
-                    <span className="text-[#410099] font-bold text-xl md:text-2xl">2025.12</span>
+                    <span className="text-[#410099] font-bold text-lg md:text-2xl">2025.12</span>
                   </div>
                   <div className="flex-1 pb-8 pl-8 relative before:absolute before:left-0 before:top-3 before:bottom-2 before:w-0.5 before:bg-[#5eb3e4]/50">
                     <div className="absolute left-[-7.5px] top-1.5 w-4 h-4 bg-[#5eb3e4] rounded-full ring-4 ring-[#5eb3e4]/30" />
-                    <h3 className="font-bold text-xl md:text-2xl mb-1 text-gray-900">중기부 프리팁스(Pre-TIPS) 선정</h3>
+                    <h3 className="font-bold text-lg md:text-2xl mb-1 text-gray-900">중기부 프리팁스(Pre-TIPS) 선정</h3>
                   </div>
                 </div>
 
                 {/* 2025.11 */}
-                <div className="flex gap-10">
+                <div className="flex gap-5 md:gap-10">
                   <div className="w-20 flex-shrink-0 text-left">
-                    <span className="text-[#410099] font-bold text-xl md:text-2xl">2025.11</span>
+                    <span className="text-[#410099] font-bold text-lg md:text-2xl">2025.11</span>
                   </div>
                   <div className="flex-1 pb-8 pl-8 relative before:absolute before:left-0 before:top-3 before:bottom-2 before:w-0.5 before:bg-[#5eb3e4]/50">
                     <div className="absolute left-[-7.5px] top-1.5 w-4 h-4 bg-[#5eb3e4] rounded-full" />
-                    <h3 className="font-bold text-xl md:text-2xl mb-1 text-gray-900">강원특별자치도 예비사회적기업(혼합형) 지정</h3>
-                    <p className="text-gray-600 text-base md:text-lg">강원관광재단 표창장 수상</p>
+                    <h3 className="font-bold text-lg md:text-2xl mb-1 text-gray-900">강원특별자치도 예비사회적기업(혼합형) 지정</h3>
+                    <p className="text-gray-600 text-sm md:text-lg">강원관광재단 표창장 수상</p>
                   </div>
                 </div>
 
                 {/* 2025.07 */}
-                <div className="flex gap-10">
+                <div className="flex gap-5 md:gap-10">
                   <div className="w-20 flex-shrink-0 text-left">
-                    <span className="text-[#410099] font-bold text-xl md:text-2xl">2025.07</span>
+                    <span className="text-[#410099] font-bold text-lg md:text-2xl">2025.07</span>
                   </div>
                   <div className="flex-1 pb-8 pl-8 relative before:absolute before:left-0 before:top-3 before:bottom-2 before:w-0.5 before:bg-[#5eb3e4]/50">
                     <div className="absolute left-[-7.5px] top-1.5 w-4 h-4 bg-[#5eb3e4] rounded-full" />
-                    <h3 className="font-bold text-xl md:text-2xl mb-1 text-gray-900">중기부 창업성장기술개발(디딤돌) 과제 선정</h3>
+                    <h3 className="font-bold text-lg md:text-2xl mb-1 text-gray-900">중기부 창업성장기술개발(디딤돌) 과제 선정</h3>
                   </div>
                 </div>
 
                 {/* 2025.05 */}
-                <div className="flex gap-10">
+                <div className="flex gap-5 md:gap-10">
                   <div className="w-20 flex-shrink-0 text-left">
-                    <span className="text-[#410099] font-bold text-xl md:text-2xl">2025.05</span>
+                    <span className="text-[#410099] font-bold text-lg md:text-2xl">2025.05</span>
                   </div>
                   <div className="flex-1 pb-8 pl-8 relative before:absolute before:left-0 before:top-3 before:bottom-2 before:w-0.5 before:bg-[#5eb3e4]/50">
                     <div className="absolute left-[-7.5px] top-1.5 w-4 h-4 bg-[#5eb3e4] rounded-full" />
-                    <h3 className="font-bold text-xl md:text-2xl mb-1 text-gray-900">강원창조경제혁신센터 강원관광컬처지원사업 선정</h3>
-                    <p className="text-gray-600 text-base md:text-lg">힐링로드ON 프로젝트</p>
+                    <h3 className="font-bold text-lg md:text-2xl mb-1 text-gray-900">강원창조경제혁신센터 강원관광컬처지원사업 선정</h3>
+                    <p className="text-gray-600 text-sm md:text-lg">힐링로드ON 프로젝트</p>
                   </div>
                 </div>
 
                 {/* 2025.03 */}
-                <div className="flex gap-10">
+                <div className="flex gap-5 md:gap-10">
                   <div className="w-20 flex-shrink-0 text-left">
-                    <span className="text-[#410099] font-bold text-xl md:text-2xl">2025.03</span>
+                    <span className="text-[#410099] font-bold text-lg md:text-2xl">2025.03</span>
                   </div>
                   <div className="flex-1 pb-8 pl-8 relative before:absolute before:left-0 before:top-3 before:bottom-2 before:w-0.5 before:bg-[#5eb3e4]/50">
                     <div className="absolute left-[-7.5px] top-1.5 w-4 h-4 bg-[#5eb3e4] rounded-full" />
-                    <h3 className="font-bold text-xl md:text-2xl mb-1 text-gray-900">경북관광기업지원센터 협력기업 선정</h3>
+                    <h3 className="font-bold text-lg md:text-2xl mb-1 text-gray-900">경북관광기업지원센터 협력기업 선정</h3>
                   </div>
                 </div>
 
                 {/* 2024.12 */}
-                <div className="flex gap-10">
+                <div className="flex gap-5 md:gap-10">
                   <div className="w-20 flex-shrink-0 text-left">
-                    <span className="text-[#410099] font-bold text-xl md:text-2xl">2024.12</span>
+                    <span className="text-[#410099] font-bold text-lg md:text-2xl">2024.12</span>
                   </div>
                   <div className="flex-1 pb-8 pl-8 relative before:absolute before:left-0 before:top-3 before:bottom-2 before:w-0.5 before:bg-[#5eb3e4]/50">
                     <div className="absolute left-[-7.5px] top-1.5 w-4 h-4 bg-[#5eb3e4] rounded-full" />
-                    <h3 className="font-bold text-xl md:text-2xl mb-1 text-gray-900">특허 출원</h3>
-                    <p className="text-gray-600 text-base md:text-lg">음성기반 운동기록 시스템 등</p>
+                    <h3 className="font-bold text-lg md:text-2xl mb-1 text-gray-900">특허 출원</h3>
+                    <p className="text-gray-600 text-sm md:text-lg">음성기반 운동기록 시스템 등</p>
                   </div>
                 </div>
 
                 {/* 2024.07 */}
-                <div className="flex gap-10">
+                <div className="flex gap-5 md:gap-10">
                   <div className="w-20 flex-shrink-0 text-left">
-                    <span className="text-[#410099] font-bold text-xl md:text-2xl">2024.07</span>
+                    <span className="text-[#410099] font-bold text-lg md:text-2xl">2024.07</span>
                   </div>
                   <div className="flex-1 pb-8 pl-8 relative before:absolute before:left-0 before:top-3 before:bottom-2 before:w-0.5 before:bg-[#5eb3e4]/50">
                     <div className="absolute left-[-7.5px] top-1.5 w-4 h-4 bg-[#5eb3e4] rounded-full" />
-                    <h3 className="font-bold text-xl md:text-2xl mb-1 text-gray-900">벤처기업 인증(혁신성장유형)</h3>
+                    <h3 className="font-bold text-lg md:text-2xl mb-1 text-gray-900">벤처기업 인증(혁신성장유형)</h3>
                   </div>
                 </div>
 
                 {/* 2024.02 - 마지막 항목 (선 없음) */}
-                <div className="flex gap-10">
+                <div className="flex gap-5 md:gap-10">
                   <div className="w-20 flex-shrink-0 text-left">
-                    <span className="text-[#410099] font-bold text-xl md:text-2xl">2024.02</span>
+                    <span className="text-[#410099] font-bold text-lg md:text-2xl">2024.02</span>
                   </div>
                   <div className="flex-1 pl-8 relative">
                     <div className="absolute left-[-7.5px] top-1.5 w-4 h-4 bg-[#5eb3e4] rounded-full" />
-                    <h3 className="font-bold text-xl md:text-2xl mb-1 text-gray-900">주식회사 위드더레이크 법인 설립</h3>
+                    <h3 className="font-bold text-lg md:text-2xl mb-1 text-gray-900">주식회사 위드더레이크 법인 설립</h3>
                   </div>
                 </div>
               </div>

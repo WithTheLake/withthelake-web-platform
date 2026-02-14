@@ -115,7 +115,7 @@ export default function InfoPage() {
       {/* 히어로 섹션 - 밝은 배경 */}
       <section className="relative py-24 md:py-32 bg-gradient-to-b from-green-100/70 to-white overflow-hidden">
         <div className="absolute inset-0 bg-[url('/images/pattern-dots.png')] opacity-5" />
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+        <div className="max-w-4xl mx-auto px-6 lg:px-8 text-center relative z-10">
           <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-green-100 text-green-700 rounded-full text-base font-medium mb-6">
             <Leaf size={18} />
             Earthing / Grounding
@@ -132,7 +132,7 @@ export default function InfoPage() {
 
       {/* 섹션 앵커 네비게이션 */}
       <nav className="hidden lg:block sticky top-20 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex items-center justify-center gap-2 h-14">
             {sectionNav.map((item) => (
               <button
@@ -153,7 +153,7 @@ export default function InfoPage() {
 
       {/* 맨발걷기란? */}
       <section id="definition" className="py-20 md:py-28 scroll-mt-36">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <motion.div {...fadeInUp} className="max-w-4xl mx-auto text-center">
             <p className="text-green-600 text-base font-medium tracking-widest uppercase mb-4">What is Barefoot Walking?</p>
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8">맨발걷기란?</h2>
@@ -184,7 +184,7 @@ export default function InfoPage() {
 
       {/* 과학적 효과 */}
       <motion.section {...fadeInUp} id="benefits" className="py-20 md:py-28 bg-gray-50 scroll-mt-36">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="text-center mb-16">
             <p className="text-green-600 text-base font-medium tracking-widest uppercase mb-4">Scientific Benefits</p>
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">과학적으로 보고된 효과</h2>
@@ -271,7 +271,7 @@ export default function InfoPage() {
 
       {/* 올바른 맨발걷기 방법 */}
       <motion.section {...fadeInUp} id="method" className="py-20 md:py-28 scroll-mt-36">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="text-center mb-16">
             <p className="text-green-600 text-base font-medium tracking-widest uppercase mb-4">How to Practice</p>
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900">올바른 맨발걷기 방법</h2>
@@ -333,7 +333,7 @@ export default function InfoPage() {
 
       {/* 주의사항 */}
       <motion.section {...fadeInUp} id="caution" className="py-20 md:py-28 bg-amber-50 scroll-mt-36">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-100 text-amber-700 rounded-full text-base font-medium mb-4">
               <AlertTriangle size={18} />
@@ -367,7 +367,7 @@ export default function InfoPage() {
 
       {/* 관련 연구 자료 */}
       <motion.section {...fadeInUp} id="research" className="py-20 md:py-28 scroll-mt-36">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="text-center mb-16">
             <p className="text-green-600 text-base font-medium tracking-widest uppercase mb-4">Research & Articles</p>
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">관련 연구 자료</h2>
@@ -418,18 +418,18 @@ export default function InfoPage() {
 
       {/* CTA */}
       <motion.section {...fadeInUp} className="py-20 md:py-28 bg-gradient-to-r from-green-500 to-emerald-600 text-white">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div className="max-w-5xl mx-auto px-6 lg:px-8 text-center">
           <h2 className="text-4xl md:text-5xl font-bold mb-6">
             지금 맨발걷기를 시작해보세요
           </h2>
-          <p className="text-2xl text-green-100 mb-10">
+          <p className="text-xl md:text-2xl text-green-100 mb-10">
             힐링로드 ON과 함께 전문 가이드 음성을 들으며
             <br />
             안전하고 효과적인 맨발걷기를 경험하세요
           </p>
           <Link
             href="/healing"
-            className="inline-flex items-center gap-3 px-12 py-6 bg-white text-green-600 rounded-full font-bold text-2xl hover:bg-gray-100 transition-colors shadow-xl"
+            className="inline-flex items-center gap-3 px-10 py-5 md:px-12 md:py-6 bg-white text-green-600 rounded-full font-bold text-xl md:text-2xl hover:bg-gray-100 transition-colors shadow-xl"
           >
             힐링로드 ON 시작하기
             <ArrowRight size={28} />

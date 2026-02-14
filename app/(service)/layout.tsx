@@ -34,7 +34,7 @@ export default function ServiceLayout({
   return (
     <>
       <Header />
-      <main className="pt-14 md:pt-20 font-pretendard">
+      <main className="pt-16 md:pt-20 font-pretendard">
         {/* 반응형: 각 페이지에서 자체 관리 (max-width 제거) */}
         {children}
       </main>

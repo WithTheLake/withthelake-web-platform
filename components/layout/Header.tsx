@@ -65,7 +65,7 @@ export default function Header() {
   return (
     <header className="fixed top-0 left-0 right-0 bg-white z-50 shadow-sm">
       <div className="w-full px-4 sm:px-10 lg:px-14">
-        <div className="flex justify-between items-center h-14 md:h-20">
+        <div className="flex justify-between items-center h-16 md:h-20">
           {/* 로고 */}
           <Link href="/" className="flex items-center flex-shrink-0">
             <Image

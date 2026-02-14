@@ -349,8 +349,8 @@ export default function HealingPageClient({ walkGuides, affirmations, trailGuide
           {/* 오디오 선택 섹션 */}
           <div className="mb-5">
             <div className="flex items-center mb-3">
-              <span className="text-base font-bold text-gray-900 mr-2">🎧 오디오 듣기</span>
-              <span className="text-xs text-gray-500">걷기 안내와 긍정적 메세지</span>
+              <span className="text-lg font-bold text-gray-900 mr-2">🎧 오디오 듣기</span>
+              <span className="text-sm text-gray-500">걷기 안내와 긍정적 메세지</span>
             </div>
             <div className="flex gap-2">
               <button
@@ -358,14 +358,14 @@ export default function HealingPageClient({ walkGuides, affirmations, trailGuide
                 className="flex-1 h-12 bg-white border border-gray-200 rounded-xl flex items-center justify-center gap-2 hover:border-emerald-300 hover:bg-emerald-50/50 transition-all shadow-sm cursor-pointer"
               >
                 <span className="text-xl">🚶</span>
-                <span className="text-sm font-medium text-gray-700">걷기 안내</span>
+                <span className="text-base font-medium text-gray-700">걷기 안내</span>
               </button>
               <button
                 onClick={() => setIsAffirmationOpen(true)}
                 className="flex-1 h-12 bg-white border border-gray-200 rounded-xl flex items-center justify-center gap-2 hover:border-emerald-300 hover:bg-emerald-50/50 transition-all shadow-sm cursor-pointer"
               >
                 <span className="text-xl">💭</span>
-                <span className="text-sm font-medium text-gray-700">긍정확언</span>
+                <span className="text-base font-medium text-gray-700">긍정확언</span>
               </button>
             </div>
             {/* 길 안내 및 지도 버튼 */}
@@ -375,14 +375,14 @@ export default function HealingPageClient({ walkGuides, affirmations, trailGuide
                 className="flex-1 h-12 bg-white border border-gray-200 rounded-xl flex items-center justify-center gap-2 hover:border-emerald-300 hover:bg-emerald-50/50 transition-all shadow-sm cursor-pointer"
               >
                 <span className="text-xl">🗺️</span>
-                <span className="text-sm font-medium text-gray-700">길 안내</span>
+                <span className="text-base font-medium text-gray-700">길 안내</span>
               </button>
               <button
                 onClick={() => setIsTrailMapSelectOpen(true)}
                 className="flex-1 h-12 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl flex items-center justify-center gap-2 hover:from-blue-600 hover:to-blue-700 transition-all shadow-md cursor-pointer"
               >
                 <MapPin size={18} />
-                <span className="text-sm font-medium">지도로 선택</span>
+                <span className="text-base font-medium">지도로 선택</span>
               </button>
             </div>
           </div>
@@ -393,8 +393,8 @@ export default function HealingPageClient({ walkGuides, affirmations, trailGuide
           {/* 기록하기 섹션 */}
           <div className="mb-5">
             <div className="flex items-center mb-3">
-              <span className="text-base font-bold text-gray-900 mr-2">📝 기록하기</span>
-              <span className="text-xs text-gray-500">오늘의 감정을 기록해요</span>
+              <span className="text-lg font-bold text-gray-900 mr-2">📝 기록하기</span>
+              <span className="text-sm text-gray-500">오늘의 감정을 기록해요</span>
             </div>
             <div className="flex gap-2">
               <button
@@ -419,7 +419,7 @@ export default function HealingPageClient({ walkGuides, affirmations, trailGuide
           {/* 스토어 섹션 */}
           <div className="mb-8">
             <div className="mb-3">
-              <span className="text-base font-bold text-gray-900">🛒 힐링로드ON 제품</span>
+              <span className="text-lg font-bold text-gray-900">🛒 힐링로드ON 제품</span>
             </div>
             <a
               href="https://smartstore.naver.com/withlab201"
@@ -592,11 +592,11 @@ export default function HealingPageClient({ walkGuides, affirmations, trailGuide
                     <span className="text-2xl">🚶</span>
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-900">걷기 안내</h3>
-                    <p className="text-sm text-emerald-600">{walkGuides.length}개</p>
+                    <h3 className="text-lg font-bold text-gray-900">걷기 안내</h3>
+                    <p className="text-base text-emerald-600">{walkGuides.length}개</p>
                   </div>
                 </div>
-                <p className="text-gray-500 text-sm">걷기의 효과와 올바른 방법을 안내해드려요</p>
+                <p className="text-gray-500 text-base">걷기의 효과와 올바른 방법을 안내해드려요</p>
               </button>
 
               {/* 긍정확언 */}
@@ -609,11 +609,11 @@ export default function HealingPageClient({ walkGuides, affirmations, trailGuide
                     <span className="text-2xl">💬</span>
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-900">긍정확언</h3>
-                    <p className="text-sm text-amber-600">{affirmations.length}개</p>
+                    <h3 className="text-lg font-bold text-gray-900">긍정확언</h3>
+                    <p className="text-base text-amber-600">{affirmations.length}개</p>
                   </div>
                 </div>
-                <p className="text-gray-500 text-sm">마음을 다독이는 따뜻한 메시지</p>
+                <p className="text-gray-500 text-base">마음을 다독이는 따뜻한 메시지</p>
               </button>
 
               {/* 길 안내 */}
@@ -623,21 +623,21 @@ export default function HealingPageClient({ walkGuides, affirmations, trailGuide
                     <span className="text-2xl">🗺️</span>
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-900">길 안내</h3>
-                    <p className="text-sm text-blue-600">{trailGuides.length}개</p>
+                    <h3 className="text-lg font-bold text-gray-900">길 안내</h3>
+                    <p className="text-base text-blue-600">{trailGuides.length}개</p>
                   </div>
                 </div>
-                <p className="text-gray-500 text-sm mb-4">전국의 힐링 산책로를 찾아보세요</p>
+                <p className="text-gray-500 text-base mb-4">전국의 힐링 산책로를 찾아보세요</p>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setIsTrailTextSelectOpen(true)}
-                    className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium transition-colors cursor-pointer"
+                    className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-base font-medium transition-colors cursor-pointer"
                   >
                     📋 목록
                   </button>
                   <button
                     onClick={() => setIsTrailMapSelectOpen(true)}
-                    className="flex-1 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-sm font-medium transition-colors cursor-pointer"
+                    className="flex-1 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-base font-medium transition-colors cursor-pointer"
                   >
                     🗺️ 지도
                   </button>

@@ -70,7 +70,7 @@ export default function HomePage() {
           {/* 유튜브 비디오 (로딩 후 페이드인) */}
           <iframe
             onLoad={handleVideoLoad}
-            className={`absolute inset-0 w-full h-full transition-opacity duration-700 ${
+            className={`absolute inset-0 w-full transition-opacity duration-700 ${
               videoLoaded ? 'opacity-100' : 'opacity-0'
             }`}
             src="https://www.youtube.com/embed/GI4SKsaESc0?autoplay=1&mute=1&loop=1&playlist=GI4SKsaESc0&controls=0&showinfo=0&modestbranding=1&playsinline=1"
@@ -80,6 +80,8 @@ export default function HomePage() {
             style={{
               border: 'none',
               pointerEvents: 'none',
+              height: '115%',
+              top: '-5%',
             }}
           />
         </div>
@@ -107,7 +109,7 @@ export default function HomePage() {
       </section>
 
       {/* 액티브 시니어 섹션 - 투명 배경 (고정된 페이지 배경이 보임) */}
-      <section className="py-10">
+      <section className="py-16">
         <motion.div {...fadeInUp} className="max-w-6xl mx-auto pl-12 pr-4 md:px-12 lg:px-16">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-6 items-center">
             {/* 텍스트 */}

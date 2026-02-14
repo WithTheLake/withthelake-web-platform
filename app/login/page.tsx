@@ -23,8 +23,8 @@ function LoginContent() {
       const { data: { user } } = await supabase.auth.getUser()
 
       if (user) {
-        // 이미 로그인되어 있으면 next 파라미터 또는 마이페이지로 이동
-        const next = searchParams.get('next') || '/mypage'
+        // 이미 로그인되어 있으면 next 파라미터 또는 힐링로드ON으로 이동
+        const next = searchParams.get('next') || '/healing'
         router.replace(next)
       } else {
         setIsCheckingAuth(false)
@@ -39,8 +39,8 @@ function LoginContent() {
     try {
       const supabase = createClient()
 
-      // next 파라미터가 있으면 사용, 없으면 마이페이지로
-      const next = searchParams.get('next') || '/mypage'
+      // next 파라미터가 있으면 사용, 없으면 힐링로드ON으로
+      const next = searchParams.get('next') || '/healing'
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'kakao',

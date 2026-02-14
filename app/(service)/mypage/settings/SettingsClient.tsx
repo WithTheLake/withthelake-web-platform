@@ -72,7 +72,7 @@ export default function SettingsClient({
       {/* ==================== 모바일 레이아웃 (lg 미만) ==================== */}
       <div className="lg:hidden pb-20">
         {/* 헤더 */}
-        <section className="bg-[#5eb3e4] text-white px-5 py-6">
+        <section className="bg-gradient-to-r from-[#6ec4f0] to-[#4a9fd4] text-white px-5 py-6">
           <div className="flex items-center gap-3">
             <Link
               href="/mypage"
@@ -82,7 +82,7 @@ export default function SettingsClient({
             </Link>
             <div className="flex items-center gap-2">
               <Settings size={24} />
-              <h1 className="text-xl font-bold">설정</h1>
+              <h1 className="text-2xl font-bold">설정</h1>
             </div>
           </div>
         </section>
@@ -94,14 +94,14 @@ export default function SettingsClient({
             animate={{ opacity: 1, y: 0 }}
             className="bg-white rounded-2xl p-6 shadow-sm"
           >
-            <h2 className="text-lg font-bold mb-6 flex items-center gap-2">
-              <User size={20} className="text-[#5eb3e4]" />
+            <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+              <User size={22} className="text-[#5eb3e4]" />
               프로필 설정
             </h2>
 
             {/* 이메일 (읽기 전용) */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-base font-medium text-gray-700 mb-2">
                 <Mail size={16} className="inline mr-1" />
                 이메일
               </label>
@@ -111,14 +111,14 @@ export default function SettingsClient({
                 disabled
                 className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-xl text-gray-500 cursor-not-allowed"
               />
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-sm text-gray-400 mt-1">
                 카카오 계정과 연동된 이메일입니다.
               </p>
             </div>
 
             {/* 닉네임 */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-base font-medium text-gray-700 mb-2">
                 닉네임
               </label>
               <input
@@ -129,14 +129,14 @@ export default function SettingsClient({
                 maxLength={20}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5eb3e4] focus:border-transparent"
               />
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-sm text-gray-400 mt-1">
                 20자 이내로 입력해주세요. ({nickname.length}/20)
               </p>
             </div>
 
             {/* 성별 */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-base font-medium text-gray-700 mb-2">
                 성별
               </label>
               <div className="flex gap-3">
@@ -155,14 +155,14 @@ export default function SettingsClient({
                   </button>
                 ))}
               </div>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-sm text-gray-400 mt-1">
                 선택하지 않아도 됩니다. 다시 누르면 해제됩니다.
               </p>
             </div>
 
             {/* 연령대 */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-base font-medium text-gray-700 mb-2">
                 연령대
               </label>
               <div className="grid grid-cols-3 gap-2">
@@ -171,7 +171,7 @@ export default function SettingsClient({
                     key={option}
                     type="button"
                     onClick={() => setAgeGroup(ageGroup === option ? '' : option)}
-                    className={`py-3 rounded-xl border text-center text-sm font-medium transition-colors ${
+                    className={`py-3 rounded-xl border text-center text-base font-medium transition-colors ${
                       ageGroup === option
                         ? 'bg-[#5eb3e4] text-white border-[#5eb3e4]'
                         : 'bg-white text-gray-700 border-gray-200 hover:border-[#5eb3e4]/50'
@@ -181,7 +181,7 @@ export default function SettingsClient({
                   </button>
                 ))}
               </div>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-sm text-gray-400 mt-1">
                 선택하지 않아도 됩니다. 다시 누르면 해제됩니다.
               </p>
             </div>
@@ -215,11 +215,11 @@ export default function SettingsClient({
             transition={{ delay: 0.1 }}
             className="bg-white rounded-2xl p-6 shadow-sm"
           >
-            <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-              <Shield size={20} className="text-[#5eb3e4]" />
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <Shield size={22} className="text-[#5eb3e4]" />
               계정 정보
             </h2>
-            <div className="space-y-3 text-sm">
+            <div className="space-y-3 text-base">
               <div className="flex justify-between py-2 border-b border-gray-100">
                 <span className="text-gray-500">로그인 방식</span>
                 <span className="font-medium text-gray-900">카카오 로그인</span>
