@@ -7,11 +7,13 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Plus, Search, Edit2, Trash2, ExternalLink, Eye, EyeOff } from 'lucide-react'
 import { getAdminNewsArticles, deleteNewsArticle, toggleNewsActive, type NewsArticle } from '@/actions/newsActions'
 import { formatDate } from '@/lib/utils/format'
+import { useToast } from '@/components/ui/Toast'
 
 const ITEMS_PER_PAGE = 10
 const CATEGORIES = ['전체', '언론보도', '해외자료', '블로그', '보도자료']
 
 export default function AdminNewsPage() {
+  const { showToast } = useToast()
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -54,7 +56,7 @@ export default function AdminNewsPage() {
     if (result.success) {
       fetchNews()
     } else {
-      alert(result.message || '삭제에 실패했습니다.')
+      showToast(result.message || '삭제에 실패했습니다.', 'error')
     }
   }
 
@@ -68,7 +70,7 @@ export default function AdminNewsPage() {
     if (result.success) {
       fetchNews()
     } else {
-      alert(result.message || '상태 변경에 실패했습니다.')
+      showToast(result.message || '상태 변경에 실패했습니다.', 'error')
     }
   }
 

@@ -237,7 +237,7 @@ export async function getRecentMembers(limit = 5) {
   try {
     const { data, error } = await supabase
       .from('user_profiles')
-      .select('user_id, nickname, avatar_url, is_admin, is_blocked, created_at')
+      .select('user_id, nickname, email, avatar_url, is_admin, is_blocked, created_at')
       .order('created_at', { ascending: false })
       .limit(limit)
 

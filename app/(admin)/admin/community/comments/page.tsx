@@ -6,10 +6,12 @@ import { ArrowLeft, Search, Eye, EyeOff, Trash2, ExternalLink } from 'lucide-rea
 import { getAdminComments, deleteComment, toggleCommentActive, type AdminComment, type BoardType } from '@/actions/communityActions'
 import { formatDateTime } from '@/lib/utils/format'
 import { getBoardLabel } from '@/lib/constants/community'
+import { useToast } from '@/components/ui/Toast'
 
 const ITEMS_PER_PAGE = 20
 
 export default function AdminCommentsPage() {
+  const { showToast } = useToast()
   const [comments, setComments] = useState<AdminComment[]>([])
   const [totalCount, setTotalCount] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
@@ -47,7 +49,7 @@ export default function AdminCommentsPage() {
     if (result.success) {
       fetchComments()
     } else {
-      alert(result.error || '삭제에 실패했습니다.')
+      showToast(result.error || '삭제에 실패했습니다.', 'error')
     }
   }
 
@@ -62,7 +64,7 @@ export default function AdminCommentsPage() {
     if (result.success) {
       fetchComments()
     } else {
-      alert(result.error || '상태 변경에 실패했습니다.')
+      showToast(result.error || '상태 변경에 실패했습니다.', 'error')
     }
   }
 

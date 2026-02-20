@@ -27,6 +27,7 @@ import {
   deleteAudioFolder,
 } from '@/actions/audioActions'
 import type { StorageFileItem } from '@/actions/audioActions'
+import { useToast } from '@/components/ui/Toast'
 
 const SUPABASE_STORAGE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
   ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/audio`
@@ -44,6 +45,7 @@ const formatDate = (dateStr: string) => {
 }
 
 export default function AudioStoragePage() {
+  const { showToast } = useToast()
   const [folders, setFolders] = useState<string[]>([])
   const [category, setCategory] = useState<string>('')
   const [files, setFiles] = useState<StorageFileItem[]>([])
@@ -93,7 +95,7 @@ export default function AudioStoragePage() {
         setLinkedFiles({})
       }
     } else {
-      alert(result.message || '파일 목록 조회에 실패했습니다.')
+      showToast(result.message || '파일 목록 조회에 실패했습니다.', 'error')
     }
     setIsLoading(false)
   }
@@ -133,7 +135,7 @@ export default function AudioStoragePage() {
       await fetchFolders()
       setCategory(newFolderName.trim())
     } else {
-      alert(result.message || '폴더 생성에 실패했습니다.')
+      showToast(result.message || '폴더 생성에 실패했습니다.', 'error')
     }
     setIsCreatingFolder(false)
   }
@@ -152,7 +154,7 @@ export default function AudioStoragePage() {
       setLinkedFiles({})
       await fetchFolders()
     } else {
-      alert(result.message || '폴더 삭제에 실패했습니다.')
+      showToast(result.message || '폴더 삭제에 실패했습니다.', 'error')
     }
   }
 
@@ -161,12 +163,12 @@ export default function AudioStoragePage() {
     if (!file) return
 
     if (!file.type.startsWith('audio/') && !file.name.match(/\.(mp3|wav|ogg|aac|m4a)$/i)) {
-      alert('오디오 파일만 업로드할 수 있습니다. (MP3, WAV, OGG, AAC, M4A)')
+      showToast('오디오 파일만 업로드할 수 있습니다. (MP3, WAV, OGG, AAC, M4A)', 'warning')
       return
     }
 
     if (file.size > 50 * 1024 * 1024) {
-      alert('파일 크기는 50MB 이하만 가능합니다.')
+      showToast('파일 크기는 50MB 이하만 가능합니다.', 'warning')
       return
     }
 
@@ -175,7 +177,7 @@ export default function AudioStoragePage() {
     if (result.success) {
       await fetchFiles()
     } else {
-      alert(result.message || '업로드에 실패했습니다.')
+      showToast(result.message || '업로드에 실패했습니다.', 'error')
     }
     setIsUploading(false)
 
@@ -195,7 +197,7 @@ export default function AudioStoragePage() {
     if (result.success) {
       await fetchFiles()
     } else {
-      alert(result.message || '삭제에 실패했습니다.')
+      showToast(result.message || '삭제에 실패했습니다.', 'error')
     }
   }
 

@@ -1,10 +1,24 @@
 import Link from 'next/link'
 import { Facebook, Instagram, Youtube } from 'lucide-react'
 
-function NaverIcon({ className }: { className?: string }) {
+function NaverBlogIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 20 20" fill="currentColor" className={className} width={16} height={16}>
       <path d="M13.56 10.74L6.15 0H0v20h6.44V9.26L13.85 20H20V0h-6.44v10.74z" />
+    </svg>
+  )
+}
+
+function NaverCafeIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} width={18} height={18}>
+      {/* 컵 */}
+      <path d="M4 10h12v8a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3v-8z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+      {/* 손잡이 */}
+      <path d="M16 12h1.5a2.5 2.5 0 0 1 0 5H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      {/* 잎/연기 */}
+      <path d="M10 3c0 2.5-3 2.5-3 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M7 4.5c0 1.5 2 1.5 2 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   )
 }
@@ -60,7 +74,7 @@ export default function Footer() {
                 className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 transition-colors"
                 aria-label="네이버 블로그"
               >
-                <NaverIcon />
+                <NaverBlogIcon />
               </a>
               <a
                 href="https://cafe.naver.com/healingroadon"
@@ -69,7 +83,7 @@ export default function Footer() {
                 className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 transition-colors"
                 aria-label="네이버 카페"
               >
-                <NaverIcon />
+                <NaverCafeIcon />
               </a>
             </div>
             <p className="text-xs text-gray-500 mt-8">© 2024 WithTheLake Corp. All rights reserved.</p>
@@ -124,7 +138,7 @@ export default function Footer() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/notice" className="text-sm hover:text-white transition-colors">
+                  <Link href="/community/notice" className="text-sm hover:text-white transition-colors">
                     공지사항
                   </Link>
                 </li>

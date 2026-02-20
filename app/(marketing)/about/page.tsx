@@ -20,7 +20,7 @@ import {
   Facebook,
   Instagram,
   Youtube,
-  ExternalLink,
+  BookOpen,
 } from 'lucide-react'
 
 // 스크롤 애니메이션 설정
@@ -596,7 +596,7 @@ export default function AboutPage() {
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg transition-colors text-base md:text-lg"
                     >
-                      <ExternalLink size={16} />
+                      <BookOpen size={16} />
                       네이버 블로그
                     </a>
                     <a
@@ -605,7 +605,12 @@ export default function AboutPage() {
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg transition-colors text-base md:text-lg"
                     >
-                      <Users size={16} />
+                      <svg viewBox="0 0 24 24" fill="none" width={16} height={16}>
+                        <path d="M4 10h12v8a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3v-8z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+                        <path d="M16 12h1.5a2.5 2.5 0 0 1 0 5H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M10 3c0 2.5-3 2.5-3 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                        <path d="M7 4.5c0 1.5 2 1.5 2 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                      </svg>
                       네이버 카페
                     </a>
                     <a

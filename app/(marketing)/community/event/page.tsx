@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import { getPosts, type SearchType } from '@/actions/communityActions'
 import { checkIsAdmin } from '@/actions/profileActions'
 import GalleryList from '../_components/GalleryList'
+import { GalleryListSkeleton } from '@/components/ui/Skeleton'
 
 interface PageProps {
   searchParams: Promise<{ page?: string; search?: string; searchType?: string }>
@@ -28,7 +29,7 @@ export default async function EventPage({ searchParams }: PageProps) {
   ])
 
   return (
-    <Suspense fallback={<div className="min-h-screen bg-gray-50" />}>
+    <Suspense fallback={<GalleryListSkeleton />}>
       <GalleryList
         boardType="event"
         posts={postsResult.data || []}

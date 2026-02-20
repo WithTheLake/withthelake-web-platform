@@ -8,6 +8,32 @@ import { getAdminStats, getRecentPosts, getRecentNews, getRecentMembers } from '
 import { formatDate } from '@/lib/utils/format'
 import { getBoardLabel } from '@/lib/constants/community'
 
+interface RecentPost {
+  id: string
+  title: string
+  board_type: string
+  author_nickname: string | null
+  created_at: string
+}
+
+interface RecentNews {
+  id: string
+  title: string
+  source: string
+  category: string
+  published_at: string
+}
+
+interface RecentMember {
+  user_id: string
+  nickname: string | null
+  email: string | null
+  avatar_url: string | null
+  is_admin: boolean
+  is_blocked: boolean
+  created_at: string
+}
+
 export default async function AdminDashboardPage() {
   const [statsResult, postsResult, newsResult, membersResult] = await Promise.all([
     getAdminStats(),
@@ -191,7 +217,7 @@ export default async function AdminDashboardPage() {
           </div>
           <div className="divide-y divide-gray-100">
             {recentPosts.length > 0 ? (
-              recentPosts.map((post: any) => (
+              recentPosts.map((post: RecentPost) => (
                 <div key={post.id} className="px-6 py-3 hover:bg-gray-50">
                   <div className="flex items-center justify-between">
                     <div className="flex-1 min-w-0">
@@ -230,7 +256,7 @@ export default async function AdminDashboardPage() {
           </div>
           <div className="divide-y divide-gray-100">
             {recentNews.length > 0 ? (
-              recentNews.map((news: any) => (
+              recentNews.map((news: RecentNews) => (
                 <div key={news.id} className="px-6 py-3 hover:bg-gray-50">
                   <div className="flex items-center justify-between">
                     <div className="flex-1 min-w-0">
@@ -269,27 +295,16 @@ export default async function AdminDashboardPage() {
           </div>
           <div className="divide-y divide-gray-100">
             {recentMembers.length > 0 ? (
-              recentMembers.map((member: any) => (
+              recentMembers.map((member: RecentMember) => (
                 <div key={member.user_id} className="px-6 py-3 hover:bg-gray-50">
                   <div className="flex items-center justify-between">
                     <div className="min-w-0 ml-1">
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">
-                          {member.nickname || '닉네임 없음'}
-                        </p>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          {member.is_admin && (
-                            <span className="text-[10px] px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded font-medium">
-                              관리자
-                            </span>
-                          )}
-                          {member.is_blocked && (
-                            <span className="text-[10px] px-1.5 py-0.5 bg-red-100 text-red-700 rounded font-medium">
-                              차단됨
-                            </span>
-                          )}
-                        </div>
-                      </div>
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {member.nickname || '닉네임 없음'}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate mt-0.5">
+                        {member.email || '-'}
+                      </p>
                     </div>
                     <span className="text-xs text-gray-400 ml-4 shrink-0">
                       {formatDate(member.created_at)}

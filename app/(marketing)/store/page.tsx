@@ -1,8 +1,10 @@
+import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import StoreClient from './StoreClient'
 import { getStoreProducts, getStoreCategories } from '@/actions/storeActions'
 import { getSiteUrl, getImageUrl } from '@/lib/utils/url'
+import { ProductListSkeleton } from '@/components/ui/Skeleton'
 
 export const metadata: Metadata = {
   title: '스토어 - WithTheLake',
@@ -28,16 +30,10 @@ export const metadata: Metadata = {
   },
 }
 
-export default async function StorePage() {
-  // DB에서 상품 데이터 및 카테고리 조회
-  const [{ data: products }, storeCategories] = await Promise.all([
-    getStoreProducts(),
-    getStoreCategories(),
-  ])
-
+export default function StorePage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-16">
-      {/* 히어로 섹션 - 이미지 배너 (중앙 정렬) */}
+      {/* 히어로 섹션 - 즉시 렌더링 */}
       <section className="bg-white py-4 md:py-6">
         <div className="max-w-xl mx-auto px-4">
           <div className="relative w-full aspect-[3/1] rounded-xl overflow-hidden ">
@@ -52,8 +48,19 @@ export default async function StorePage() {
         </div>
       </section>
 
-      {/* 클라이언트 컴포넌트: 카테고리 필터 + 상품 그리드 */}
-      <StoreClient products={products} categories={storeCategories} />
+      {/* 데이터 로딩 영역 - 스트리밍 */}
+      <Suspense fallback={<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"><ProductListSkeleton /></div>}>
+        <StoreContent />
+      </Suspense>
     </div>
   )
+}
+
+async function StoreContent() {
+  const [{ data: products }, storeCategories] = await Promise.all([
+    getStoreProducts(),
+    getStoreCategories(),
+  ])
+
+  return <StoreClient products={products} categories={storeCategories} />
 }

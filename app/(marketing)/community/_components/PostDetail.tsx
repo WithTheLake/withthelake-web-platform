@@ -807,9 +807,9 @@ export default function PostDetail({
                     onChange={(e) => setCommentContent(e.target.value)}
                     placeholder="댓글을 입력하세요 (최대 1,000자)"
                     maxLength={1000}
-                    rows={2}
+                    rows={3}
                     disabled={isSubmittingComment}
-                    className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                    className="flex-1 px-3 py-2.5 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
                   />
                   <button
                     type="submit"
@@ -859,17 +859,18 @@ export default function PostDetail({
                             {formatRelativeTimeKorean(comment.created_at)}
                           </span>
                         </div>
-                        {/* 댓글 삭제 버튼 - 작성자만 표시 */}
-                        {currentUserId && comment.user_id === currentUserId && (
+                        {/* 댓글 삭제 버튼 - 작성자 또는 관리자 */}
+                        {currentUserId && (comment.user_id === currentUserId || isAdmin) && (
                           <button
                             onClick={() => handleDeleteComment(comment.id)}
-                            className="text-gray-400 hover:text-red-600 transition-colors"
+                            className="p-2 -m-2 text-gray-400 hover:text-red-600 transition-colors"
+                            aria-label="댓글 삭제"
                           >
-                            <Trash2 size={12} />
+                            <Trash2 size={16} />
                           </button>
                         )}
                       </div>
-                      <p className="text-gray-800 text-xs whitespace-pre-wrap">
+                      <p className="text-gray-800 text-sm whitespace-pre-wrap">
                         {comment.content}
                       </p>
                     </motion.div>

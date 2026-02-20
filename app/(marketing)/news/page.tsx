@@ -1,7 +1,9 @@
+import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import NewsClient from './NewsClient'
 import { getNewsArticles } from '@/actions/newsActions'
 import { getSiteUrl, getImageUrl } from '@/lib/utils/url'
+import { NewsListSkeleton } from '@/components/ui/Skeleton'
 
 export const metadata: Metadata = {
   title: 'NEWS - WithTheLake',
@@ -27,23 +29,10 @@ export const metadata: Metadata = {
   },
 }
 
-export default async function NewsPage() {
-  // DB에서 뉴스 데이터 조회
-  const { data: newsArticles } = await getNewsArticles()
-
-  // NewsClient에 전달할 형식으로 변환
-  const newsItems = newsArticles.map(article => ({
-    id: article.id,
-    title: article.title,
-    source: article.source,
-    date: article.published_at,
-    category: article.category,
-    thumbnail: article.thumbnail_url,
-    link: article.link,
-  }))
+export default function NewsPage() {
   return (
     <div className="min-h-screen bg-white pb-16">
-      {/* 히어로 섹션 */}
+      {/* 히어로 섹션 - 즉시 렌더링 */}
       <section className="bg-gradient-to-r from-gray-900 to-gray-700 text-white py-12 md:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-3xl md:text-4xl font-bold mb-3">NEWS</h1>
@@ -53,8 +42,26 @@ export default async function NewsPage() {
         </div>
       </section>
 
-      {/* 클라이언트 컴포넌트: 카테고리 필터 + 뉴스 그리드 */}
-      <NewsClient newsItems={newsItems} />
+      {/* 데이터 로딩 영역 - 스트리밍 */}
+      <Suspense fallback={<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"><NewsListSkeleton /></div>}>
+        <NewsContent />
+      </Suspense>
     </div>
   )
+}
+
+async function NewsContent() {
+  const { data: newsArticles } = await getNewsArticles()
+
+  const newsItems = newsArticles.map(article => ({
+    id: article.id,
+    title: article.title,
+    source: article.source,
+    date: article.published_at,
+    category: article.category,
+    thumbnail: article.thumbnail_url,
+    link: article.link,
+  }))
+
+  return <NewsClient newsItems={newsItems} />
 }

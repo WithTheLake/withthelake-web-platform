@@ -264,10 +264,10 @@
 | 요소 | 비로그인 | 로그인 사용자 | 관리자 |
 |------|----------|---------------|--------|
 | 글쓰기 버튼 | 클릭 시 로그인 모달 | 표시 | 표시 |
-| 댓글 작성 | 로그인 유도 UI | 가능 | 가능 |
+| 댓글 작성 | 로그인 유도 UI | 가능 (`rows={3}`, `text-base`) | 가능 (`rows={3}`, `text-base`) |
 | 수정/삭제 버튼 | 숨김 | 본인 글만 표시 | 모든 글 표시 |
 | 고정 아이콘 (공지) | 표시 (읽기 전용) | 표시 (읽기 전용) | 토글 버튼 |
-| 댓글 삭제 | 숨김 | 본인 댓글만 | 모든 댓글 |
+| 댓글 삭제 | 숨김 | 본인 댓글만 | 모든 댓글 (Trash2 16px, `p-2 -m-2` 터치 영역 확대) |
 
 **관리자 전용 기능**:
 - 고정글 설정/해제 (`togglePinPost()`)
@@ -331,7 +331,8 @@
    - 진행 바 클릭으로 시간 이동
    - 재생/일시정지/정지 버튼
    - 현재 시간 / 전체 시간 표시
-   - 로딩 상태 표시 (Loader2 아이콘)
+   - 로딩 상태 표시 (Loader2 회전 아이콘 + Framer Motion fade-in)
+   - **오디오 선택 시 자동 재생** (`shouldAutoPlay` ref + `canplay` 이벤트 핸들러)
 
 3. **Leaflet + OpenStreetMap 기반 지도 길 안내**
    - `hooks/useLeafletMap.ts` (Leaflet 동적 로딩 훅)
@@ -542,6 +543,11 @@
 - 모든 테이블에 `overflow-x-auto` + `min-w-[700~800px]` 적용
 - 오디오(800px), 뉴스(700px), 회원(800px), 스토어(750px), 커뮤니티 게시글(750px), 댓글(700px)
 
+**알림 시스템**:
+- 모든 관리자 페이지에서 `showToast()` 사용 (Toast 알림)
+- 파괴적 작업 확인은 `window.confirm()` 유지 (삭제, 토글 등)
+- 8개 관리 페이지에 적용: store, audio, audio/storage, store/categories, community, community/comments, news, members
+
 ---
 
 ### 5.2 대시보드 (`/admin`)
@@ -565,7 +571,7 @@
 4. **최근 데이터 3열**
    - 최근 게시글 5개
    - 최근 뉴스 5개
-   - 최근 가입 회원 5명 (닉네임, 가입일, 관리자/차단 상태)
+   - 최근 가입 회원 5명 (닉네임, 이메일, 가입일)
 
 **Server Actions**:
 - `getAdminStats()` - 통계 조회 (`Promise.all`로 12개 쿼리 병렬 실행)
@@ -866,11 +872,11 @@
    - 주소: 강원특별자치도 속초시 관광로 115
    - 문의 이메일: `ceo@withthelake.com`
 2. **SNS 링크**
+   - Facebook: 위드더레이크 페이지
    - Instagram: `https://www.instagram.com/withwellme/`
    - YouTube: `https://www.youtube.com/channel/UC8vmE6swgfF-PvsVIQUmsOQ/about`
-   - 네이버 블로그: `https://blog.naver.com/with_thelake`
-   - 네이버 카페: `https://cafe.naver.com/healingroadon`
-   - ExternalLink 아이콘으로 표시
+   - 네이버 블로그: `https://blog.naver.com/with_thelake` (`NaverBlogIcon` - N 형태 SVG)
+   - 네이버 카페: `https://cafe.naver.com/healingroadon` (`NaverCafeIcon` - 커피컵 형태 SVG)
 3. **저작권 표기**: `© 2024`
 4. **내부 패딩**: `py-16 md:py-14`
 
@@ -879,6 +885,13 @@
 ---
 
 ## 7. 모달 시스템
+
+**공통 접근성 속성** (7개 모달):
+- `role="dialog"` - 모달 역할 명시
+- `aria-modal="true"` - 모달 동작 명시 (뒤쪽 콘텐츠 비활성)
+- `aria-label="모달명"` - 스크린리더에서 모달 이름 안내
+- Framer Motion `motion.div` 패널 컨테이너에 적용
+- 적용 모달: EmotionRecordModal, LoginModal, WalkGuideModal, AffirmationModal, AudioDescriptionModal, TrailMapSelectModal, TrailTextSelectModal
 
 ### 7.1 로그인 모달 (`components/modals/LoginModal.tsx`)
 
@@ -1118,9 +1131,9 @@ showToast('이미 기록된 날짜입니다.', 'warning');
 ```
 
 **적용 파일**:
-- `EmotionRecordSheet.tsx`
-- `SettingsClient.tsx`
-- 기타 여러 파일
+- `EmotionRecordSheet.tsx` - 감정 기록 저장 성공/실패
+- `SettingsClient.tsx` - 프로필 저장 성공/실패
+- 관리자 페이지 8개: `store/page.tsx`, `audio/page.tsx`, `audio/storage/page.tsx`, `store/categories/page.tsx`, `community/page.tsx`, `community/comments/page.tsx`, `news/page.tsx`, `members/page.tsx`
 
 ---
 
@@ -1151,6 +1164,11 @@ showToast('이미 기록된 날짜입니다.', 'warning');
 - `/community/review` - ReviewListSkeleton
 - `/community/notice` - BoardListSkeleton
 - `/community/free` - BoardListSkeleton
+- `/community` (공지사항 직접 렌더링) - BoardListSkeleton
+- `/community/event` - GalleryListSkeleton
+- `/community/notice/[id]`, `/community/free/[id]`, `/community/event/[id]`, `/community/review/[id]` - PostDetailSkeleton
+- `/news` - NewsListSkeleton (Suspense 스트리밍 패턴: 히어로 즉시 렌더링 + 목록 스트리밍)
+- `/store` - ProductListSkeleton (Suspense 스트리밍 패턴: 히어로 즉시 렌더링 + 목록 스트리밍)
 
 ---
 

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
-import { Play, Pause, Square, MapPin, ShoppingBag } from 'lucide-react'
+import { Play, Pause, Square, MapPin, ShoppingBag, Loader2 } from 'lucide-react'
 import { useAudioStore } from '@/stores/useAudioStore'
 import { createClient } from '@/lib/supabase/client'
 import type { AudioItem } from '@/types/audio'
@@ -36,6 +36,7 @@ export default function HealingPageClient({ walkGuides, affirmations, trailGuide
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
   const [isAlreadyRecordedOpen, setIsAlreadyRecordedOpen] = useState(false)
   const audioRef = useRef<HTMLAudioElement>(null)
+  const shouldAutoPlay = useRef(false)
 
   const {
     currentAudio,
@@ -115,6 +116,12 @@ export default function HealingPageClient({ walkGuides, affirmations, trailGuide
       if (audio.duration && isFinite(audio.duration) && audio.duration > 0) {
         setDuration(audio.duration)
       }
+      // 오디오 선택 시 자동 재생
+      if (shouldAutoPlay.current) {
+        shouldAutoPlay.current = false
+        audio.play()
+        setPlaybackState('playing')
+      }
     }
 
     const handleWaiting = () => setLoading(true)
@@ -125,20 +132,20 @@ export default function HealingPageClient({ walkGuides, affirmations, trailGuide
       setLoading(false)
       setPlaybackState('stopped')
 
-      let errorMessage = '오디오를 재생할 수 없습니다.'
+      let errorMessage = '오디오를 재생할 수 없습니다. 잠시 후 다시 시도해 주세요.'
       if (error) {
         switch (error.code) {
           case MediaError.MEDIA_ERR_ABORTED:
-            errorMessage = '오디오 로딩이 취소되었습니다.'
+            errorMessage = '오디오 로딩이 중단되었습니다. 다시 선택해 주세요.'
             break
           case MediaError.MEDIA_ERR_NETWORK:
-            errorMessage = '네트워크 오류가 발생했습니다.'
+            errorMessage = '인터넷 연결이 불안정합니다. Wi-Fi 또는 데이터를 확인해 주세요.'
             break
           case MediaError.MEDIA_ERR_DECODE:
-            errorMessage = '오디오 파일을 재생할 수 없습니다.'
+            errorMessage = '이 오디오를 재생할 수 없습니다. 다른 오디오를 선택해 주세요.'
             break
           case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
-            errorMessage = '지원하지 않는 오디오 형식입니다.'
+            errorMessage = '이 오디오를 재생할 수 없습니다. 다른 오디오를 선택해 주세요.'
             break
         }
       }
@@ -182,6 +189,7 @@ export default function HealingPageClient({ walkGuides, affirmations, trailGuide
   }, [currentAudio, setLoading])
 
   const handleAudioSelect = (item: AudioItem) => {
+    shouldAutoPlay.current = true
     setCurrentAudio(item)
   }
 
@@ -302,8 +310,9 @@ export default function HealingPageClient({ walkGuides, affirmations, trailGuide
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-center mt-3 text-sm text-purple-600 font-medium"
+            className="flex items-center justify-center gap-2 mt-3 text-sm text-purple-600 font-medium"
           >
+            <Loader2 size={16} className="animate-spin" />
             로딩 중...
           </motion.div>
         )}

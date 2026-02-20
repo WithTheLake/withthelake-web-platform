@@ -10,8 +10,10 @@ import {
   deleteStoreCategory,
   type StoreCategoryItem,
 } from '@/actions/storeActions'
+import { useToast } from '@/components/ui/Toast'
 
 export default function AdminStoreCategoriesPage() {
+  const { showToast } = useToast()
   const [categories, setCategories] = useState<StoreCategoryItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -57,7 +59,7 @@ export default function AdminStoreCategoriesPage() {
       setShowAddForm(false)
       fetchCategories()
     } else {
-      alert(result.message || '카테고리 추가에 실패했습니다.')
+      showToast(result.message || '카테고리 추가에 실패했습니다.', 'error')
     }
     setIsAdding(false)
   }
@@ -83,7 +85,7 @@ export default function AdminStoreCategoriesPage() {
       setEditingId(null)
       fetchCategories()
     } else {
-      alert(result.message || '카테고리 수정에 실패했습니다.')
+      showToast(result.message || '카테고리 수정에 실패했습니다.', 'error')
     }
     setIsSaving(false)
   }
@@ -95,7 +97,7 @@ export default function AdminStoreCategoriesPage() {
     if (result.success) {
       fetchCategories()
     } else {
-      alert(result.message || '카테고리 삭제에 실패했습니다.')
+      showToast(result.message || '카테고리 삭제에 실패했습니다.', 'error')
     }
   }
 
@@ -109,7 +111,7 @@ export default function AdminStoreCategoriesPage() {
     if (result.success) {
       fetchCategories()
     } else {
-      alert(result.message || '상태 변경에 실패했습니다.')
+      showToast(result.message || '상태 변경에 실패했습니다.', 'error')
     }
   }
 

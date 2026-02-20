@@ -6,6 +6,7 @@ import { Plus, Search, Edit2, Trash2, Eye, EyeOff, Music, Play, Pause, Square, H
 import { getAdminAudioTracks, deleteAudioTrack, toggleAudioActive, getAdminAudioCategories, type AudioCategoryItem } from '@/actions/audioActions'
 import type { AudioItem } from '@/types/audio'
 import { PROVINCE_NAMES, CITY_NAMES, DIFFICULTY_LABELS } from '@/types/audio'
+import { useToast } from '@/components/ui/Toast'
 
 const ITEMS_PER_PAGE = 15
 
@@ -35,6 +36,7 @@ const SUPABASE_STORAGE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
   : ''
 
 export default function AdminAudioPage() {
+  const { showToast } = useToast()
   const [tracks, setTracks] = useState<AudioItem[]>([])
   const [totalCount, setTotalCount] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
@@ -142,7 +144,7 @@ export default function AdminAudioPage() {
     if (result.success) {
       fetchTracks()
     } else {
-      alert(result.message || '삭제에 실패했습니다.')
+      showToast(result.message || '삭제에 실패했습니다.', 'error')
     }
   }
 
@@ -157,7 +159,7 @@ export default function AdminAudioPage() {
     if (result.success) {
       fetchTracks()
     } else {
-      alert(result.message || '상태 변경에 실패했습니다.')
+      showToast(result.message || '상태 변경에 실패했습니다.', 'error')
     }
   }
 

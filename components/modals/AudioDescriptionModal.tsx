@@ -42,6 +42,9 @@ export default function AudioDescriptionModal({
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             transition={MODAL_ANIMATION.spring}
+            role="dialog"
+            aria-modal="true"
+            aria-label="오디오 상세"
             className="bg-white rounded-3xl w-full max-w-sm p-6 relative"
             onClick={(e) => e.stopPropagation()}
           >

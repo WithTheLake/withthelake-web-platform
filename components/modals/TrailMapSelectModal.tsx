@@ -428,6 +428,9 @@ export default function TrailMapSelectModal({
           <motion.div
             {...MODAL_ANIMATION.content}
             transition={MODAL_ANIMATION.spring}
+            role="dialog"
+            aria-modal="true"
+            aria-label="지도로 길 선택"
             className="fixed inset-2 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-md md:max-h-[95vh] bg-white rounded-2xl shadow-xl z-50 flex flex-col overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >

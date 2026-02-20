@@ -6,6 +6,7 @@ import { Search, Eye, EyeOff, Pin, Trash2, ExternalLink } from 'lucide-react'
 import { getAdminPosts, deletePost, togglePinPost, togglePostActive, type CommunityPost, type BoardType } from '@/actions/communityActions'
 import { formatDate } from '@/lib/utils/format'
 import { getBoardLabel } from '@/lib/constants/community'
+import { useToast } from '@/components/ui/Toast'
 
 const ITEMS_PER_PAGE = 20
 const BOARD_TYPES: { value: BoardType | 'all'; label: string }[] = [
@@ -17,6 +18,7 @@ const BOARD_TYPES: { value: BoardType | 'all'; label: string }[] = [
 ]
 
 export default function AdminCommunityPage() {
+  const { showToast } = useToast()
   const [posts, setPosts] = useState<CommunityPost[]>([])
   const [totalCount, setTotalCount] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
@@ -56,7 +58,7 @@ export default function AdminCommunityPage() {
     if (result.success) {
       fetchPosts()
     } else {
-      alert(result.error || '삭제에 실패했습니다.')
+      showToast(result.error || '삭제에 실패했습니다.', 'error')
     }
   }
 
@@ -65,7 +67,7 @@ export default function AdminCommunityPage() {
     if (result.success) {
       fetchPosts()
     } else {
-      alert(result.error || '고정 상태 변경에 실패했습니다.')
+      showToast(result.error || '고정 상태 변경에 실패했습니다.', 'error')
     }
   }
 
@@ -79,7 +81,7 @@ export default function AdminCommunityPage() {
     if (result.success) {
       fetchPosts()
     } else {
-      alert(result.error || '상태 변경에 실패했습니다.')
+      showToast(result.error || '상태 변경에 실패했습니다.', 'error')
     }
   }
 

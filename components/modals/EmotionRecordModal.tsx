@@ -343,6 +343,9 @@ export default function EmotionRecordModal({ isOpen, onClose }: EmotionRecordMod
             <motion.div
               {...MODAL_ANIMATION.content}
               transition={MODAL_ANIMATION.spring}
+              role="dialog"
+              aria-modal="true"
+              aria-label="감정 기록"
               className="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg md:max-h-[90vh] bg-white rounded-3xl z-50 flex flex-col overflow-hidden shadow-2xl"
             >
               {/* Header */}

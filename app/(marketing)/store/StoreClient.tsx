@@ -140,6 +140,7 @@ export default function StoreClient({ products, categories = ['전체'] }: Store
                             </span>
                           )}
                         </div>
+
                       </div>
                     </article>
                   </Link>

@@ -85,6 +85,9 @@ export default function LoginModal({ isOpen, onClose, focusOnComment = false, re
             className="fixed inset-0 flex items-center justify-center z-[60] p-5"
           >
             <div
+              role="dialog"
+              aria-modal="true"
+              aria-label="로그인"
               className="bg-white rounded-3xl w-full max-w-sm p-6 relative shadow-xl"
               onClick={(e) => e.stopPropagation()}
             >

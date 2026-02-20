@@ -16,6 +16,7 @@ import {
   type MemberDetail,
 } from '@/actions/adminActions'
 import { formatDate, formatDateTime } from '@/lib/utils/format'
+import { useToast } from '@/components/ui/Toast'
 
 const ITEMS_PER_PAGE = 20
 const FILTERS: { value: 'all' | 'admin' | 'general'; label: string }[] = [
@@ -25,6 +26,7 @@ const FILTERS: { value: 'all' | 'admin' | 'general'; label: string }[] = [
 ]
 
 export default function AdminMembersPage() {
+  const { showToast } = useToast()
   const [members, setMembers] = useState<AdminMember[]>([])
   const [totalCount, setTotalCount] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
@@ -84,7 +86,7 @@ export default function AdminMembersPage() {
         handleOpenDetail(member)
       }
     } else {
-      alert(result.error || '권한 변경에 실패했습니다.')
+      showToast(result.error || '권한 변경에 실패했습니다.', 'error')
     }
   }
 
@@ -103,7 +105,7 @@ export default function AdminMembersPage() {
         handleOpenDetail(member)
       }
     } else {
-      alert(result.error || '차단 상태 변경에 실패했습니다.')
+      showToast(result.error || '차단 상태 변경에 실패했습니다.', 'error')
     }
   }
 
@@ -116,7 +118,7 @@ export default function AdminMembersPage() {
       fetchMembers()
       handleOpenDetail(member)
     } else {
-      alert(result.error || '강퇴 처리에 실패했습니다.')
+      showToast(result.error || '강퇴 처리에 실패했습니다.', 'error')
     }
   }
 
@@ -129,7 +131,7 @@ export default function AdminMembersPage() {
       fetchMembers()
       handleOpenDetail(member)
     } else {
-      alert(result.error || '강퇴 해제에 실패했습니다.')
+      showToast(result.error || '강퇴 해제에 실패했습니다.', 'error')
     }
   }
 
@@ -140,7 +142,7 @@ export default function AdminMembersPage() {
     if (result.success && result.data) {
       setSelectedMember(result.data)
     } else {
-      alert(result.error || '회원 정보를 불러올 수 없습니다.')
+      showToast(result.error || '회원 정보를 불러올 수 없습니다.', 'error')
     }
     setIsDetailLoading(false)
   }
@@ -152,13 +154,13 @@ export default function AdminMembersPage() {
     const result = await syncMemberEmails()
     if (result.success) {
       if (result.synced > 0) {
-        alert(`${result.synced}명의 이메일을 동기화했습니다.`)
+        showToast(`${result.synced}명의 이메일을 동기화했습니다.`, 'success')
         fetchMembers()
       } else {
-        alert('동기화할 이메일이 없습니다. (모두 최신 상태)')
+        showToast('동기화할 이메일이 없습니다. (모두 최신 상태)', 'success')
       }
     } else {
-      alert(result.error || '이메일 동기화에 실패했습니다.')
+      showToast(result.error || '이메일 동기화에 실패했습니다.', 'error')
     }
     setIsSyncing(false)
   }

@@ -7,10 +7,12 @@ import { Plus, Search, Edit2, Trash2, ExternalLink, Eye, EyeOff, Star } from 'lu
 import { getAdminStoreProducts, deleteStoreProduct, toggleProductActive, getStoreCategories, type StoreProduct } from '@/actions/storeActions'
 import { formatDate } from '@/lib/utils/format'
 import { getBadgeStyle } from '@/lib/constants/store'
+import { useToast } from '@/components/ui/Toast'
 
 const ITEMS_PER_PAGE = 10
 
 export default function AdminStorePage() {
+  const { showToast } = useToast()
   const [products, setProducts] = useState<StoreProduct[]>([])
   const [totalCount, setTotalCount] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
@@ -57,7 +59,7 @@ export default function AdminStorePage() {
     if (result.success) {
       fetchProducts()
     } else {
-      alert(result.message || '삭제에 실패했습니다.')
+      showToast(result.message || '삭제에 실패했습니다.', 'error')
     }
   }
 
@@ -71,7 +73,7 @@ export default function AdminStorePage() {
     if (result.success) {
       fetchProducts()
     } else {
-      alert(result.message || '상태 변경에 실패했습니다.')
+      showToast(result.message || '상태 변경에 실패했습니다.', 'error')
     }
   }
 

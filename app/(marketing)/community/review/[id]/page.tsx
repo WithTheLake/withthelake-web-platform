@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { getPost, getAdjacentPosts, getCurrentUserId } from '@/actions/communityActions'
 import { checkIsAdmin } from '@/actions/profileActions'
 import PostDetail from '../../_components/PostDetail'
+import { PostDetailSkeleton } from '@/components/ui/Skeleton'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -42,7 +43,7 @@ export default async function ReviewPostPage({ params }: PageProps) {
   }
 
   return (
-    <Suspense fallback={<div className="min-h-screen bg-gray-50" />}>
+    <Suspense fallback={<PostDetailSkeleton />}>
       <PostDetail
         post={result.post}
         comments={result.comments || []}
