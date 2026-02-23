@@ -412,7 +412,7 @@ export default function WriteForm({
       {/* 헤더 */}
       <section className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-5 py-8">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-2xl md:text-3xl font-bold">
+          <h1 className="text-3xl md:text-4xl font-bold">
             {isEdit ? '글 수정' : '글 쓰기'}
           </h1>
           <p className="text-emerald-100 mt-1">
@@ -807,7 +807,7 @@ export default function WriteForm({
             <button
               type="submit"
               disabled={isSubmitting || isUploading || isInlineUploading}
-              className="flex-1 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg font-semibold hover:from-emerald-700 hover:to-teal-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-semibold hover:from-emerald-700 hover:to-teal-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               <Save size={20} />
               {isSubmitting ? '저장 중...' : isEdit ? '수정하기' : '작성하기'}
@@ -816,7 +816,7 @@ export default function WriteForm({
               type="button"
               onClick={handleCancel}
               disabled={isSubmitting}
-              className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-6 py-4 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               <X size={20} />
               취소

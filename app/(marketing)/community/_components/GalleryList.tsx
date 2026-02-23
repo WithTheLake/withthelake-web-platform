@@ -23,11 +23,11 @@ import {
 const { pagesPerGroup: PAGES_PER_GROUP } = PAGINATION
 
 // 게시판별 색상 테마 (갤러리 전용)
-const BOARD_COLORS: Record<BoardType, { from: string; to: string; bg: string; ring: string }> = {
-  notice: { from: 'from-emerald-600', to: 'to-teal-600', bg: 'bg-emerald-600', ring: 'ring-emerald-500' },
-  event: { from: 'from-amber-500', to: 'to-orange-500', bg: 'bg-amber-500', ring: 'ring-amber-500' },
-  free: { from: 'from-emerald-600', to: 'to-teal-600', bg: 'bg-emerald-600', ring: 'ring-emerald-500' },
-  review: { from: 'from-purple-600', to: 'to-pink-600', bg: 'bg-purple-600', ring: 'ring-purple-500' },
+const BOARD_COLORS: Record<BoardType, { from: string; to: string; bg: string; ring: string; text: string }> = {
+  notice: { from: 'from-emerald-600', to: 'to-teal-600', bg: 'bg-emerald-600', ring: 'ring-emerald-500', text: 'text-emerald-600' },
+  event: { from: 'from-amber-500', to: 'to-orange-500', bg: 'bg-amber-500', ring: 'ring-amber-500', text: 'text-amber-500' },
+  free: { from: 'from-emerald-600', to: 'to-teal-600', bg: 'bg-emerald-600', ring: 'ring-emerald-500', text: 'text-emerald-600' },
+  review: { from: 'from-purple-600', to: 'to-pink-600', bg: 'bg-purple-600', ring: 'ring-purple-500', text: 'text-purple-600' },
 }
 
 export default function GalleryList({
@@ -159,10 +159,10 @@ export default function GalleryList({
             transition={{ duration: 0.5 }}
             className="text-center"
           >
-            <h1 className="text-2xl md:text-3xl font-bold mb-2">
+            <h1 className="text-3xl md:text-4xl font-bold mb-2">
               {getBoardLabel(boardType)}
             </h1>
-            <p className="text-white/80 text-sm md:text-base">
+            <p className="text-white/80 text-base md:text-lg">
               {getBoardDescription(boardType)}
             </p>
           </motion.div>
@@ -177,7 +177,7 @@ export default function GalleryList({
               <Link
                 key={tab}
                 href={`/community/${tab}`}
-                className={`flex-1 px-4 py-4 font-semibold transition-colors text-center text-sm md:text-base ${
+                className={`flex-1 px-4 py-4 font-semibold transition-colors text-center text-base md:text-lg ${
                   boardType === tab
                     ? `text-${tab === 'event' ? 'amber' : tab === 'review' ? 'purple' : 'emerald'}-600 border-b-2 border-current bg-gray-50`
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -259,14 +259,14 @@ export default function GalleryList({
 
                     {/* 고정 배지 */}
                     {post.is_pinned && (
-                      <div className="absolute top-2 left-2 px-2 py-1 bg-amber-500 text-white text-xs font-bold rounded">
+                      <div className="absolute top-2 left-2 px-2 py-1 bg-amber-500 text-white text-[13px] font-bold rounded">
                         공지
                       </div>
                     )}
                   </div>
 
                   {/* 제목만 표시 */}
-                  <h3 className="font-medium text-gray-900 text-sm md:text-base line-clamp-2 group-hover:text-amber-600 transition-colors">
+                  <h3 className="font-medium text-gray-900 text-[15px] md:text-[17px] line-clamp-2 group-hover:text-amber-600 transition-colors">
                     {post.title}
                   </h3>
                 </Link>
@@ -310,14 +310,14 @@ export default function GalleryList({
                     )}
 
                     {/* 조회수 오버레이 */}
-                    <div className="absolute bottom-2 right-2 px-2 py-1 bg-black/60 text-white text-xs rounded flex items-center gap-1">
+                    <div className="absolute bottom-2 right-2 px-2 py-1 bg-black/60 text-white text-[13px] rounded flex items-center gap-1">
                       <Eye size={12} />
                       {post.view_count}
                     </div>
 
                     {/* 고정 배지 */}
                     {post.is_pinned && (
-                      <div className={`absolute top-2 left-2 px-2 py-1 ${colors.bg} text-white text-xs font-bold rounded`}>
+                      <div className={`absolute top-2 left-2 px-2 py-1 ${colors.bg} text-white text-[13px] font-bold rounded`}>
                         공지
                       </div>
                     )}
@@ -331,7 +331,7 @@ export default function GalleryList({
                     </h3>
 
                     {/* 메타 정보 */}
-                    <div className="flex items-center justify-between text-xs text-gray-500">
+                    <div className="flex items-center justify-between text-[13px] text-gray-500">
                       <span>{post.author_nickname || '익명'}</span>
                       <span>{formatRelativeTime(post.created_at)}</span>
                     </div>
@@ -358,7 +358,7 @@ export default function GalleryList({
             <Link
               href={`/community/${boardType}/write`}
               onClick={handleWriteClick}
-              className={`px-5 py-2 bg-gradient-to-r ${colors.from} ${colors.to} text-white rounded-lg font-semibold hover:opacity-90 transition-all flex items-center gap-2 whitespace-nowrap text-sm`}
+              className={`px-4 py-2 bg-gradient-to-r ${colors.from} ${colors.to} text-white rounded-lg font-semibold hover:opacity-90 transition-all flex items-center gap-2 whitespace-nowrap text-sm`}
             >
               <Plus size={18} />
               글쓰기
@@ -384,10 +384,10 @@ export default function GalleryList({
               <button
                 key={page}
                 onClick={() => handlePageChange(page)}
-                className={`min-w-[36px] h-9 px-2.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`min-w-[40px] h-10 px-2.5 text-[17px] font-medium transition-colors ${
                   page === currentPage
-                    ? `${colors.bg} text-white`
-                    : 'hover:bg-gray-100 text-gray-700'
+                    ? `${colors.text} font-bold`
+                    : 'text-gray-400 hover:text-gray-700'
                 }`}
               >
                 {page}

@@ -238,7 +238,7 @@ export default function SettingsClient({
         <section className="px-5 mt-4">
           <Link
             href="/mypage"
-            className="block w-full py-4 bg-white text-[#5eb3e4] border border-[#5eb3e4]/30 rounded-2xl font-bold text-center shadow-sm hover:bg-blue-50 transition-colors"
+            className="block w-full py-4 bg-white text-[#5eb3e4] border border-[#5eb3e4]/30 rounded-xl font-bold text-center shadow-sm hover:bg-blue-50 transition-colors"
           >
             마이페이지로 돌아가기
           </Link>

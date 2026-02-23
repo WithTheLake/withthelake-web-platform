@@ -440,7 +440,7 @@ export default function TrailMapSelectModal({
                 {viewMode !== 'korea' && (
                   <button
                     onClick={handleBack}
-                    className="p-1.5 hover:bg-white/20 rounded-full transition-colors"
+                    className="p-2 hover:bg-white/20 rounded-full transition-colors"
                   >
                     <ChevronLeft size={22} className="text-white" />
                   </button>
@@ -449,7 +449,7 @@ export default function TrailMapSelectModal({
               </div>
               <button
                 onClick={handleClose}
-                className="p-1.5 hover:bg-white/20 rounded-full transition-colors"
+                className="p-2 hover:bg-white/20 rounded-full transition-colors"
               >
                 <X size={22} className="text-white" />
               </button>

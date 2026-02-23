@@ -382,7 +382,7 @@ export default function PostDetail({
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-2">
                   {isPinned && (
-                    <span className="px-2 py-0.5 bg-red-100 text-red-600 text-xs font-bold rounded">
+                    <span className="px-2 py-0.5 bg-red-100 text-red-600 text-[13px] font-bold rounded">
                       중요공지
                     </span>
                   )}
@@ -428,7 +428,7 @@ export default function PostDetail({
                 </div>
               </div>
               {/* 메타 정보 테이블 */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-y-2 text-sm border-t py-3 bg-gray-50 -mx-5 px-5">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-y-2 text-[15px] border-t py-3 bg-gray-50 -mx-5 px-5">
                 <div className="flex items-center gap-2">
                   <span className="text-gray-500">작성자</span>
                   <span className="font-medium text-gray-800">{post.author_nickname || '관리자'}</span>
@@ -452,7 +452,7 @@ export default function PostDetail({
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2 flex-1">
                   {post.topic && (
-                    <span className={`px-2 py-0.5 text-xs font-medium rounded shrink-0 ${getTopicStyle(post.topic)}`}>
+                    <span className={`px-2 py-0.5 text-[13px] font-medium rounded shrink-0 ${getTopicStyle(post.topic)}`}>
                       {getTopicLabel(post.topic)}
                     </span>
                   )}
@@ -460,12 +460,12 @@ export default function PostDetail({
                     {post.title}
                   </h1>
                 </div>
-                <span className="text-sm text-gray-500 whitespace-nowrap ml-3">
+                <span className="text-[15px] text-gray-500 whitespace-nowrap ml-3">
                   {formatDateTime(post.created_at)}
                 </span>
               </div>
               {/* 두번째 줄: 닉네임 (좌측) + 조회수/댓글수 (우측) - 회색 배경 */}
-              <div className="flex items-center justify-between text-sm text-gray-600 border-t py-3 bg-gray-50 -mx-5 px-5">
+              <div className="flex items-center justify-between text-[15px] text-gray-600 border-t py-3 bg-gray-50 -mx-5 px-5">
                 <span className="font-medium">{post.author_nickname || '익명'}</span>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-1">
@@ -485,7 +485,7 @@ export default function PostDetail({
           {isReviewBoard && (
             <div className="px-5 py-4">
               <div className="flex items-center justify-between border-b pb-3">
-                <div className="flex items-center gap-3 text-xs text-gray-600">
+                <div className="flex items-center gap-3 text-[13px] text-gray-600">
                   <span className="font-semibold">
                     {post.author_nickname || '익명'}
                   </span>
@@ -544,7 +544,7 @@ export default function PostDetail({
             <div className="px-5 py-4">
               <div className="flex items-center gap-1.5 mb-1.5">
                 {isPinned && (
-                  <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-xs font-semibold rounded">
+                  <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[13px] font-semibold rounded">
                     공지
                   </span>
                 )}
@@ -553,7 +553,7 @@ export default function PostDetail({
                 {post.title}
               </h1>
               <div className="flex items-center justify-between border-b pb-3">
-                <div className="flex items-center gap-3 text-xs text-gray-600">
+                <div className="flex items-center gap-3 text-[13px] text-gray-600">
                   <span className="font-semibold">
                     {post.author_nickname || '익명'}
                   </span>
@@ -672,7 +672,7 @@ export default function PostDetail({
                       </div>
                     ))}
                   </div>
-                  <p className="text-xs text-gray-500 mt-1.5 text-center">
+                  <p className="text-[13px] text-gray-500 mt-1.5 text-center">
                     이미지를 클릭하면 크게 볼 수 있습니다
                   </p>
                 </div>
@@ -690,7 +690,7 @@ export default function PostDetail({
           {/* 첨부 파일 섹션 (후기 게시판 제외) */}
           {hasImages && post.board_type !== 'review' && (
             <div className="px-5 py-3 border-t bg-gray-50">
-              <div className="flex flex-wrap items-center gap-x-1 gap-y-1.5 text-xs">
+              <div className="flex flex-wrap items-center gap-x-1 gap-y-1.5 text-[13px]">
                 <span className="text-gray-600 font-medium mr-1.5">첨부파일</span>
                 {post.images!.map((imageUrl, index) => {
                   const fileName = imageUrl.split('/').pop() || `image_${index + 1}.jpg`
@@ -719,7 +719,7 @@ export default function PostDetail({
               <button
                 onClick={handleTogglePin}
                 disabled={isTogglingPin}
-                className={`flex items-center gap-1.5 px-4 py-2 text-sm bg-white rounded-lg shadow-sm transition-colors ${
+                className={`flex items-center gap-1.5 px-4 py-2 text-[15px] bg-white rounded-lg shadow-sm transition-colors ${
                   isPinned
                     ? 'text-amber-600 hover:bg-amber-50'
                     : 'text-gray-600 hover:bg-gray-50'
@@ -733,7 +733,7 @@ export default function PostDetail({
             {isPostOwner && (
               <Link
                 href={`${boardPath}/write?id=${post.id}`}
-                className="flex items-center gap-1.5 px-4 py-2 text-sm text-gray-600 bg-white rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-1.5 px-4 py-2 text-[15px] text-gray-600 bg-white rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
               >
                 <Edit size={14} />
                 <span>수정</span>
@@ -743,7 +743,7 @@ export default function PostDetail({
             {canDelete && (
               <button
                 onClick={handleDeletePost}
-                className="flex items-center gap-1.5 px-4 py-2 text-sm text-gray-600 bg-white rounded-lg shadow-sm hover:text-red-600 hover:bg-red-50 transition-colors"
+                className="flex items-center gap-1.5 px-4 py-2 text-[15px] text-gray-600 bg-white rounded-lg shadow-sm hover:text-red-600 hover:bg-red-50 transition-colors"
               >
                 <Trash2 size={14} />
                 <span>삭제</span>
@@ -754,14 +754,14 @@ export default function PostDetail({
           <div className="flex items-center gap-2">
             <Link
               href={boardPath}
-              className="flex items-center gap-1.5 px-4 py-2 text-sm text-gray-600 bg-white rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
+              className="flex items-center gap-1.5 px-4 py-2 text-[15px] text-gray-600 bg-white rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
             >
               <List size={14} />
               <span>목록</span>
             </Link>
             <button
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="flex items-center gap-1.5 px-4 py-2 text-sm text-gray-600 bg-white rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
+              className="flex items-center gap-1.5 px-4 py-2 text-[15px] text-gray-600 bg-white rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
             >
               <ArrowUp size={14} />
               <span>TOP</span>
@@ -782,12 +782,12 @@ export default function PostDetail({
               /* 비회원일 때 로그인 유도 UI */
               <div className="mb-5 p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm text-gray-600">
+                  <p className="text-[15px] text-gray-600">
                     댓글을 작성하려면 로그인이 필요합니다.
                   </p>
                   <button
                     onClick={() => setShowLoginModal(true)}
-                    className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg text-sm font-semibold hover:from-emerald-700 hover:to-teal-700 transition-all flex items-center gap-1.5"
+                    className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg text-[15px] font-semibold hover:from-emerald-700 hover:to-teal-700 transition-all flex items-center gap-1.5"
                   >
                     <LogIn size={14} />
                     로그인
@@ -798,7 +798,7 @@ export default function PostDetail({
               /* 회원일 때 댓글 작성 폼 */
               <form onSubmit={handleSubmitComment} className="mb-5">
                 {error && (
-                  <p className="text-xs text-red-600 mb-1.5">{error}</p>
+                  <p className="text-[13px] text-red-600 mb-1.5">{error}</p>
                 )}
                 <div className="flex gap-2">
                   <textarea
@@ -814,13 +814,13 @@ export default function PostDetail({
                   <button
                     type="submit"
                     disabled={isSubmittingComment || !commentContent.trim()}
-                    className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg text-sm font-semibold hover:from-emerald-700 hover:to-teal-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                    className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg text-[15px] font-semibold hover:from-emerald-700 hover:to-teal-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
                   >
                     <Send size={14} />
                     {isSubmittingComment ? '작성 중...' : '등록'}
                   </button>
                 </div>
-                <p className="text-xs text-gray-500 mt-0.5 text-right">
+                <p className="text-[13px] text-gray-500 mt-0.5 text-right">
                   {commentContent.length} / 1,000
                 </p>
               </form>
@@ -837,7 +837,7 @@ export default function PostDetail({
             <div className="space-y-3">
               <AnimatePresence>
                 {comments.length === 0 ? (
-                  <p className="text-center text-gray-500 text-sm py-6">
+                  <p className="text-center text-gray-500 text-[15px] py-6">
                     아직 댓글이 없습니다. 첫 댓글을 작성해보세요!
                   </p>
                 ) : (
@@ -852,10 +852,10 @@ export default function PostDetail({
                     >
                       <div className="flex items-start justify-between mb-1">
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold text-xs">
+                          <span className="font-semibold text-[13px]">
                             {comment.author_nickname || '익명'}
                           </span>
-                          <span className="text-xs text-gray-500">
+                          <span className="text-[13px] text-gray-500">
                             {formatRelativeTimeKorean(comment.created_at)}
                           </span>
                         </div>
@@ -870,7 +870,7 @@ export default function PostDetail({
                           </button>
                         )}
                       </div>
-                      <p className="text-gray-800 text-sm whitespace-pre-wrap">
+                      <p className="text-gray-800 text-[15px] whitespace-pre-wrap">
                         {comment.content}
                       </p>
                     </motion.div>
@@ -885,38 +885,38 @@ export default function PostDetail({
         <div className="bg-white mt-20 rounded-xl shadow-sm overflow-hidden">
           {/* 이전글 */}
           <div className="flex items-center border-b">
-            <div className="w-20 md:w-24 px-3 py-3 bg-gray-50 text-xs font-medium text-gray-600 flex items-center gap-1.5">
+            <div className="w-20 md:w-24 px-3 py-3 bg-gray-50 text-[13px] font-medium text-gray-600 flex items-center gap-1.5">
               <ChevronLeft size={14} />
               이전글
             </div>
             {prevPost ? (
               <Link
                 href={`${boardPath}/${prevPost.id}`}
-                className="flex-1 px-3 py-3 text-xs text-gray-800 hover:text-emerald-600 hover:bg-gray-50 transition-colors truncate"
+                className="flex-1 px-3 py-3 text-[13px] text-gray-800 hover:text-emerald-600 hover:bg-gray-50 transition-colors truncate"
               >
                 {isReviewBoard && prevPost.content ? getFirstLine(prevPost.content, 60) : prevPost.title}
               </Link>
             ) : (
-              <span className="flex-1 px-3 py-3 text-xs text-gray-400">
+              <span className="flex-1 px-3 py-3 text-[13px] text-gray-400">
                 이전글이 없습니다.
               </span>
             )}
           </div>
           {/* 다음글 */}
           <div className="flex items-center">
-            <div className="w-20 md:w-24 px-3 py-3 bg-gray-50 text-xs font-medium text-gray-600 flex items-center gap-1.5">
+            <div className="w-20 md:w-24 px-3 py-3 bg-gray-50 text-[13px] font-medium text-gray-600 flex items-center gap-1.5">
               <ChevronRight size={14} />
               다음글
             </div>
             {nextPost ? (
               <Link
                 href={`${boardPath}/${nextPost.id}`}
-                className="flex-1 px-3 py-3 text-xs text-gray-800 hover:text-emerald-600 hover:bg-gray-50 transition-colors truncate"
+                className="flex-1 px-3 py-3 text-[13px] text-gray-800 hover:text-emerald-600 hover:bg-gray-50 transition-colors truncate"
               >
                 {isReviewBoard && nextPost.content ? getFirstLine(nextPost.content, 60) : nextPost.title}
               </Link>
             ) : (
-              <span className="flex-1 px-3 py-3 text-xs text-gray-400">
+              <span className="flex-1 px-3 py-3 text-[13px] text-gray-400">
                 다음글이 없습니다.
               </span>
             )}

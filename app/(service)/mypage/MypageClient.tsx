@@ -224,13 +224,13 @@ export default function MypageClient({
               <p className="text-white/70 text-base mt-1">{user?.email}</p>
             </div>
             <div className="flex items-center gap-3">
-              <Link href="/mypage/settings" className="p-2.5 bg-white/20 text-white rounded-full hover:bg-white/30">
+              <Link href="/mypage/settings" className="p-2 bg-white/20 text-white rounded-full hover:bg-white/30">
                 <Settings size={22} />
               </Link>
               <button
                 onClick={handleLogout}
                 disabled={isLoggingOut}
-                className="p-2.5 bg-white/20 text-white rounded-full hover:bg-white/30 cursor-pointer"
+                className="p-2 bg-white/20 text-white rounded-full hover:bg-white/30 cursor-pointer"
               >
                 <LogOut size={22} />
               </button>
@@ -284,7 +284,7 @@ export default function MypageClient({
         <section className="px-5 mt-6">
           <button
             onClick={handleOpenReport}
-            className="w-full p-5 bg-gradient-to-r from-[#6ec4f0] to-[#4a9fd4] rounded-2xl text-white flex items-center justify-between shadow-sm cursor-pointer"
+            className="w-full py-4 px-5 bg-gradient-to-r from-[#6ec4f0] to-[#4a9fd4] rounded-xl text-white flex items-center justify-between shadow-sm cursor-pointer"
           >
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">

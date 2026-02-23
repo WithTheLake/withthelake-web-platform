@@ -126,7 +126,7 @@ export default function HomePage() {
               </div>
               <Link
                 href="/about"
-                className="group inline-flex items-center gap-2 mt-8 md:mt-8 text-base md:text-[1.0625rem] lg:text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors"
+                className="group inline-flex items-center gap-2 mt-8 md:mt-8 text-base md:text-[1.0625rem] lg:text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors cursor-pointer"
               >
                 더 자세히 알아보기
                 <span className="inline-block transition-transform duration-300 group-hover:translate-x-1">→</span>
@@ -362,6 +362,7 @@ export default function HomePage() {
                   href="https://apps.apple.com/kr/app/맨발루/id6651824430"
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="cursor-pointer"
                 >
                   <Image
                     src="/images/downonappstore.png"
@@ -376,6 +377,7 @@ export default function HomePage() {
                   href="https://play.google.com/store/apps/details?id=com.apppp.menbaloo"
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="cursor-pointer"
                 >
                   <Image
                     src="/images/getitongoogleplay.png"

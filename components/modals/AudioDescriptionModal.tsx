@@ -50,7 +50,7 @@ export default function AudioDescriptionModal({
           >
             <button
               onClick={onClose}
-              className="absolute top-3 right-3 text-black text-xl hover:bg-gray-100 rounded-full p-1 transition-colors"
+              className="absolute top-3 right-3 text-black text-xl hover:bg-gray-100 rounded-full p-2 transition-colors"
               aria-label="닫기"
             >
               <X size={24} />

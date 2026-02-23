@@ -47,7 +47,9 @@
 - 5가지 프로젝트 (3x2 그리드)
 - 3가지 방법 (4컬럼: 숫자3 이미지 + 3개 카드)
 - 앱 다운로드 (둥근 검정 박스, 좌측 텍스트 + 우측 스크린샷)
+  - 앱스토어 다운로드 링크에 `cursor-pointer` 적용
 - CTA (힐링로드ON 시작하기)
+- "더 자세히 알아보기" Link에 `cursor-pointer` 적용
 
 **반응형**:
 - 모바일: 1열 스택
@@ -136,10 +138,21 @@
 **주요 기능**:
 - 뉴스 목록 (DB 기반, `news_articles` 테이블)
 - **카테고리 필터** (전체, 언론보도, 해외자료, 블로그, 보도자료)
+  - `cursor-pointer` 적용
+  - **중립 색상**: 활성 `bg-green-600 text-white` / 비활성 `bg-gray-100 text-gray-700`
+  - **카테고리 전환 페이드 효과**: `isVisible` state + 150ms opacity 전환
+  - **카테고리 섹션 패딩**: `py-4`, sticky (`top-16 md:top-20`)
+  - 카테고리 버튼 텍스트: `text-base`
+- **뉴스 카드**:
+  - 제목: `text-base font-bold`
+  - 카테고리 뱃지: `text-[13px]`, 출처: `text-sm`, 날짜: `text-[13px] text-gray-400`
+  - 뱃지-날짜 간격: `gap-3`
 - **썸네일 정책**:
   - 해외자료: 썸네일 표시
   - 언론보도: 썸네일 제거 (저작권 이슈)
   - 블로그/보도자료: 썸네일 표시
+- **히어로 섹션**: 제목 `text-4xl md:text-5xl`, 부제 `text-lg`
+- **섹션 제목**: `text-2xl`, 개수 `text-lg`
 - 페이지네이션 (16개/페이지)
 - 외부 링크 (`target="_blank"`)
 - **하단 여백**: `pb-16` 추가
@@ -159,7 +172,12 @@
 - 상품 목록 (DB 기반, `store_products` 테이블)
 - **동적 카테고리 필터** (`store_categories` 테이블)
   - 전체, 케어, 어싱, 체험
+  - `cursor-pointer` 적용
+  - **카테고리 전환 페이드 효과**: `isVisible` state + 150ms opacity 전환
+  - **카테고리 섹션 패딩**: `py-4`
+  - 카테고리 버튼 텍스트: `text-base`
 - 상품 카드 (이미지, 이름, 가격, 원가, 할인율, 평점, 리뷰 수, 뱃지)
+  - **접근성**: `aria-label="네이버스토어에서 {상품명} 구매하기"` 추가
 - **네이버 스마트스토어 연동**
   - 기본 URL: `https://smartstore.naver.com/withlab201`
   - 클릭 시 새 탭으로 열림
@@ -220,19 +238,25 @@
    - Supabase `ilike` 연산자 (대소문자 구분 없음)
 
 6. **페이지네이션**
-   - 10개/페이지
-   - 10페이지/그룹
+   - 10개/페이지, 10페이지/그룹
+   - 텍스트 스타일 (배경색 박스 없음): 활성=색상+볼드, 비활성=회색
+   - 버튼 크기: `min-w-[40px] h-10 text-[17px]`
 
-7. **닉네임 마스킹** (개인정보 보호)
+7. **모바일 리스트 UI**
+   - 글 번호 미표시 (데스크톱에서만 번호 표시)
+   - 뱃지 패딩 축소 (`px-1.5`) - 제목 시작점 정렬
+   - 메타 정보 `|` 구분선: 닉네임 | 날짜 | 조회수
+
+8. **닉네임 마스킹** (개인정보 보호)
    - 2글자: 첫 글자 + `*` (예: "홍*")
    - 3글자 이상: 첫 글자 + `*` 반복 + 마지막 글자 (예: "홍**동")
 
-8. **자유게시판 전용 기능**
+9. **자유게시판 전용 기능**
    - 주제 필터 (잡담, 질문, 정보, 후기)
    - 주제별 색상 뱃지
    - 3열 테이블 레이아웃 (주제 포함)
 
-9. **후기 게시판 전용 기능**
+10. **후기 게시판 전용 기능**
    - **0.5 단위 평점 시스템**
      - DB: `DECIMAL(2,1)` 타입
      - 별 아이콘 좌/우 클릭 영역 분리
@@ -854,6 +878,8 @@
    - 모바일: 회색 점 (`●`)
    - Hover: 파란색 텍스트 (`hover:text-blue-500`)
 6. **햄버거 메뉴** (모바일)
+   - 터치 영역: `p-3` (48px, 시니어 친화 기준 충족)
+   - `cursor-pointer` 적용
 
 **조건부 UI**:
 
@@ -871,8 +897,7 @@
 1. **회사 정보**
    - 주소: 강원특별자치도 속초시 관광로 115
    - 문의 이메일: `ceo@withthelake.com`
-2. **SNS 링크**
-   - Facebook: 위드더레이크 페이지
+2. **SNS 링크** (`cursor-pointer` 적용)
    - Instagram: `https://www.instagram.com/withwellme/`
    - YouTube: `https://www.youtube.com/channel/UC8vmE6swgfF-PvsVIQUmsOQ/about`
    - 네이버 블로그: `https://blog.naver.com/with_thelake` (`NaverBlogIcon` - N 형태 SVG)
@@ -892,6 +917,11 @@
 - `aria-label="모달명"` - 스크린리더에서 모달 이름 안내
 - Framer Motion `motion.div` 패널 컨테이너에 적용
 - 적용 모달: EmotionRecordModal, LoginModal, WalkGuideModal, AffirmationModal, AudioDescriptionModal, TrailMapSelectModal, TrailTextSelectModal
+
+**버튼 스타일 표준화** (2026-02-21):
+- **닫기/아이콘 버튼**: `p-2 rounded-full hover:bg-gray-100` (모든 모달 통일)
+- **주요 액션 버튼**: `py-4 rounded-xl` (WriteForm 등록/취소, SettingsClient 돌아가기, MypageClient CTA)
+- **글쓰기 버튼**: `px-4 py-2 rounded-lg` (BoardList, GalleryList, ReviewList)
 
 ### 7.1 로그인 모달 (`components/modals/LoginModal.tsx`)
 
@@ -1396,6 +1426,6 @@ revalidatePath('/mypage');
 
 ---
 
-*마지막 업데이트: 2026-02-13*
+*마지막 업데이트: 2026-02-21 (버튼 스타일 표준화, NEWS 페이지 UI 개선, 카테고리 섹션 패딩 통일)*
 *상태: Phase 1-9 완료, 모든 기능 반영*
 *문서 버전: 2.1*

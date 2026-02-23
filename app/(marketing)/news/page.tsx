@@ -35,8 +35,8 @@ export default function NewsPage() {
       {/* 히어로 섹션 - 즉시 렌더링 */}
       <section className="bg-gradient-to-r from-gray-900 to-gray-700 text-white py-12 md:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-3xl md:text-4xl font-bold mb-3">NEWS</h1>
-          <p className="text-gray-300">
+          <h1 className="text-4xl md:text-5xl font-bold mb-3">NEWS</h1>
+          <p className="text-lg text-gray-300">
             맨발걷기 관련 언론 보도와 미디어 소식
           </p>
         </div>

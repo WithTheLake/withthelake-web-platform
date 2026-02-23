@@ -44,7 +44,7 @@ export default function Footer() {
                 href="https://www.facebook.com/people/%EC%9C%84%EB%93%9C%EB%8D%94%EB%A0%88%EC%9D%B4%ED%81%AC/61565595385880/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 transition-colors"
+                className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 transition-colors cursor-pointer"
                 aria-label="Facebook"
               >
                 <Facebook size={18} />
@@ -53,7 +53,7 @@ export default function Footer() {
                 href="https://www.instagram.com/withwellme/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 transition-colors"
+                className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 transition-colors cursor-pointer"
                 aria-label="Instagram"
               >
                 <Instagram size={18} />
@@ -62,7 +62,7 @@ export default function Footer() {
                 href="https://www.youtube.com/channel/UC8vmE6swgfF-PvsVIQUmsOQ/about"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 transition-colors"
+                className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 transition-colors cursor-pointer"
                 aria-label="YouTube"
               >
                 <Youtube size={18} />
@@ -71,7 +71,7 @@ export default function Footer() {
                 href="https://blog.naver.com/with_thelake"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 transition-colors"
+                className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 transition-colors cursor-pointer"
                 aria-label="네이버 블로그"
               >
                 <NaverBlogIcon />
@@ -80,7 +80,7 @@ export default function Footer() {
                 href="https://cafe.naver.com/healingroadon"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 transition-colors"
+                className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 transition-colors cursor-pointer"
                 aria-label="네이버 카페"
               >
                 <NaverCafeIcon />

@@ -165,7 +165,7 @@ export default function Header() {
           {/* 모바일 메뉴 버튼 */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="lg:hidden p-2 text-gray-700"
+            className="lg:hidden p-3 text-gray-700 cursor-pointer"
             aria-label="메뉴"
           >
             {isMenuOpen ? <X size={28} /> : <Menu size={28} />}

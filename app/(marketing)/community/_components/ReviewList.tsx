@@ -287,13 +287,13 @@ export default function ReviewList({
             transition={{ duration: 0.5 }}
             className="text-center"
           >
-            <h1 className="text-2xl md:text-3xl font-bold mb-2">
+            <h1 className="text-3xl md:text-4xl font-bold mb-2">
               힐링 후기
             </h1>
-            <p className="text-white/80 text-sm md:text-base">
+            <p className="text-white/80 text-base md:text-lg">
               힐링로드 ON 이용 후기를 공유해주세요
             </p>
-            <p className="text-white/60 text-xs mt-1">
+            <p className="text-white/60 text-sm mt-1">
               {totalCount.toLocaleString()}개의 리뷰
             </p>
           </motion.div>
@@ -308,7 +308,7 @@ export default function ReviewList({
               <Link
                 key={tab}
                 href={`/community/${tab}`}
-                className={`flex-1 px-4 py-4 font-semibold transition-colors text-center text-sm md:text-base ${
+                className={`flex-1 px-4 py-4 font-semibold transition-colors text-center text-base md:text-lg ${
                   tab === 'review'
                     ? 'text-purple-600 border-b-2 border-purple-600 bg-purple-50'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -546,7 +546,7 @@ export default function ReviewList({
           <Link
             href="/community/review/write"
             onClick={handleWriteClick}
-            className="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-semibold hover:opacity-90 transition-all flex items-center gap-2 text-sm"
+            className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-semibold hover:opacity-90 transition-all flex items-center gap-2 text-sm"
           >
             <Plus size={18} />
             후기 작성
@@ -568,10 +568,10 @@ export default function ReviewList({
               <button
                 key={page}
                 onClick={() => handlePageChange(page)}
-                className={`min-w-[36px] h-9 px-2.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`min-w-[40px] h-10 px-2.5 text-[17px] font-medium transition-colors ${
                   page === currentPage
-                    ? 'bg-purple-600 text-white'
-                    : 'hover:bg-gray-100 text-gray-700'
+                    ? 'text-purple-600 font-bold'
+                    : 'text-gray-400 hover:text-gray-700'
                 }`}
               >
                 {page}

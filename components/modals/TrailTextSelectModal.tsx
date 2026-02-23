@@ -129,7 +129,7 @@ export default function TrailTextSelectModal({
                 {viewMode !== 'province' && (
                   <button
                     onClick={handleBack}
-                    className="p-1.5 hover:bg-white/20 rounded-full transition-colors"
+                    className="p-2 hover:bg-white/20 rounded-full transition-colors"
                   >
                     <ChevronLeft size={22} className="text-white" />
                   </button>
@@ -138,7 +138,7 @@ export default function TrailTextSelectModal({
               </div>
               <button
                 onClick={handleClose}
-                className="p-1.5 hover:bg-white/20 rounded-full transition-colors"
+                className="p-2 hover:bg-white/20 rounded-full transition-colors"
               >
                 <X size={22} className="text-white" />
               </button>

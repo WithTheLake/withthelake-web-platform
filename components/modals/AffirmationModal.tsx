@@ -69,7 +69,7 @@ export default function AffirmationModal({
               </div>
               <button
                 onClick={onClose}
-                className="p-1.5 hover:bg-white/20 rounded-full transition-colors"
+                className="p-2 hover:bg-white/20 rounded-full transition-colors"
                 aria-label="닫기"
               >
                 <X size={22} className="text-white" />

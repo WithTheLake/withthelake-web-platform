@@ -172,10 +172,10 @@ export default function FreeBoardList({
             transition={{ duration: 0.5 }}
             className="text-center"
           >
-            <h1 className="text-2xl md:text-3xl font-bold mb-2">
+            <h1 className="text-3xl md:text-4xl font-bold mb-2">
               자유게시판
             </h1>
-            <p className="text-white/80 text-sm md:text-base">
+            <p className="text-white/80 text-base md:text-lg">
               자유롭게 이야기를 나눠보세요
             </p>
           </motion.div>
@@ -190,7 +190,7 @@ export default function FreeBoardList({
               <Link
                 key={tab}
                 href={`/community/${tab}`}
-                className={`flex-1 px-4 py-4 font-semibold transition-colors text-center text-sm md:text-base ${
+                className={`flex-1 px-4 py-4 font-semibold transition-colors text-center text-base md:text-lg ${
                   tab === 'free'
                     ? 'text-blue-600 border-b-2 border-current bg-gray-50'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -261,11 +261,17 @@ export default function FreeBoardList({
             <p className="text-gray-400 text-xs mt-1.5">
               다른 검색어로 시도해보세요.
             </p>
+            <button
+              onClick={() => router.push(basePath)}
+              className="mt-4 px-4 py-2 text-sm text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors"
+            >
+              검색 초기화
+            </button>
           </motion.div>
         ) : (
           <div className="bg-white rounded-xl shadow-sm overflow-hidden">
             {/* 테이블 헤더 */}
-            <div className="hidden md:grid md:grid-cols-[70px_1fr_130px_110px_75px] px-4 bg-gray-50 border-b text-sm font-semibold text-gray-600">
+            <div className="hidden md:grid md:grid-cols-[70px_1fr_130px_110px_75px] px-4 bg-gray-50 border-b text-[15px] font-semibold text-gray-600">
               <div className="py-3 text-center">주제</div>
               <div className="px-4 py-3 text-center">제목</div>
               <div className="px-3 py-3 text-center">작성자</div>
@@ -286,9 +292,9 @@ export default function FreeBoardList({
                   className="block hover:bg-blue-50 transition-colors border-b border-gray-100"
                 >
                   {/* 데스크톱 */}
-                  <div className="hidden md:grid md:grid-cols-[70px_1fr_130px_110px_75px] px-4 text-sm">
+                  <div className="hidden md:grid md:grid-cols-[70px_1fr_130px_110px_75px] px-4 text-[15px]">
                     <div className="py-3.5 text-center">
-                      <span className="inline-block px-2 py-0.5 bg-red-100 text-red-600 text-xs font-bold rounded">
+                      <span className="inline-block px-2 py-0.5 bg-red-100 text-red-600 text-[13px] font-bold rounded">
                         공지
                       </span>
                     </div>
@@ -297,7 +303,7 @@ export default function FreeBoardList({
                         {post.title}
                       </span>
                       {post.comment_count > 0 && (
-                        <span className="flex items-center gap-0.5 text-blue-600 text-xs font-medium">
+                        <span className="flex items-center gap-0.5 text-blue-600 text-[13px] font-medium">
                           <MessageCircle size={12} />
                           {post.comment_count}
                         </span>
@@ -320,22 +326,24 @@ export default function FreeBoardList({
                   {/* 모바일 */}
                   <div className="md:hidden px-4 py-3.5">
                     <div className="flex items-center gap-2 mb-1.5">
-                      <span className="px-2 py-0.5 bg-red-100 text-red-600 text-xs font-bold rounded">
+                      <span className="px-1.5 py-0.5 bg-red-100 text-red-600 text-[13px] font-bold rounded">
                         공지
                       </span>
-                      <span className="font-medium text-gray-900 text-sm truncate flex-1">
+                      <span className="font-medium text-gray-900 text-[15px] truncate flex-1">
                         {post.title}
                       </span>
                       {post.comment_count > 0 && (
-                        <span className="flex items-center gap-0.5 text-blue-600 text-xs">
+                        <span className="flex items-center gap-0.5 text-blue-600 text-[13px]">
                           <MessageCircle size={12} />
                           {post.comment_count}
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-2.5 text-sm text-gray-500">
+                    <div className="flex items-center gap-1.5 text-[13px] text-gray-500">
                       <span>{post.author_nickname || '관리자'}</span>
+                      <span className="text-gray-300">|</span>
                       <span className="whitespace-nowrap">{formatSmartDate(post.created_at)}</span>
+                      <span className="text-gray-300">|</span>
                       <span>조회 {post.view_count}</span>
                     </div>
                   </div>
@@ -356,10 +364,10 @@ export default function FreeBoardList({
                   className="block hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
                 >
                   {/* 데스크톱 */}
-                  <div className="hidden md:grid md:grid-cols-[70px_1fr_130px_110px_75px] px-4 text-sm">
+                  <div className="hidden md:grid md:grid-cols-[70px_1fr_130px_110px_75px] px-4 text-[15px]">
                     <div className="py-3.5 text-center">
                       {post.topic && (
-                        <span className={`inline-block px-2 py-0.5 text-xs font-medium rounded ${getTopicStyle(post.topic)}`}>
+                        <span className={`inline-block px-2 py-0.5 text-[13px] font-medium rounded ${getTopicStyle(post.topic)}`}>
                           {getTopicLabel(post.topic)}
                         </span>
                       )}
@@ -369,7 +377,7 @@ export default function FreeBoardList({
                         {post.title}
                       </span>
                       {post.comment_count > 0 && (
-                        <span className="flex items-center gap-0.5 text-blue-600 text-xs font-medium">
+                        <span className="flex items-center gap-0.5 text-blue-600 text-[13px] font-medium">
                           <MessageCircle size={12} />
                           {post.comment_count}
                         </span>
@@ -393,15 +401,15 @@ export default function FreeBoardList({
                   <div className="md:hidden px-4 py-3.5">
                     <div className="flex items-center gap-2 mb-1.5">
                       {post.topic && (
-                        <span className={`px-2 py-0.5 text-xs font-medium rounded ${getTopicStyle(post.topic)}`}>
+                        <span className={`px-1.5 py-0.5 text-[13px] font-medium rounded ${getTopicStyle(post.topic)}`}>
                           {getTopicLabel(post.topic)}
                         </span>
                       )}
-                      <span className="font-medium text-gray-900 text-sm truncate flex-1">
+                      <span className="font-medium text-gray-900 text-[15px] truncate flex-1">
                         {post.title}
                       </span>
                       {post.comment_count > 0 && (
-                        <span className="flex items-center gap-0.5 text-blue-600 text-xs">
+                        <span className="flex items-center gap-0.5 text-blue-600 text-[13px]">
                           <MessageCircle size={12} />
                           {post.comment_count}
                         </span>
@@ -410,9 +418,11 @@ export default function FreeBoardList({
                         <ImageIcon size={12} className="text-gray-400" />
                       )}
                     </div>
-                    <div className="flex items-center gap-2.5 text-sm text-gray-500">
+                    <div className="flex items-center gap-1.5 text-[13px] text-gray-500">
                       <span>{post.author_nickname || '익명'}</span>
+                      <span className="text-gray-300">|</span>
                       <span className="whitespace-nowrap">{formatSmartDate(post.created_at)}</span>
+                      <span className="text-gray-300">|</span>
                       <span>조회 {post.view_count}</span>
                     </div>
                   </div>
@@ -452,10 +462,10 @@ export default function FreeBoardList({
               <button
                 key={page}
                 onClick={() => handlePageChange(page)}
-                className={`min-w-[36px] h-9 px-2.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`min-w-[40px] h-10 px-2.5 text-[17px] font-medium transition-colors ${
                   page === currentPage
-                    ? 'bg-blue-600 text-white'
-                    : 'hover:bg-gray-100 text-gray-700'
+                    ? 'text-blue-600 font-bold'
+                    : 'text-gray-400 hover:text-gray-700'
                 }`}
               >
                 {page}
@@ -534,18 +544,6 @@ export default function FreeBoardList({
           </button>
         </div>
 
-        {/* 검색 결과 안내 */}
-        {urlSearch && (
-          <div className="mt-4 text-center text-sm text-gray-500">
-            &apos;{urlSearch}&apos; 검색 결과 {totalCount}건
-            <button
-              onClick={() => router.push(basePath)}
-              className="ml-2 text-blue-600 hover:underline"
-            >
-              검색 초기화
-            </button>
-          </div>
-        )}
       </div>
     </div>
   )
